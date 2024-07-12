@@ -3,29 +3,27 @@ import UserRepository from "../infrastructure/repository/userRepository";
 import GenerateOtp from "../infrastructure/services/generateOtp";
 import GenerateMail from "../infrastructure/services/sendMailer";
 import EncryptPassword from "../infrastructure/services/bcryptPassword";
-
-
+import { VerifyData } from "./Interface/verifyData";
 
 class UserUseCase {
   private UserRepository: UserRepository;
-  private EncryptPassword:EncryptPassword;
-  private GenerateOtp :GenerateOtp;
-  private GenerateSendMail : GenerateMail
+  private EncryptPassword: EncryptPassword;
+  private GenerateOtp: GenerateOtp;
+  private GenerateSendMail: GenerateMail;
 
   constructor(
-
     userRepository: UserRepository,
-    encryptPassword : EncryptPassword,
-    generateOtp : GenerateOtp,
-    generateSendMail : GenerateMail
-
+    encryptPassword: EncryptPassword,
+    generateOtp: GenerateOtp,
+    generateSendMail: GenerateMail
   ) {
-    this.UserRepository = userRepository;
-    this.EncryptPassword = encryptPassword,
-    this.GenerateOtp = generateOtp,
-    this.GenerateSendMail = generateSendMail
+      this.UserRepository = userRepository;
+      this.EncryptPassword = encryptPassword,
+      this.GenerateOtp = generateOtp,
+      this.GenerateSendMail = generateSendMail;
   }
 
+  // email exist checking when register
   async checkExist(email: string) {
     const userExist = await this.UserRepository.findByEmail(email);
 
@@ -48,48 +46,63 @@ class UserUseCase {
     }
   }
 
+  // signup user usecase
+  async signup(name: string, email: string) {
 
-
-  async signup( name: string, email: string){
     const otp = this.GenerateOtp.createOtp();
-    console.log("otp generate at usecase",otp);
-    
-    await this.UserRepository.saveOtp(name,email,otp);
-    console.log("save otp at document");
-    
-    this.GenerateSendMail.sendMail(name,email,otp);
-    console.log("mail sended");
+    await this.UserRepository.saveOtp(name, email, otp);
+    this.GenerateSendMail.sendMail(name, email, otp);
+
     return {
-      status:200,
-      data:{
-        status:true,
-        message:"Verification otp sent to yout email"
-      }
+      status: 200,
+      data: {
+        status: true,
+        message: "Verification otp sent to yout email",
+      },
     };
   }
 
-  async verify(data:{}){
+  // otp verification case
+  async verify(data: VerifyData) {
+    console.log("user sucase otp");
 
+    const otpDetailes = await this.UserRepository.findOtpByEmail(
+      data.userData.email
+    );
+
+    if (otpDetailes === null) {
+      return { status: 400, message: "Invalid or expired OTP" };
+    }
+
+    if (otpDetailes.otp !== data.otp) {
+      return { status: 400, message: "Invalid OTP" };
+    }
+
+    return {
+      status: 200,
+      message: "OTP verificaton successfully",
+      data: data.userData,
+    };
   }
 
+  async saveUser(user: User) {
+    console.log(user.password, "pass save ");
 
+    const hashPassword = await this.EncryptPassword.encryptPassword(
+      user.password as string
+    );
+    user.password = hashPassword
+    const userSave = await this.UserRepository.saves(user)
+    console.log(hashPassword,"pass hash");
+    return {
+      status:201,
+      data:userSave
+    }
+    
+  }
 }
 
 export default UserUseCase;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 //   async saveUserJust(
 //     name: string,

@@ -24,8 +24,7 @@ const userController = new UserController(userUseCase)
 
 
 route.post('/signUp',(req:Req,res:Res,next:Next)=> userController.signUp(req,res,next))
-route.post('/verify'),(req:Req,res:Res,next:Next)=>userController.verifyOTP(req,res,next)
+route.post('/verify',(req:Req,res:Res,next:Next)=>userController.verifyOTP(req,res,next));
 
 
-  
 export default route;

@@ -31,6 +31,14 @@ class UserRepository implements UserRepo{
         return saveOtp;
     }
 
+    // otp details finding from otpDB using email
+    async findOtpByEmail(email:string):Promise<any>{
+        const otpData = await otpDocModel.findOne({email:email}).sort({generatedAt : -1});
+        console.log(otpData,"repo otp data");
+        return otpData
+        
+    }
+
 }
 
 export default UserRepository
