@@ -62,6 +62,21 @@ class userConroller {
       next(error);
     }
   }
+
+  // login
+  async login(req:Req,res:Res,next:Next){
+    try {
+      
+      const { email, password } = req.body;
+      
+    const user = await this.userUseCase.login(email,password)
+    console.log(user,"login controller");
+    return res.status(user.status).json(user.data)
+      
+    } catch (error) {
+      next(error);
+    }
+  }
 }
 
 export default userConroller;
