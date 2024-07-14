@@ -1,5 +1,5 @@
 import mongoose, { Schema, Model } from "mongoose";
-import IOtpDoc from "../../domain/IOtpDoc";
+import IOtpDoc from "../../../domain/IOtpDoc";
 
 const OtpDocSchema: Schema<IOtpDoc> = new Schema({
   name: {
@@ -10,6 +10,9 @@ const OtpDocSchema: Schema<IOtpDoc> = new Schema({
   },
   otp: {
     type: String,
+  },
+  role:{
+    type:String
   },
   generatedAt: {
     type: Date,

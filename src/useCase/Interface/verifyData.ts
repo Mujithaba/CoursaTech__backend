@@ -1,6 +1,7 @@
 export  interface VerifyData {
     otp: string;
-    userData: {
+    role:string;
+    roleData: {
       name: string;
       email: string;
       phone: string;

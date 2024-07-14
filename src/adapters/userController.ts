@@ -13,13 +13,7 @@ class userConroller {
   async signUp(req: Req, res: Res, next: Next) {
     try {
       const userVerify = await this.userUseCase.checkExist(req.body.email);
-
-      console.log(userVerify, "exist verification kazhinju");
-
       if (userVerify.data.status == true) {
-        console.log(
-          "user not exist allaathond  usercase sinup function ilk keri"
-        );
         const sendOtp = await this.userUseCase.signup(
           req.body.name,
           req.body.email
@@ -37,26 +31,21 @@ class userConroller {
   // otp verification
   async verifyOTP(req: Req, res: Res, next: Next) {
     try {
-      console.log("controller otp verify");
-
       const data: VerifyData = req.body;
-      console.log(data, "verifyOtp data got");
-
       const OTPverification = await this.userUseCase.verify(data);
-      console.log(OTPverification, "otp data");
 
       if (OTPverification.status == 400) {
         return res
           .status(OTPverification.status)
           .json({ message: OTPverification.message });
       }
-
       if (OTPverification.data && OTPverification.status ==200) {
         const savedUser = await this.userUseCase.saveUser(OTPverification.data);
         console.log(savedUser, "user saved data");
-        res
+
+       return res
           .status(200)
-          .json({ message: "User saved successfully", data: savedUser });
+          .json({ message: "User verification successfully", data: savedUser });
       }
     } catch (error) {
       next(error);
@@ -77,6 +66,20 @@ class userConroller {
       next(error);
     }
   }
+
+  // resendOTP
+  async resendOtp(req:Req,res:Res,next:Next){
+    try {
+      const {name,email } = req.body
+      console.log(name,email,"otp contoller");
+      
+      const  resendOTP = await this.userUseCase.resend_otp(name,email)
+      return res.status(resendOTP.status).json(resendOTP.data);
+    } catch (error) {
+      next(error)
+    }
+  }
+
 }
 
 export default userConroller;

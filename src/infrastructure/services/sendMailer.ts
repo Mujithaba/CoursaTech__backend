@@ -15,14 +15,14 @@ class sendotp {
     }
 
     // user verification otp mail
-    sendMail(name:string,email: string, otp: number): void {
+    sendMail(name:string,email: string, otp: number,role:string): void {
         const mailoptions: nodemailer.SendMailOptions = {
             from: "muj@gmail.com",
             to: email,
-            subject: "Coursa Tech Email verification",
+            subject: `Coursa Tech Email verification for ${role}`,
             // text: `${email}, your verification code is: ${otp}`,
             html: `<p>Dear ${name},</p>
-                   <p><b>Your verification code is: ${otp}</b></p>
+                   <p><b>Your verification OTP is: ${otp}</b></p>
                    <p>Thank you,<br/>CoursaTech Team</p>`,
         };
         this.transporter.sendMail(mailoptions, (err) => {

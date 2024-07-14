@@ -1,7 +1,7 @@
 import User from "../../domain/user";
-import IOtpDoc from "../../domain/IOtpDoc";
-import userModel from "../database/userModel";
-import otpDocModel from "../database/otpDocModel";
+// import IOtpDoc from "../../domain/IOtpDoc";
+import userModel from "../database/userModels/userModel";
+import otpDocModel from "../database/commonModel/otpDocModel";
 import UserRepo from "../../useCase/Interface/userRepo";
 
 class UserRepository implements UserRepo{
@@ -12,17 +12,19 @@ class UserRepository implements UserRepo{
         return saveUser;
     }
 
+    // email finding from DB
     async findByEmail(email:string):Promise<User | null>{
-        const exist=await userModel.findOne({email:email})
-        return exist
+        const res=await userModel.findOne({email:email})
+        return res
     }
 
     // otp details saving in db using TTL
-    async saveOtp(name:string,email:string,otp:number):Promise<any>{
+    async saveOtp(name:string,email:string,otp:number,role:string):Promise<any>{
         const newOtpDoc = new otpDocModel({
             name:name,
             email:email,
             otp:otp,
+            role:role,
             generatedAt:new Date()
         })
         const saveOtp = await newOtpDoc.save();
@@ -32,8 +34,8 @@ class UserRepository implements UserRepo{
     }
 
     // otp details finding from otpDB using email
-    async findOtpByEmail(email:string):Promise<any>{
-        const otpData = await otpDocModel.findOne({email:email}).sort({generatedAt : -1});
+    async findOtpByEmail(email:string,role:string):Promise<any>{
+        const otpData = await otpDocModel.findOne({email:email,role:role}).sort({generatedAt : -1});
         console.log(otpData,"repo otp data");
         return otpData
         

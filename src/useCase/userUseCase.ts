@@ -5,7 +5,6 @@ import GenerateMail from "../infrastructure/services/sendMailer";
 import EncryptPassword from "../infrastructure/services/bcryptPassword";
 import { VerifyData } from "./Interface/verifyData";
 import JwtToken from "../infrastructure/services/generateToken";
-import { log } from "console";
 
 class UserUseCase {
   private UserRepository: UserRepository;
@@ -22,9 +21,9 @@ class UserUseCase {
     jwtToken: JwtToken
   ) {
     this.UserRepository = userRepository;
-    (this.EncryptPassword = encryptPassword),
-      (this.GenerateOtp = generateOtp),
-      (this.GenerateSendMail = generateSendMail);
+    this.EncryptPassword = encryptPassword;
+    this.GenerateOtp = generateOtp;
+    this.GenerateSendMail = generateSendMail;
     this.JwtToken = jwtToken;
   }
 
@@ -52,26 +51,30 @@ class UserUseCase {
   }
 
   // signup user usecase
-  async signup(name: string, email: string) {
+  async signup(name: string, email: string) {    
     const otp = this.GenerateOtp.createOtp();
-    await this.UserRepository.saveOtp(name, email, otp);
-    this.GenerateSendMail.sendMail(name, email, otp);
+    console.log(otp,"OTP");
+    
+    const role = "user"
+    await this.UserRepository.saveOtp(name, email, otp,role);
+     this.GenerateSendMail.sendMail(name, email, otp,role);
 
     return {
       status: 200,
       data: {
         status: true,
-        message: "Verification otp sent to yout email",
+        message: "Verification otp sent to your email",
       },
     };
   }
 
   // otp verification case
   async verify(data: VerifyData) {
-    console.log("user sucase otp");
-
+    console.log( data.roleData.email,"tutor email");
+    
     const otpDetailes = await this.UserRepository.findOtpByEmail(
-      data.userData.email
+      data.roleData.email,
+      data.role
     );
 
     if (otpDetailes === null) {
@@ -81,23 +84,23 @@ class UserUseCase {
     if (otpDetailes.otp !== data.otp) {
       return { status: 400, message: "Invalid OTP" };
     }
+    // if (otpDetailes.role !== role) {
+    //   return {status:400,message:`No OTP found for ${role} with the provided email.`}
+    // }
 
     return {
       status: 200,
       message: "OTP verificaton successfully",
-      data: data.userData,
+      data: data.roleData,
     };
   }
 
   async saveUser(user: User) {
-    console.log(user.password, "pass save ");
-
     const hashPassword = await this.EncryptPassword.encryptPassword(
       user.password as string
     );
     user.password = hashPassword;
     const userSave = await this.UserRepository.saves(user);
-    console.log(hashPassword, "pass hash");
     return {
       status: 201,
       data: userSave,
@@ -106,7 +109,6 @@ class UserUseCase {
 
   async login(email: string, password: string) {
     const user = await this.UserRepository.findByEmail(email);
-    console.log(user, "login user data");
     let token = "";
 
     if (user) {
@@ -115,9 +117,9 @@ class UserUseCase {
         name: user.name,
         email: user.email,
         password: user.password,
-        isBlock:user.isBlocked,
-        isAdmin:user.isAdmin,
-        isGoogle:user.isGoogle
+        isBlock: user.isBlocked,
+        isAdmin: user.isAdmin,
+        isGoogle: user.isGoogle,
       };
 
       if (user.isBlocked) {
@@ -182,6 +184,23 @@ class UserUseCase {
         },
       };
     }
+  }
+
+  async resend_otp (name:string,email:string){
+    const otp = this.GenerateOtp.createOtp();
+    console.log(otp,"OTP");
+    
+    const role = "user"
+    await this.UserRepository.saveOtp(name, email, otp,role);
+     this.GenerateSendMail.sendMail(name, email, otp,role);
+
+    return {
+      status: 200,
+      data: {
+        status: true,
+        message: " Resend otp sent to your email",
+      },
+    };
   }
 }
 

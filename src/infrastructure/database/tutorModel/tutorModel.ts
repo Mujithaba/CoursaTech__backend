@@ -1,7 +1,7 @@
-import User from "../../domain/user";
+import Tutor from "../../../domain/tutor";
 import mongoose, { Schema,Model,Document } from "mongoose";
 
-const UserSchema:Schema = new Schema<User | Document>(
+const TutorSchema:Schema = new Schema<Tutor | Document>(
     {
         name:{
             type:String,
@@ -36,9 +36,9 @@ const UserSchema:Schema = new Schema<User | Document>(
 
 
 
-const userModel:Model<User & Document> = mongoose.model <User & Document>(
-    "User",
-    UserSchema
+const tutorModel:Model<Tutor & Document> = mongoose.model <Tutor & Document>(
+    "Tutor",
+    TutorSchema
 );
 
-export default userModel;
+export default tutorModel;

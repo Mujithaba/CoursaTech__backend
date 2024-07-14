@@ -13,6 +13,7 @@ import http from "http";
 
 // route roots
 import userRoute from "../router/userRoute";
+import tutorRoute from "../router/toturRoute";
 import adminRoute from "../router/adminRoute";
 
 
@@ -40,4 +41,5 @@ app.use(morgan('dev'))
 
 // api's
 app.use('/api/users',userRoute)
+app.use('/api/tutors',tutorRoute)
 app.use('/api/admin',adminRoute)
