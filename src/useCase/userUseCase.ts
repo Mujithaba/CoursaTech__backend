@@ -96,6 +96,8 @@ class UserUseCase {
   }
 
   async saveUser(user: User) {
+    console.log(user.email,"ggoo");
+    
     const hashPassword = await this.EncryptPassword.encryptPassword(
       user.password as string
     );
@@ -108,6 +110,7 @@ class UserUseCase {
   }
 
   async login(email: string, password: string) {
+
     const user = await this.UserRepository.findByEmail(email);
     let token = "";
 
@@ -116,7 +119,7 @@ class UserUseCase {
         _id: user._id,
         name: user.name,
         email: user.email,
-        password: user.password,
+        // password: user.password,
         isBlock: user.isBlocked,
         isAdmin: user.isAdmin,
         isGoogle: user.isGoogle,

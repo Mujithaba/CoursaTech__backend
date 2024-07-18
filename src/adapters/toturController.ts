@@ -81,5 +81,43 @@ class TutorController {
     }
   }
 
+
+   // google sign up or login
+   async googleUse(req:Req,res:Res,next:Next){
+    try {
+
+      const {name,email,phone,password,isGoogled} = req.body
+      console.log(name,email,phone,password,isGoogled,"google controller");
+
+      const checkExist = await this.tutorUseCase.checkExist(email)
+
+      if (checkExist.data.status == true) {
+        const data = {
+          name:name,
+          email:email,
+          phone:phone,
+          password:password,
+          isGoogle:isGoogled
+        }
+
+        const savedTutor = await this.tutorUseCase.saveTutor(data);
+        console.log(savedTutor,"goo");
+        const tutor = await this.tutorUseCase.login(email,password)
+        console.log(tutor,"login controller");
+        return res.status(tutor.status).json(tutor.data)
+       
+
+      } else if(checkExist.data.status == false){
+        const user = await this.tutorUseCase.login(email,password)
+        console.log(user,"login controller");
+        return res.status(user.status).json(user.data)
+      }
+      
+      
+    } catch (error) {
+      next(error)
+    }
+  }
+
 }
 export default TutorController;

@@ -80,6 +80,43 @@ class userConroller {
     }
   }
 
+  // google sign up or login
+  async googleUse(req:Req,res:Res,next:Next){
+    try {
+
+      const {name,email,phone,password,isGoogled} = req.body
+      console.log(name,email,phone,password,isGoogled,"google controller");
+
+      const checkExist = await this.userUseCase.checkExist(email)
+
+      if (checkExist.data.status == true) {
+        const data = {
+          name:name,
+          email:email,
+          phone:phone,
+          password:password,
+          isGoogle:isGoogled
+        }
+
+        const savedUser = await this.userUseCase.saveUser(data);
+        console.log(savedUser,"goo");
+        const user = await this.userUseCase.login(email,password)
+        console.log(user,"login controller");
+        return res.status(user.status).json(user.data)
+       
+
+      } else if(checkExist.data.status == false){
+        const user = await this.userUseCase.login(email,password)
+        console.log(user,"login controller");
+        return res.status(user.status).json(user.data)
+      }
+      
+      
+    } catch (error) {
+      next(error)
+    }
+  }
+
 }
 
 export default userConroller;

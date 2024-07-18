@@ -29,8 +29,10 @@ const tutorController = new TutorController(tutorUseCase);
 
 route.post('/register',(req:Req,res:Res,next:Next)=>tutorController.signup(req,res,next));
 route.post('/verify',(req:Req,res:Res,next:Next)=>tutorController.verifyOTP(req,res,next));
-route.post('/login',(req:Req,res:Res,next:Next)=>tutorController.login(req,res,next))
+route.post('/login',(req:Req,res:Res,next:Next)=>tutorController.login(req,res,next));
+route.post('/googleTutorIN',(req:Req,res:Res,next:Next)=>tutorController.googleUse(req,res,next));
 route.post('/resendOTP',(req:Req,res:Res,next:Next)=>tutorController.resendOtp(req,res,next))
+
 
 
 export default route;
