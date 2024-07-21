@@ -70,8 +70,7 @@ class UserUseCase {
 
   // otp verification case
   async verify(data: VerifyData) {
-    console.log( data.roleData.email,"tutor email");
-    
+
     const otpDetailes = await this.UserRepository.findOtpByEmail(
       data.roleData.email,
       data.role
@@ -96,7 +95,6 @@ class UserUseCase {
   }
 
   async saveUser(user: User) {
-    console.log(user.email,"ggoo");
     
     const hashPassword = await this.EncryptPassword.encryptPassword(
       user.password as string

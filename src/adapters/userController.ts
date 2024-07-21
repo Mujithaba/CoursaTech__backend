@@ -41,7 +41,6 @@ class userConroller {
       }
       if (OTPverification.data && OTPverification.status ==200) {
         const savedUser = await this.userUseCase.saveUser(OTPverification.data);
-        console.log(savedUser, "user saved data");
 
        return res
           .status(200)
@@ -59,7 +58,6 @@ class userConroller {
       const { email, password } = req.body;
       
     const user = await this.userUseCase.login(email,password)
-    console.log(user,"login controller");
     return res.status(user.status).json(user.data)
       
     } catch (error) {
@@ -85,8 +83,6 @@ class userConroller {
     try {
 
       const {name,email,phone,password,isGoogled} = req.body
-      console.log(name,email,phone,password,isGoogled,"google controller");
-
       const checkExist = await this.userUseCase.checkExist(email)
 
       if (checkExist.data.status == true) {
@@ -98,16 +94,13 @@ class userConroller {
           isGoogle:isGoogled
         }
 
-        const savedUser = await this.userUseCase.saveUser(data);
-        console.log(savedUser,"goo");
+        await this.userUseCase.saveUser(data);
         const user = await this.userUseCase.login(email,password)
-        console.log(user,"login controller");
         return res.status(user.status).json(user.data)
        
 
       } else if(checkExist.data.status == false){
         const user = await this.userUseCase.login(email,password)
-        console.log(user,"login controller");
         return res.status(user.status).json(user.data)
       }
       

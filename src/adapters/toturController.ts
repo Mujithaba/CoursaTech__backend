@@ -32,7 +32,6 @@ class TutorController {
   async verifyOTP(req:Req, res:Res,next:Next){
     try {
         const data: VerifyData = req.body;
-
         const OTPverification = await this.tutorUseCase.verify(data);
   
         if (OTPverification.status == 400) {
@@ -43,7 +42,6 @@ class TutorController {
   
         if (OTPverification.data && OTPverification.status ==200) {
           const savedTutor = await this.tutorUseCase.saveTutor(OTPverification.data);
-          console.log(savedTutor, "tutur saved data");
           res
             .status(200)
             .json({ message: "Tutor saved successfully", data: savedTutor });
@@ -60,7 +58,6 @@ class TutorController {
       const { email, password } = req.body;
       
     const user = await this.tutorUseCase.login(email,password)
-    console.log(user,"login controller");
     return res.status(user.status).json(user.data)
       
     } catch (error) {
@@ -72,7 +69,6 @@ class TutorController {
    async resendOtp(req:Req,res:Res,next:Next){
     try {
       const {name,email } = req.body
-      console.log(name,email,"otp contoller");
       
       const  resendOTP = await this.tutorUseCase.resend_otp(name,email)
       return res.status(resendOTP.status).json(resendOTP.data);
@@ -87,7 +83,6 @@ class TutorController {
     try {
 
       const {name,email,phone,password,isGoogled} = req.body
-      console.log(name,email,phone,password,isGoogled,"google controller");
 
       const checkExist = await this.tutorUseCase.checkExist(email)
 
@@ -100,16 +95,13 @@ class TutorController {
           isGoogle:isGoogled
         }
 
-        const savedTutor = await this.tutorUseCase.saveTutor(data);
-        console.log(savedTutor,"goo");
+         await this.tutorUseCase.saveTutor(data);
         const tutor = await this.tutorUseCase.login(email,password)
-        console.log(tutor,"login controller");
         return res.status(tutor.status).json(tutor.data)
        
 
       } else if(checkExist.data.status == false){
         const user = await this.tutorUseCase.login(email,password)
-        console.log(user,"login controller");
         return res.status(user.status).json(user.data)
       }
       

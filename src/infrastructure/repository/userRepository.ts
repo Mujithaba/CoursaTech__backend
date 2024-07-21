@@ -27,18 +27,14 @@ class UserRepository implements UserRepo{
             role:role,
             generatedAt:new Date()
         })
-        const saveOtp = await newOtpDoc.save();
-        console.log(saveOtp,"otp db");
-        
+        const saveOtp = await newOtpDoc.save();        
         return saveOtp;
     }
 
     // otp details finding from otpDB using email
     async findOtpByEmail(email:string,role:string):Promise<any>{
         const otpData = await otpDocModel.findOne({email:email,role:role}).sort({generatedAt : -1});
-        console.log(otpData,"repo otp data");
         return otpData
-        
     }
 
 }
