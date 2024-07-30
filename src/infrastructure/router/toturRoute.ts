@@ -7,6 +7,7 @@ import sendotp from '../services/sendMailer';
 import EncryptPassword from '../services/bcryptPassword';
 import { Req,Res,Next } from '../type/expressTypes';
 import JwtToken from '../services/generateToken';
+import { tutorAuth } from '../middleware/tutorAuth';
 
 
 const route = express.Router();
@@ -31,7 +32,12 @@ route.post('/register',(req:Req,res:Res,next:Next)=>tutorController.signup(req,r
 route.post('/verify',(req:Req,res:Res,next:Next)=>tutorController.verifyOTP(req,res,next));
 route.post('/login',(req:Req,res:Res,next:Next)=>tutorController.login(req,res,next));
 route.post('/googleTutorIN',(req:Req,res:Res,next:Next)=>tutorController.googleUse(req,res,next));
-route.post('/resendOTP',(req:Req,res:Res,next:Next)=>tutorController.resendOtp(req,res,next))
+route.post('/resendOTP',(req:Req,res:Res,next:Next)=>tutorController.resendOtp(req,res,next));
+route.post('/forgotPassEmail',(req:Req,res:Res,next:Next)=>tutorController.forgotPass(req,res,next));
+route.post('/forgotOTPverify',(req:Req,res:Res,next:Next)=>tutorController.forgotOTPverify(req,res,next));
+route.patch('/forgotPasswordSave',(req:Req,res:Res,next:Next)=>tutorController.resetPassword(req,res,next));
+route.get('/dashboardPage',tutorAuth ,(req: Req, res: Res, next: Next) => tutorController.dashboardPage(req, res, next));
+
 
 
 

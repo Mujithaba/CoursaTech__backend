@@ -4,8 +4,8 @@ export  interface VerifyData {
     roleData: {
       name: string;
       email: string;
-      phone: string;
-      password: string;
+      phone: string ;
+      password: string ;
     };
   }
 

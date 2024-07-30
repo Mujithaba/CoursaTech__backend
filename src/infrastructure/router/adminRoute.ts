@@ -4,6 +4,7 @@ import AdminRepository from "../repository/adminRepository";
 import AdminUseCase from "../../useCase/adminUseCase";
 import AdminController from "../../adapters/adminController";
 import { Next, Req, Res } from "../type/expressTypes";
+import { adminAuth } from "../middleware/adminAuth";
 
 
 const route = express.Router();
@@ -21,11 +22,11 @@ const adminController = new AdminController(adminUseCase);
 
 
 // endpoints
-route.get('/getAllUsers',(req:Req,res:Res,next:Next)=>adminController.getUsers(req,res,next))
-route.patch('/userBlock',(req:Req,res:Res,next:Next)=>adminController.blockUser(req,res,next))
-route.patch('/userUnblock',(req:Req,res:Res,next:Next)=>adminController.unblockUser(req,res,next))
-route.get('/getAllTutors',(req:Req,res:Res,next:Next)=>adminController.getTutors(req,res,next))
-route.patch('/tutorBlock',(req:Req,res:Res,next:Next)=>adminController.blockTutor(req,res,next))
-route.patch('/tutorUnblock',(req:Req,res:Res,next:Next)=>adminController.unblockTutor(req,res,next))
-
+route.get('/getAllUsers',adminAuth,(req:Req,res:Res,next:Next)=>adminController.getUsers(req,res,next))
+route.patch('/userBlock',adminAuth,(req:Req,res:Res,next:Next)=>adminController.blockUser(req,res,next))
+route.patch('/userUnblock',adminAuth,(req:Req,res:Res,next:Next)=>adminController.unblockUser(req,res,next))
+route.get('/getAllTutors',adminAuth,(req:Req,res:Res,next:Next)=>adminController.getTutors(req,res,next))
+route.patch('/tutorBlock',adminAuth,(req:Req,res:Res,next:Next)=>adminController.blockTutor(req,res,next))
+route.patch('/tutorUnblock',adminAuth,(req:Req,res:Res,next:Next)=>adminController.unblockTutor(req,res,next))
+  
 export default route

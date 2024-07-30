@@ -11,11 +11,14 @@ class AdminController {
   // taking all users for listing them
   async getUsers(req: Req, res: Res, next: Next) {
     try {
-      const userList = await this.adminUseCase.usersData();
+      const page = parseInt(req.query.page as string, 10) || 1;
+      const limit = parseInt(req.query.limit as string, 10) || 3;
+  
+      const userList = await this.adminUseCase.usersData(page, limit);
       return res.status(userList.status).json(userList.data);
     } catch (error) {
       next(error);
-    }
+    }  
   }
 
   // user block
@@ -54,10 +57,12 @@ class AdminController {
     // taking all tutors for listing them
     async getTutors(req: Req, res: Res, next: Next) {
       try {
-        const tutorsList = await this.adminUseCase.tutorsData();
-        console.log(tutorsList,"tutotr data");
-        
+        const page = parseInt(req.query.page as string, 10) || 1;
+        const limit = parseInt(req.query.limit as string, 10) || 3;
+    
+        const tutorsList = await this.adminUseCase.tutorsData(page, limit);
         return res.status(tutorsList.status).json(tutorsList.data);
+
       } catch (error) {
         next(error);
       }

@@ -7,6 +7,7 @@ import sendotp from "../services/sendMailer";
 import EncryptPassword from "../services/bcryptPassword";
 import { Next, Req, Res } from "../type/expressTypes";
 import JwtToken from "../services/generateToken";
+import { userAuth } from "../middleware/userAuth";
 
 
 const route = express.Router();
@@ -30,7 +31,10 @@ route.post('/signUp',(req:Req,res:Res,next:Next)=> userController.signUp(req,res
 route.post('/verify',(req:Req,res:Res,next:Next)=>userController.verifyOTP(req,res,next));
 route.post('/login',(req:Req,res:Res,next:Next)=>userController.login(req,res,next));
 route.post('/googleIN',(req:Req,res:Res,next:Next)=>userController.googleUse(req,res,next));
-route.post('/resendOTP',(req:Req,res:Res,next:Next)=>userController.resendOtp(req,res,next))
-
+route.post('/resendOTP',(req:Req,res:Res,next:Next)=>userController.resendOtp(req,res,next));
+route.post('/forgotPassEmail',(req:Req,res:Res,next:Next)=>userController.forgotPass(req,res,next));
+route.post('/forgotOTPverify',(req:Req,res:Res,next:Next)=>userController.forgotOTPverify(req,res,next));
+route.patch('/forgotPasswordSave',(req:Req,res:Res,next:Next)=>userController.resetPassword(req,res,next));
+route.get('/homePage',userAuth ,(req: Req, res: Res, next: Next) => userController.homePage(req, res, next));
 
 export default route;

@@ -11,19 +11,22 @@ class AdminUseCase {
     this.GenerateMail = generateMail;
   }
 
-  async usersData() {
-    const getUsers = await this.AdminRepository.findUsers();
-    if (getUsers !== null) {
+  async usersData(page: number, limit: number) {
+    const { users, totalUsers } = await this.AdminRepository.findUsers(page, limit);
+    if (users !== null) {
       return {
         status: 200,
-        data: getUsers,
+        data: {
+          users,
+          totalUsers,
+        },
       };
     } else {
       return {
         status: 400,
         data: {
           status: false,
-          message: "Something went wrong so not getting users",
+          message: "Something went wrong, unable to fetch users",
         },
       };
     }
@@ -74,23 +77,28 @@ async userUnblock(user_id:string){
 }
 
 // all tutors data 
-async tutorsData() {
-  const getTutors = await this.AdminRepository.findTutors();
-  if (getTutors !== null) {
+async tutorsData (page: number, limit: number) {
+  const { tutors, totalTutors } = await this.AdminRepository.findTutors(page, limit);
+  if (tutors !== null) {
     return {
       status: 200,
-      data: getTutors,
+      data: {
+        tutors,
+        totalTutors,
+      },
     };
   } else {
     return {
       status: 400,
       data: {
         status: false,
-        message: "Something went wrong so not getting users",
+        message: "Something went wrong, unable to fetch tutors",
       },
     };
   }
 }
+
+
 
  // block user
  async tutorBlock(tutor_id: string) {

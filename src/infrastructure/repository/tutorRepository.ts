@@ -19,6 +19,14 @@ async findByEmail(email: string): Promise<Tutor | null> {
     return res
 }
 
+  // find by id
+  async findById(tutorId: string): Promise<Tutor | null> {
+    const tutorData = await tutorModel.findById({_id:tutorId})
+    console.log(tutorData,"find by id");
+    return tutorData
+    
+  }
+
 // otp taking from db
 async saveOtp(name: string, email: string, otp: number, role: string): Promise<any> {
     const newOtpDoc = new OtpDocModel({
@@ -40,6 +48,16 @@ async findOtpByEmail(email: string,role:string): Promise<any> {
     return otpData
 }
 
+async forgotPassUpdate(
+    email: string,
+    hashPassword: string
+  ): Promise<boolean> {
+    const result = await tutorModel.updateOne(
+      { email: email },
+      { $set: { password: hashPassword } }
+    );
+    return result.modifiedCount > 0;
+  }
 
 }
 

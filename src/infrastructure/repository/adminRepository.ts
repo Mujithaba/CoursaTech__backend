@@ -6,9 +6,21 @@ import userModel from "../database/userModels/userModel";
 
 class AdminRepository implements AdminRep {
 
-  async findUsers(): Promise<User[] | null> {
-    const users = await userModel.find({ isAdmin: false });
-    return users;
+  // async findUsers(page: number, limit: number): Promise<{ users: User[], totalUsers: number }> {
+  //   const totalUsers = await userModel.countDocuments({ isAdmin: false });
+  //   const users = await userModel
+  //     .find({ isAdmin: false })
+  //     .skip((page - 1) * limit)
+  //     .limit(limit);
+  //   return { users, totalUsers };
+  // }
+  async findUsers(page: number, limit: number): Promise<{ users: User[]; totalUsers: number }> {
+    const totalUsers = await userModel.countDocuments({ isAdmin: false });
+    const users = await userModel
+      .find({ isAdmin: false })
+      .skip((page - 1) * limit)
+      .limit(limit);
+    return { users, totalUsers };
   }
 
   // block user
@@ -32,9 +44,13 @@ class AdminRepository implements AdminRep {
   }
 
   // taking all tutors from db
-  async findTutors(): Promise<Tutor[] | null> {
-    const tutors = await tutorModel.find();
-    return tutors;
+  async findTutors(page: number, limit: number): Promise<{tutors:Tutor[] ,totalTutors:number}> {
+    const totalTutors = await tutorModel.countDocuments();
+    const tutors = await userModel
+      .find()
+      .skip((page - 1) * limit)
+      .limit(limit);
+    return { tutors, totalTutors };
   }
 
    // block user
