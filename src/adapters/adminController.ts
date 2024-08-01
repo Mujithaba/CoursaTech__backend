@@ -1,6 +1,7 @@
 import { json } from "stream/consumers";
-import { Req, Res, Next } from "../infrastructure/type/expressTypes";
+import { Req, Res, Next, Obj } from "../infrastructure/type/expressTypes";
 import AdminUseCase from "../useCase/adminUseCase";
+import ICategory from "../domain/Icategory";
 
 class AdminController {
   private adminUseCase: AdminUseCase;
@@ -98,6 +99,93 @@ class AdminController {
       }
     } catch (error) {
       next(error);
+    }
+  }
+
+  // save category
+  async saveCategory (req:Req,res:Res,next:Next){
+    try {
+      console.log("cate contrller");
+      
+      const {category} = req.body
+      console.log("category",category);
+
+      const Category:ICategory ={categoryName:category}
+     
+      const saveCategory = await this.adminUseCase.saveCategory(Category)
+      if (saveCategory.status == 201) {
+        return res.status(saveCategory.status).json(saveCategory.data)
+      } else {
+        return res.status(saveCategory.status).json({ message: saveCategory.message })
+      }
+      
+    } catch (error) {
+      next(error)
+    }
+  }
+
+  // taking all users for listing them
+  async getCategories(req: Req, res: Res, next: Next) {
+    try {
+      const page = parseInt(req.query.page as string, 10) || 1;
+      const limit = parseInt(req.query.limit as string, 10) || 3;
+  
+      const cateList = await this.adminUseCase.categoryData(page, limit);
+      return res.status(cateList.status).json(cateList.data);
+    } catch (error) {
+      next(error);
+    }  
+  }
+
+   //category unlist
+   async categoryUnlist(req: Req, res: Res, next: Next) {
+    try {
+      const { categoryID } = req.body;
+      console.log("blk conntroller", categoryID);
+      const result = await this.adminUseCase.categoryUnlist(categoryID);
+
+      if (result.status == 200) {
+        return res.status(result.status).json(result.data.message);
+      } else {
+        return res.status(result.status).json(result.data.message);
+      }
+    } catch (error) {
+      next(error);
+    }
+  }
+  //category list
+  async categoryList(req: Req, res: Res, next: Next) {
+    try {
+      const { categoryID } = req.body;
+      console.log("blk conntroller", categoryID);
+      const result = await this.adminUseCase.categoryList(categoryID);
+
+      if (result.status == 200) {
+        return res.status(result.status).json(result.data.message);
+      } else {
+        return res.status(result.status).json(result.data.message);
+      }
+    } catch (error) {
+      next(error);
+    }
+  }
+  // category update
+  async categoryEdit (req:Req,res:Res,next:Next){
+    try {
+      console.log("edit controller");
+      
+      const {newCategory,categoryID}= req.body
+      console.log(newCategory,categoryID,"kkkkk");
+      
+      const result = await this.adminUseCase.categoryUpdate(newCategory,categoryID)
+      if (result.status == 200) {
+        return res.status(result.status).json({message:result.message})
+      } else {
+        
+        return res.status(result.status).json({message:result.message})
+      }
+    } catch (error) {
+      next(error)
     }
   }
 }

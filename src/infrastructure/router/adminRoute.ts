@@ -28,5 +28,10 @@ route.patch('/userUnblock',adminAuth,(req:Req,res:Res,next:Next)=>adminControlle
 route.get('/getAllTutors',adminAuth,(req:Req,res:Res,next:Next)=>adminController.getTutors(req,res,next))
 route.patch('/tutorBlock',adminAuth,(req:Req,res:Res,next:Next)=>adminController.blockTutor(req,res,next))
 route.patch('/tutorUnblock',adminAuth,(req:Req,res:Res,next:Next)=>adminController.unblockTutor(req,res,next))
+route.post('/addCategory',adminAuth,(req:Req,res:Res,next:Next)=>adminController.saveCategory(req,res,next))
+route.get('/getCagories',adminAuth,(req:Req,res:Res,next:Next)=>adminController.getCategories(req,res,next))
+route.patch('/categoryUnlist',adminAuth,(req:Req,res:Res,next:Next)=>adminController.categoryUnlist(req,res,next))
+route.patch('/categorylist',adminAuth,(req:Req,res:Res,next:Next)=>adminController.categoryList(req,res,next))
+route.patch('/categoryEdit',adminAuth,(req:Req,res:Res,next:Next)=>adminController.categoryEdit(req,res,next))
   
 export default route
