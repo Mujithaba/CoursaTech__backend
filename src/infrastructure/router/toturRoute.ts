@@ -8,7 +8,8 @@ import EncryptPassword from '../services/bcryptPassword';
 import { Req,Res,Next } from '../type/expressTypes';
 import JwtToken from '../services/generateToken';
 import { tutorAuth } from '../middleware/tutorAuth';
-
+import S3Uploader from '../services/s3BucketAWS';
+import { uploader } from '../middleware/multer';
 
 const route = express.Router();
 
@@ -17,12 +18,13 @@ const GenerateMail = new sendotp();
 const generateOtp =new GenerateOtp();
 const encryptPassword = new EncryptPassword();
 const jwtToken = new JwtToken();
+const s3Uploader = new S3Uploader();
 
 // tutor repository
 const tutorRepository = new TutorRepository();
 
 // tutor usecase
-const tutorUseCase = new TutorUseCase(tutorRepository,encryptPassword,generateOtp,GenerateMail,jwtToken);
+const tutorUseCase = new TutorUseCase(tutorRepository,encryptPassword,generateOtp,GenerateMail,jwtToken,s3Uploader);
 
 // tutor controller
 const tutorController = new TutorController(tutorUseCase);
@@ -37,6 +39,11 @@ route.post('/forgotPassEmail',(req:Req,res:Res,next:Next)=>tutorController.forgo
 route.post('/forgotOTPverify',(req:Req,res:Res,next:Next)=>tutorController.forgotOTPverify(req,res,next));
 route.patch('/forgotPasswordSave',(req:Req,res:Res,next:Next)=>tutorController.resetPassword(req,res,next));
 route.get('/dashboardPage',tutorAuth ,(req: Req, res: Res, next: Next) => tutorController.dashboardPage(req, res, next));
+route.post('/basicInfoUpload',uploader.fields([ 
+                                    { name: 'thumbnail', maxCount: 1 },
+                                    { name: 'video', maxCount: 1 }
+                                ]) ,(req: Req, res: Res, next: Next) => tutorController.courseBasicInfoSave(req, res, next));
+route.get('/getAllCategories',(req:Req,res:Res,next:Next)=>tutorController.getCategories(req,res,next))
 
 
 

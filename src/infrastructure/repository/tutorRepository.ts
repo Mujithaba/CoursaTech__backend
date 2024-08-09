@@ -2,6 +2,11 @@ import Tutor from "../../domain/tutor";
 import TutorRepo from "../../useCase/Interface/tutorRepo";
 import tutorModel from "../database/tutorModel/tutorModel";
 import OtpDocModel from "../database/commonModel/otpDocModel";
+import courseModel from "../database/tutorModel/courseModel";
+import ICourse from "../../domain/course/course";
+import { log } from "console";
+import ICategory from "../../domain/Icategory";
+import categoryModel from "../database/adminModel/categoryModel";
 
 
 class TutorRepository implements TutorRepo {
@@ -10,6 +15,8 @@ class TutorRepository implements TutorRepo {
     async saves(tutor:Tutor):Promise<Tutor>{
         const newTutor = new tutorModel(tutor)
         const saveTutor = await newTutor.save()
+        console.log(saveTutor,"_id kittiyo");
+        
         return saveTutor
     }
 
@@ -25,7 +32,7 @@ async findByEmail(email: string): Promise<Tutor | null> {
     console.log(tutorData,"find by id");
     return tutorData
     
-  }
+  }   
 
 // otp taking from db
 async saveOtp(name: string, email: string, otp: number, role: string): Promise<any> {
@@ -59,6 +66,17 @@ async forgotPassUpdate(
     return result.modifiedCount > 0;
   }
 
+  // course creation
+  async createCourse(course: ICourse): Promise<ICourse> {
+    const newCOurse = new courseModel(course)
+    const saveCourse = await newCOurse.save()
+    console.log(saveCourse,"repo save course");
+    return saveCourse
+  }
+  async getCategory(): Promise<ICategory[]> {
+    const getData = await categoryModel.find({is_listed:true})
+    return getData
+  }
 }
 
 export default TutorRepository;

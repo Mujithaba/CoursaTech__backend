@@ -40,7 +40,7 @@ class userConroller {
 
       if (OTPverification.status == 400) {
         return res
-          .status(OTPverification.status)
+          .status(OTPverification.status)  
           .json({ message: OTPverification.message });
       }
       if (OTPverification.data && OTPverification.status == 200) {

@@ -1,6 +1,12 @@
-import { Req, Res, Next } from "../infrastructure/type/expressTypes";
+import { log } from "console";
+import { Req, Res, Next, IFile } from "../infrastructure/type/expressTypes";
 import { VerifyData } from "../useCase/Interface/verifyData";
 import TutorUseCase from "../useCase/tutorUseCase";
+
+// interface FileFields {
+//   thumbnail?: Express.Multer.File[];
+//   video?: Express.Multer.File[];
+// }
 
 class TutorController {
   private tutorUseCase: TutorUseCase;
@@ -113,9 +119,9 @@ class TutorController {
 
       const tutor = await this.tutorUseCase.forgotPassword(email);
 
-      if (tutor.status == 403) { 
+      if (tutor.status == 403) {
         return res.status(tutor.status).json(tutor.data);
-      } else if(tutor.status == 200) {
+      } else if (tutor.status == 200) {
         return res.status(tutor.status).json(tutor.data);
       } else {
         return res.status(tutor.status).json(tutor.data);
@@ -129,7 +135,7 @@ class TutorController {
   async forgotOTPverify(req: Req, res: Res, next: Next) {
     try {
       const data: VerifyData = req.body;
-      console.log(data,"ppp");
+      console.log(data, "ppp");
 
       const verify = await this.tutorUseCase.verify(data);
       console.log(verify.data?.email, "verify");
@@ -162,21 +168,66 @@ class TutorController {
     }
   }
 
-   // homePage
-   async dashboardPage(req:Req,res:Res,next:Next){
+  // homePage
+  async dashboardPage(req: Req, res: Res, next: Next) {
     try {
-      console.log(req.query.id,"tutor id in controller");
-      const tutorId = req.query.id as string
-      
-      const tutor = await this.tutorUseCase.getUser(tutorId)
+      console.log(req.query.id, "tutor id in controller");
+      const tutorId = req.query.id as string;
+
+      const tutor = await this.tutorUseCase.getUser(tutorId);
       console.log(tutor);
 
       if (tutor.status == 200) {
-        return res.status(tutor.status).json(tutor.data?.data)
+        return res.status(tutor.status).json(tutor.data?.data);
       } else {
-        return res.status(tutor.status).json(tutor.data?.message)
+        return res.status(tutor.status).json(tutor.data?.message);
       }
+    } catch (error) {
+      next(error);
+    }
+  }
 
+  // course basic info save
+  async courseBasicInfoSave(req: Req, res: Res, next: Next) {
+    try {
+      // console.log(req.body.instructor_id,"data");
+      const files = req.files as { [fieldname: string]: Express.Multer.File[] };
+      const thumbnailFiles = files["thumbnail"];
+      const videoFiles = files["video"];
+
+      const thumbnail = thumbnailFiles[0];
+      const video = videoFiles[0];
+      const { title, description, instructor_id, category, price } = req.body;
+      const courseInfo = { title, description, instructor_id, category, price };
+
+      const basicsData = await this.tutorUseCase.uploadBasicInfo(
+        thumbnail,
+        video,
+        courseInfo
+      );
+
+      if (basicsData) {
+        return res
+          .status(basicsData.status)
+          .json({
+            message: "Course Basic Info Created Successfully",
+            data: basicsData,
+          });
+      }
+    } catch (error) {
+      next(error);
+    }
+  }  
+
+  async getCategories(req: Req, res: Res, next: Next) {
+    try {
+      const categories = await this.tutorUseCase.getCategory()
+      if (categories) {
+        return res.status(categories.status).json(categories.data)
+      } 
+      // else {  
+      //   return res.status(categories.status)
+      // }
     } catch (error) {
       next(error)
     }
