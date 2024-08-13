@@ -1,5 +1,6 @@
 import Assignment from "./assignment";
 import Modules from "./chapter";
+import mongoose from "mongoose";
 
 interface ICourse{
     _id?:string;

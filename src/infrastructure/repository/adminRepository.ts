@@ -5,6 +5,8 @@ import tutorModel from "../database/tutorModel/tutorModel";
 import userModel from "../database/userModels/userModel";
 import ICategory from "../../domain/Icategory";
 import categoryModel from "../database/adminModel/categoryModel";
+import { time } from "console";
+import courseModel from "../database/tutorModel/courseModel";
 
 class AdminRepository implements AdminRep {
   // async findUsers(page: number, limit: number): Promise<{ users: User[], totalUsers: number }> {
@@ -150,6 +152,49 @@ class AdminRepository implements AdminRep {
       success: result.modifiedCount > 0,
       reason: result.modifiedCount > 0 ? "" : "Failed to update category",
     };
+  }
+  // get all course
+  async getCourses(): Promise<{}[]> {
+    const coursesData = await courseModel.find().populate({
+      path: 'category_id',
+      select: 'categoryName',
+    })
+    .populate({path:'chapters',
+      model:"Module",
+      select:'name lectures createdAt',
+      populate:{
+        path:'lectures',
+        model:"Lecture",
+        select: 'title description  video  pdf createdAt'
+      }
+      })
+    .lean()
+    .exec();
+
+    return coursesData;
+  }
+  // getCourseView
+  async getCourseView(course_id: string): Promise<any> {
+    const getTutorCourses = await courseModel
+    .findById(course_id)
+    .populate({
+      path: 'category_id',
+      select: 'categoryName',
+    })
+    .populate({path:'chapters',
+      model:"Module",
+      select:'name lectures createdAt',
+      populate:{
+        path:'lectures',
+        model:"Lecture",
+        select: 'title description  video  pdf createdAt'
+      }
+      })
+    .lean()
+    .exec();
+    console.dir(getTutorCourses, { depth: null, colors: true });
+    
+  return getTutorCourses;
   }
 }
 

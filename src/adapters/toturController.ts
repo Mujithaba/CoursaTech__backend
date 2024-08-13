@@ -207,27 +207,102 @@ class TutorController {
       );
 
       if (basicsData) {
-        return res
-          .status(basicsData.status)
-          .json({
-            message: "Course Basic Info Created Successfully",
-            data: basicsData,
-          });
+        return res.status(basicsData.status).json({
+          message: "Course created successfully,Now you can add modules",
+          data: basicsData,
+        });
       }
     } catch (error) {
       next(error);
     }
-  }  
+  }
 
   async getCategories(req: Req, res: Res, next: Next) {
     try {
-      const categories = await this.tutorUseCase.getCategory()
+      const categories = await this.tutorUseCase.getCategory();
       if (categories) {
-        return res.status(categories.status).json(categories.data)
-      } 
-      // else {  
-      //   return res.status(categories.status)
-      // }
+        return res.status(categories.status).json(categories.data);
+      }
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  // get instructors courses
+  async getInstructorCourses(req: Req, res: Res, next: Next) {
+    try {
+      console.log("coming to instructor course");
+      
+      const id = req.query.id as string;
+      const instructorCourses = await this.tutorUseCase.getCourses(id);
+      if (instructorCourses) {
+        return res
+          .status(instructorCourses.status)
+          .json(instructorCourses.data);
+      } else {
+        return res.status(404).json({ message: "No courses found" });
+      }
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  // uploading Curicculum
+  async uploadingCuricculum(req: Req, res: Res, next: Next) {
+    try {
+      console.log("curicculum");
+
+      
+      const course_id = req.body.course_id;
+      const modules = JSON.parse(req.body.modules);
+      // console.log(course_id, modules, "llllllooooiiiiqqq");
+  
+     
+      const files = req.files as Express.Multer.File[];
+  
+      if (!Array.isArray(modules) || !course_id) {
+        return res.status(400).json({ message: "Invalid input" });
+      }
+
+      const uploadData = await this.tutorUseCase.uploadCuricculum(
+        course_id,
+        modules,
+        files
+      );
+  
+      return res.status(uploadData.status).json(uploadData.data)
+    } catch (error) {
+      console.error("Error in uploadingCuricculum:", error); 
+      next(error); 
+    }
+  }
+// get curicculum 
+  // async getCuricculums(req:Req,res:Res,next:Next){
+  //   try {
+  //     const course_id =  req.body.id
+  //     console.log(course_id,"get curicculums");
+      
+  //   } catch (error) {
+  //     next(error)
+  //   }
+  // }
+
+  async getViewCourse (req:Req,res:Res,next:Next){
+    try {
+      console.log("getViewCourse controller");
+      const id = req.query.id as string
+      console.log( id,"getViewCourse controller");
+      const courseViewData = await this.tutorUseCase.getViewCourse(id);
+
+      if (courseViewData) {
+        return res
+          .status(courseViewData.status)
+          .json(courseViewData.data);
+      } else {
+        return res.status(404).json({ message: "No course found" });
+      }
+      
+      
     } catch (error) {
       next(error)
     }

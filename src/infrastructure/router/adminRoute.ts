@@ -5,6 +5,7 @@ import AdminUseCase from "../../useCase/adminUseCase";
 import AdminController from "../../adapters/adminController";
 import { Next, Req, Res } from "../type/expressTypes";
 import { adminAuth } from "../middleware/adminAuth";
+import S3Uploader from "../services/s3BucketAWS";
 
 
 const route = express.Router();
@@ -12,11 +13,12 @@ const route = express.Router();
 
 // services
 const GenerateMail  = new sendotp()
+const s3Uploader = new S3Uploader();
 
 // repository
 const adminRepository = new AdminRepository()
 // use case
-const adminUseCase = new AdminUseCase(adminRepository,GenerateMail)
+const adminUseCase = new AdminUseCase(adminRepository,GenerateMail,s3Uploader)
 // controller
 const adminController = new AdminController(adminUseCase);
 
@@ -33,5 +35,7 @@ route.get('/getCagories',adminAuth,(req:Req,res:Res,next:Next)=>adminController.
 route.patch('/categoryUnlist',adminAuth,(req:Req,res:Res,next:Next)=>adminController.categoryUnlist(req,res,next))
 route.patch('/categorylist',adminAuth,(req:Req,res:Res,next:Next)=>adminController.categoryList(req,res,next))
 route.patch('/categoryEdit',adminAuth,(req:Req,res:Res,next:Next)=>adminController.categoryEdit(req,res,next))
+route.get('/getCourse',adminAuth,(req:Req,res:Res,next:Next)=>adminController.getCourse(req,res,next))
+route.get('/getViewCourse',adminAuth,(req:Req,res:Res,next:Next)=>adminController.ViewCourses(req,res,next))
   
 export default route

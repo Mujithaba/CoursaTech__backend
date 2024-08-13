@@ -1,9 +1,10 @@
 interface Lecture{
     _id?:string;
+    course_id?:string;
     title:string;
     description:string;
-    video_url:string;
-    pdf_url:string;
+    video:string;
+    pdf:string;
     createdAt?: Date; 
 }
 

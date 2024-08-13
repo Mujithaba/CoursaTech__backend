@@ -16,7 +16,7 @@ class UserRepository implements UserRepo {
   // email finding from DB
   async findByEmail(email: string): Promise<User | null> {
     const userData = await userModel.findOne({ email: email });
-    return userData;
+    return userData;   
   }
 
   // find by id

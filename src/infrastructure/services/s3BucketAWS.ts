@@ -83,6 +83,10 @@ export default class S3Uploader {
     return this.uploadFile(video, 'videos');
   };
 
+  public uploadPDF = async (pdf: Express.Multer.File):Promise<string>=>{
+    return this.uploadFile(pdf,'pdfs')
+  }
+
   public getSignedUrl = async (
     fileName: string,
     expiresIn: number = 3600

@@ -9,6 +9,9 @@ import S3Uploader from "../infrastructure/services/s3BucketAWS";
 import { IFile, courseInfo } from "../infrastructure/type/expressTypes";
 import ICourse from "../domain/course/course";
 import ICategory from "../domain/Icategory";
+import Modules from "../domain/course/chapter";
+import Module from "module";
+import { title } from "process";
 
 class TutorUseCase {
   private TutorRepository: TutorRepository;
@@ -24,7 +27,7 @@ class TutorUseCase {
     generateOtp: GenerateOtp,
     generateMail: GenerateMail,
     jwtToken: JwtToken,
-    s3Uploader: S3Uploader
+    s3Uploader: S3Uploader,
   ) {
     this.TutorRepository = tutorRepository;
     this.EncryptPassword = encryptPassword;
@@ -326,25 +329,338 @@ class TutorUseCase {
   }
 
   // get categories
-  async getCategory (){
-    const getCateData = await this.TutorRepository.getCategory()
+  async getCategory() {
+    const getCateData = await this.TutorRepository.getCategory();
     if (getCateData) {
+      return {
+        status: 200,
+        data: {
+          getCateData,
+        },
+      };
+    } else {
+      return {
+        status: 400,
+        data: {
+          message: "Something went wrong fetching category",
+        },
+      };
+    }
+  }
+
+  async getCourses(instructor_id: string) {
+    const getInstructorCourses =
+      await this.TutorRepository.getInstructorCourses(instructor_id);
+    // console.log(getInstructorCourses, "getInstructorCourses");
+    const getTutorCourses = await this.s3GetFunction(getInstructorCourses);
+    
+
+    if (getTutorCourses) {
+      return {
+        status: 200,
+        data: {
+          getTutorCourses,
+        },
+      };
+    } else {
+      return {
+        status: 400,
+        data: {
+          message: "Something went wrong fetching courses",
+        },
+      };
+    }
+  }
+
+  // url thorugh data fetching from s3
+  async s3GetFunction(getTutorCourses: any) {
+    console.log("kkkk");
+    const coursesWithSignedUrls = await Promise.all(
+      getTutorCourses.map(async (course: any) => {
+        let thumbnailUrl = "";
+        let trailerUrl = "";
+
+        if (course.thambnail_Img) {
+          try {
+            thumbnailUrl = await this.S3Uploader.getSignedUrl(
+              course.thambnail_Img
+            );
+          } catch (error) {
+            console.error(
+              `Error generating signed URL for thumbnail: ${course.thambnail_Img}`,
+              error
+            );
+          }
+        }
+
+        if (course.trailer_vd) {
+          try {
+            trailerUrl = await this.S3Uploader.getSignedUrl(course.trailer_vd);
+          } catch (error) {
+            console.error(
+              `Error generating signed URL for trailer: ${course.trailer_vd}`,
+              error
+            );
+          }
+        }
+
+        const moduleWithSignedUrls = await Promise.all(
+          (course.chapters || []).map(async (module:any)=>{
+            const lecturewithSignedUrls = await Promise.all(
+              (module.lectures || []).map(async (lecture:any)=>{
+                let pdfUrl ='';
+                let videoUrl ='';
+
+                if (lecture.pdf) {
+                  try {
+                    pdfUrl = await this.S3Uploader.getSignedUrl(lecture.pdf)
+                  } catch (error) {
+                    console.error(`Error generating signed URL  for lecture pdf:${lecture.pdf}`,error);
+                    
+                  }
+                }
+
+                if (lecture.video) {
+                  try {
+                    videoUrl = await this.S3Uploader.getSignedUrl(lecture.video)
+                  } catch (error) {
+                    console.error(`error generating signed Url for lecture video:${lecture.video}`,error)
+                  }
+                }
+
+                return {
+                  ...lecture,
+                  lecturePdf:pdfUrl,
+                  lectureVideo:videoUrl,
+                }
+
+              })
+            );
+
+            return {
+              ...module,
+              name:module.name,
+              lectures:lecturewithSignedUrls,
+            }
+          })
+        );
+
+        return {
+          ...course,
+          thumbnailSignedUrl: thumbnailUrl,
+          trailerSignedUrl: trailerUrl,
+          modules:moduleWithSignedUrls
+        };
+      })
+    );
+
+    return coursesWithSignedUrls;
+  }
+
+  // uplaoding curicculums
+  async uploadCuricculum(
+    course_id: string,
+    modules: Modules[],
+    files: Express.Multer.File[]
+  ) {
+    // console.log(course_id, modules, "usecase data ");
+    const modules_IDs: string[] = [];
+    const processedModulesIDs: any[] = [];
+    for (const [moduleIndex, module] of modules.entries()) {
+      const processedLecturesIDs: any[] = [];
+
+      console.log("Module Data:", module);
+      // console.log("Module Name:", module.name);
+
+      if (module.lectures) {
+       
+        for (const [lectureIndex, lecture] of module.lectures.entries()) {
+          // console.log("Lecture Data:", lecture);
+
+          const videoFileName = `lectures[${moduleIndex}][${lectureIndex}].video`;
+          const pdfFileName = `lectures[${moduleIndex}][${lectureIndex}].pdf`;
+
+          const videoFile = files.find(
+            (file) => file.fieldname === videoFileName
+          );
+          const pdfFile = files.find((file) => file.fieldname === pdfFileName);
+
+          let videoUrl=''
+          let pdfUrl = ''
+
+          if (pdfFile) {
+            // console.log("PDF File:", pdfFile);
+            pdfUrl = await this.S3Uploader.uploadPDF(pdfFile)
+           
+          }
+          if (videoFile) {
+            // console.log("Video File:", videoFile);
+            videoUrl = await this.S3Uploader.uploadVideo(videoFile)
+            
+          }
+
+
+          const processedLecture = {
+            course_id:course_id,
+            title: lecture.title,
+            description: lecture.description,
+            video: videoUrl,
+            pdf: pdfUrl,
+          };
+
+          const savedLecture =await this.TutorRepository.saveLectures(processedLecture)
+
+          if (savedLecture) {
+            processedLecturesIDs.push(savedLecture._id)
+          }else{
+            console.log("savedLecture is cause a error");
+            
+          }
+        }
+
+      }
+
+      const processedModule ={
+        course_id:course_id,
+        name:module.name,
+        lectures:processedLecturesIDs
+      }
+      const savedModuleID = await this.TutorRepository.saveModules(processedModule)
+      if(savedModuleID){
+        processedModulesIDs.push(savedModuleID)
+      }else{
+        console.log("savedModule cause a error");
+        
+      }
+
+      
+    }
+    // save module id's to chapter field of array
+    const curicculumData = await this.TutorRepository.saveModulesIdToChapter(course_id,processedModulesIDs)
+    if (curicculumData) {
+      console.log(curicculumData,"processed saved");
       return {
         status:200,
         data:{
-          getCateData
+          message:"Curicculum added successfully",
+          data:curicculumData
         }
       }
     } else {
+      console.log("something chapter updtion");
       return {
         status:400,
         data:{
-          message:"Something went wrong fetching category"
+        message:"Somehting went wrong when adding curicculum"
         }
       }
     }
 
   }
-}
 
+  // async getCurriculums(courseId:string){
+  //   console.log(courseId,"use case of get curriculum");
+    
+  // }
+
+  //individual getViewCourse
+  async getViewCourse (course_id:string){
+    const getCourses =
+      await this.TutorRepository.getCourseView(course_id);
+    console.log(getCourses, "getInstructorCourses");
+    const getTutorCourses = await this.s3GenerateForViewCourse(getCourses);
+    console.log(getTutorCourses, "aray s3 bucke");
+
+    if (getTutorCourses) {
+      return {
+        status: 200,
+        data: {
+          getTutorCourses,
+        },
+      };
+    } else {
+      return {
+        status: 400,
+        data: {
+          message: "Something went wrong fetching courses",
+        },
+      };
+    }
+  }
+  // individual courseview
+  async s3GenerateForViewCourse (course:any){
+    console.log("Processing course...");
+
+    let thumbnailUrl = "";
+    let trailerUrl = "";
+  
+    if (course.thambnail_Img) {
+      try {
+        thumbnailUrl = await this.S3Uploader.getSignedUrl(course.thambnail_Img);
+      } catch (error) {
+        console.error(
+          `Error generating signed URL for thumbnail: ${course.thambnail_Img}`,
+          error
+        );
+      }
+    }
+  
+    if (course.trailer_vd) {
+      try {
+        trailerUrl = await this.S3Uploader.getSignedUrl(course.trailer_vd);
+      } catch (error) {
+        console.error(
+          `Error generating signed URL for trailer: ${course.trailer_vd}`,
+          error
+        );
+      }
+    }
+  
+    const moduleWithSignedUrls = await Promise.all(
+      (course.chapters || []).map(async (module: any) => {
+        const lecturewithSignedUrls = await Promise.all(
+          (module.lectures || []).map(async (lecture: any) => {
+            let pdfUrl = '';
+            let videoUrl = '';
+  
+            if (lecture.pdf) {
+              try {
+                pdfUrl = await this.S3Uploader.getSignedUrl(lecture.pdf);
+              } catch (error) {
+                console.error(`Error generating signed URL for lecture PDF: ${lecture.pdf}`, error);
+              }
+            }
+  
+            if (lecture.video) {
+              try {
+                videoUrl = await this.S3Uploader.getSignedUrl(lecture.video);
+              } catch (error) {
+                console.error(`Error generating signed URL for lecture video: ${lecture.video}`, error);
+              }
+            }
+  
+            return {
+              ...lecture,
+              lecturePdf: pdfUrl,
+              lectureVideo: videoUrl,
+            };
+          })
+        );
+  
+        return {
+          ...module,
+          name: module.name,
+          lectures: lecturewithSignedUrls,
+        };
+      })
+    );
+  
+    return {
+      ...course,
+      thumbnailSignedUrl: thumbnailUrl,
+      trailerSignedUrl: trailerUrl,
+      modules: moduleWithSignedUrls,
+    };
+  }
+}
 export default TutorUseCase;

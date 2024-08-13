@@ -27,6 +27,7 @@ interface AdminRep {
     newCategory: string,
     category_id: string
   ): Promise<{ success: boolean; reason: string }>;
+  getCourses():Promise<{}[]>
 }
 
 export default AdminRep;

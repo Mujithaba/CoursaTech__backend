@@ -44,6 +44,9 @@ route.post('/basicInfoUpload',uploader.fields([
                                     { name: 'video', maxCount: 1 }
                                 ]) ,(req: Req, res: Res, next: Next) => tutorController.courseBasicInfoSave(req, res, next));
 route.get('/getAllCategories',(req:Req,res:Res,next:Next)=>tutorController.getCategories(req,res,next))
+route.get('/getInstructorCourses',(req:Req,res:Res,next:Next)=>tutorController.getInstructorCourses(req,res,next))
+route.post('/uploadCuricculum',uploader.any(),(req:Req,res:Res,next:Next)=>tutorController.uploadingCuricculum(req,res,next))
+route.get('/getViewCourse',(req:Req,res:Res,next:Next)=>tutorController.getViewCourse(req,res,next))
 
 
 
