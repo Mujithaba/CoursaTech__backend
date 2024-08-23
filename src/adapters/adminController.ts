@@ -192,10 +192,15 @@ class AdminController {
   async getCourse(req: Req, res: Res, next: Next) {
     try {
       console.log("course admin conroller getting");
+      const { page = 1, limit = 10 } = req.query;
+      const skip = (Number(page) - 1) * Number(limit);
       
-      const getAllCourses = await this.adminUseCase.allCourseGet();
+      const getAllCourses = await this.adminUseCase.allCourseGet(Number(limit), skip);
       if (getAllCourses) {
-        return res.status(getAllCourses.status).json(getAllCourses.data);
+        const totalItems = await this.adminUseCase.countCourses();
+        console.log(totalItems,"total");
+        
+        return res.status(getAllCourses.status).json({ ...getAllCourses.data, totalItems });
       } else {
         return res.status(404).json({ message: "No courses found" });
       }
@@ -206,9 +211,9 @@ class AdminController {
   // get view course
   async ViewCourses(req:Req,res:Res,next:Next){
     try {
-      console.log("getViewCourse controller");
+      
       const id = req.query.id as string
-      console.log( id,"getViewCourse controller");
+      
       const courseViewData = await this.adminUseCase.getViewCourse(id);
 
       if (courseViewData) {
@@ -222,6 +227,55 @@ class AdminController {
       
     } catch (error) {
       next(error)
+    }
+  }
+  // getUnapprovedCourse
+  async unapprovedCourse (req:Req,res:Res,next:Next){
+    try {
+      console.log("getViewCourse controller");
+      const getUnapprCourse = await this.adminUseCase.unapprovedCourses()
+      console.log(getUnapprCourse,"get course unapprove");
+      
+      if (getUnapprCourse) {
+        return res
+          .status(getUnapprCourse.status)
+          .json(getUnapprCourse.data);
+      } else {
+        return res.status(404).json({ message: "No course found" });
+      }
+      
+    } catch (error) {
+      next(error)
+    }
+  }
+  async courseApproved(req: Req, res: Res, next: Next) {
+    try {
+      const { course_id } = req.body;
+      console.log("verify conntroller", course_id);
+      const result = await this.adminUseCase.courseVerify(course_id);
+
+      if (result.status == 200) {
+        return res.status(result.status).json(result.data.message);
+      } else {
+        return res.status(result.status).json(result.data.message);
+      }
+    } catch (error) {
+      next(error);
+    }
+  }
+  async courseUnapproved(req: Req, res: Res, next: Next) {
+    try {
+      const { course_id } = req.body;
+      console.log("verify conntroller", course_id);
+      const result = await this.adminUseCase.courseUnverify(course_id);
+
+      if (result.status == 200) {
+        return res.status(result.status).json(result.data.message);
+      } else {
+        return res.status(result.status).json(result.data.message);
+      }
+    } catch (error) {
+      next(error);
     }
   }
 }

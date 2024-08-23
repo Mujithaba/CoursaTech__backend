@@ -6,20 +6,20 @@ import EncryptPassword from "../infrastructure/services/bcryptPassword";
 import { VerifyData } from "./Interface/verifyData";
 import JwtToken from "../infrastructure/services/generateToken";
 import S3Uploader from "../infrastructure/services/s3BucketAWS";
-import { IFile, courseInfo } from "../infrastructure/type/expressTypes";
+import { IFile, Next, Req, Res, TutorDetails, courseInfo } from "../infrastructure/type/expressTypes";
 import ICourse from "../domain/course/course";
-import ICategory from "../domain/Icategory";
 import Modules from "../domain/course/chapter";
-import Module from "module";
-import { title } from "process";
+import Lecture from "../domain/course/lecture";
+import { log } from "console";
+import { ITutorDetails } from "../domain/tutorDetails";
 
 class TutorUseCase {
-  private TutorRepository: TutorRepository;
-  private EncryptPassword: EncryptPassword;
-  private GenerateOtp: GenerateOtp;
-  private GenerateMail: GenerateMail;
-  private JwtToken: JwtToken;
-  private S3Uploader: S3Uploader;
+  private _tutorRepository: TutorRepository;
+  private _encryptPassword: EncryptPassword;
+  private _generateOtp: GenerateOtp;
+  private _generateMail: GenerateMail;
+  private _jwtToken: JwtToken;
+  private _S3Uploader: S3Uploader;
 
   constructor(
     tutorRepository: TutorRepository,
@@ -27,19 +27,19 @@ class TutorUseCase {
     generateOtp: GenerateOtp,
     generateMail: GenerateMail,
     jwtToken: JwtToken,
-    s3Uploader: S3Uploader,
+    s3Uploader: S3Uploader
   ) {
-    this.TutorRepository = tutorRepository;
-    this.EncryptPassword = encryptPassword;
-    this.GenerateOtp = generateOtp;
-    this.GenerateMail = generateMail;
-    this.JwtToken = jwtToken;
-    this.S3Uploader = s3Uploader;
+    this._tutorRepository = tutorRepository;
+    this._encryptPassword = encryptPassword;
+    this._generateOtp = generateOtp;
+    this._generateMail = generateMail;
+    this._jwtToken = jwtToken;
+    this._S3Uploader = s3Uploader;
   }
 
   //check email exist
   async checkExist(email: string) {
-    const tutorExist = await this.TutorRepository.findByEmail(email);
+    const tutorExist = await this._tutorRepository.findByEmail(email);
 
     if (tutorExist) {
       return {
@@ -62,12 +62,12 @@ class TutorUseCase {
 
   //   tutor sign up
   async signup(name: string, email: string) {
-    const otp = await this.GenerateOtp.createOtp();
+    const otp = await this._generateOtp.createOtp();
     const role = "Tutor";
     console.log(otp, "otp");
 
-    await this.TutorRepository.saveOtp(name, email, otp, role);
-    this.GenerateMail.sendMail(name, email, otp, role);
+    await this._tutorRepository.saveOtp(name, email, otp, role);
+    this._generateMail.sendMail(name, email, otp, role);
     return {
       status: 200,
       data: {
@@ -81,11 +81,13 @@ class TutorUseCase {
   async verify(data: VerifyData) {
     console.log(data.roleData, "tutor sucase otp");
 
-    const otpDetailes = await this.TutorRepository.findOtpByEmail(
+    const otpDetailes = await this._tutorRepository.findOtpByEmail(
       data.roleData.email,
       data.role
     );
-    console.log(otpDetailes, "jjjj");
+    console.log(
+      otpDetailes,
+    );
 
     if (otpDetailes === null) {
       return { status: 400, message: "Invalid or expired OTP" };
@@ -95,9 +97,6 @@ class TutorUseCase {
       return { status: 400, message: "Invalid OTP" };
     }
 
-    // if (otpDetailes.role !== role) {
-    //   return {status:400,message:`No OTP found for ${role} with the provided email.`}
-    // }
     return {
       status: 200,
       message: "OTP verificaton successfully",
@@ -108,11 +107,11 @@ class TutorUseCase {
   async saveTutor(tutor: Tutor) {
     console.log(tutor.password, "pass save ");
 
-    const hashPassword = await this.EncryptPassword.encryptPassword(
+    const hashPassword = await this._encryptPassword.encryptPassword(
       tutor.password as string
     );
     tutor.password = hashPassword;
-    const userSave = await this.TutorRepository.saves(tutor);
+    const userSave = await this._tutorRepository.saves(tutor);
     console.log(hashPassword, "pass hash");
     return {
       status: 201,
@@ -122,7 +121,7 @@ class TutorUseCase {
 
   //   login use case
   async login(email: string, password: string) {
-    const tutor = await this.TutorRepository.findByEmail(email);
+    const tutor = await this._tutorRepository.findByEmail(email);
     let token = "";
 
     if (tutor) {
@@ -147,13 +146,13 @@ class TutorUseCase {
         };
       }
 
-      const passwordMatch = await this.EncryptPassword.compare(
+      const passwordMatch = await this._encryptPassword.compare(
         password,
         tutor.password
       );
 
       if (passwordMatch) {
-        token = this.JwtToken.generateToken(tutor._id, "tutor");
+        token = this._jwtToken.generateToken(tutor._id, "tutor");
         console.log(token, "token");
 
         return {
@@ -187,12 +186,12 @@ class TutorUseCase {
   }
 
   async resend_otp(name: string, email: string) {
-    const otp = this.GenerateOtp.createOtp();
+    const otp = this._generateOtp.createOtp();
     console.log(otp, "OTP");
 
     const role = "Tutor";
-    await this.TutorRepository.saveOtp(name, email, otp, role);
-    this.GenerateMail.sendMail(name, email, otp, role);
+    await this._tutorRepository.saveOtp(name, email, otp, role);
+    this._generateMail.sendMail(name, email, otp, role);
 
     return {
       status: 200,
@@ -204,7 +203,7 @@ class TutorUseCase {
   }
 
   async forgotPassword(email: string) {
-    const tutorExist = await this.TutorRepository.findByEmail(email);
+    const tutorExist = await this._tutorRepository.findByEmail(email);
     console.log(tutorExist, "data");
 
     if (tutorExist?.isGoogle) {
@@ -220,16 +219,16 @@ class TutorUseCase {
     }
 
     if (tutorExist) {
-      const otp = this.GenerateOtp.createOtp();
+      const otp = this._generateOtp.createOtp();
       const role = "Tutor";
 
-      await this.GenerateMail.sendMail(
+      await this._generateMail.sendMail(
         tutorExist.name,
         tutorExist.email,
         otp,
         role
       );
-      await this.TutorRepository.saveOtp(
+      await this._tutorRepository.saveOtp(
         tutorExist.name,
         tutorExist.email,
         otp,
@@ -258,10 +257,10 @@ class TutorUseCase {
   async resetPassword(email: string, password: string) {
     console.log(email, "kkkkoi");
 
-    const hashPassword = await this.EncryptPassword.encryptPassword(
+    const hashPassword = await this._encryptPassword.encryptPassword(
       password as string
     );
-    const result = await this.TutorRepository.forgotPassUpdate(
+    const result = await this._tutorRepository.forgotPassUpdate(
       email,
       hashPassword
     );
@@ -282,7 +281,7 @@ class TutorUseCase {
   async getUser(userId: string) {
     console.log("get user use case");
 
-    const tutorData = await this.TutorRepository.findById(userId);
+    const tutorData = await this._tutorRepository.findById(userId);
     if (tutorData) {
       return {
         status: 200,
@@ -299,15 +298,16 @@ class TutorUseCase {
     }
   }
   // basic course upload
+
   async uploadBasicInfo(
     thumbnail: Express.Multer.File,
     video: Express.Multer.File,
     courseInfo: courseInfo
-  ): Promise<any> {
+  ) {
     console.log("Thumbnail file:", thumbnail);
     console.log("Video file:", video);
-    const s3thumbnail = await this.S3Uploader.uploadImage(thumbnail);
-    const s3TrailerVD = await this.S3Uploader.uploadVideo(video);
+    const s3thumbnail = await this._S3Uploader.uploadImage(thumbnail);
+    const s3TrailerVD = await this._S3Uploader.uploadVideo(video);
     console.log(s3TrailerVD, s3thumbnail, "kkk s3 bucket");
     const data: ICourse = {
       title: courseInfo.title,
@@ -318,8 +318,8 @@ class TutorUseCase {
       trailer_vd: s3TrailerVD,
       price: courseInfo.price,
     };
-    const cousrseData = await this.TutorRepository.createCourse(data);
-    console.log(cousrseData, "cousrseCreate use case");
+    const cousrseData = await this._tutorRepository.createCourse(data);
+    console.log(cousrseData, "cousrseCreate use case$$$$$$$$$$$$$$$$$$");
     if (cousrseData) {
       return {
         status: 201,
@@ -330,7 +330,7 @@ class TutorUseCase {
 
   // get categories
   async getCategory() {
-    const getCateData = await this.TutorRepository.getCategory();
+    const getCateData = await this._tutorRepository.getCategory();
     if (getCateData) {
       return {
         status: 200,
@@ -348,12 +348,11 @@ class TutorUseCase {
     }
   }
 
-  async getCourses(instructor_id: string) {
+  async getCourses(instructor_id: string,limit: number, skip: number) {
     const getInstructorCourses =
-      await this.TutorRepository.getInstructorCourses(instructor_id);
+      await this._tutorRepository.getInstructorCourses(instructor_id,limit, skip);
     // console.log(getInstructorCourses, "getInstructorCourses");
     const getTutorCourses = await this.s3GetFunction(getInstructorCourses);
-    
 
     if (getTutorCourses) {
       return {
@@ -371,9 +370,13 @@ class TutorUseCase {
       };
     }
   }
+  async countCourses(id:string){
+    const itemsCount = await this._tutorRepository.coursesCount(id)
+    return itemsCount
+  }
 
   // url thorugh data fetching from s3
-  async s3GetFunction(getTutorCourses: any) {
+  async s3GetFunction(getTutorCourses: {}[]) {
     console.log("kkkk");
     const coursesWithSignedUrls = await Promise.all(
       getTutorCourses.map(async (course: any) => {
@@ -382,7 +385,7 @@ class TutorUseCase {
 
         if (course.thambnail_Img) {
           try {
-            thumbnailUrl = await this.S3Uploader.getSignedUrl(
+            thumbnailUrl = await this._S3Uploader.getSignedUrl(
               course.thambnail_Img
             );
           } catch (error) {
@@ -395,7 +398,7 @@ class TutorUseCase {
 
         if (course.trailer_vd) {
           try {
-            trailerUrl = await this.S3Uploader.getSignedUrl(course.trailer_vd);
+            trailerUrl = await this._S3Uploader.getSignedUrl(course.trailer_vd);
           } catch (error) {
             console.error(
               `Error generating signed URL for trailer: ${course.trailer_vd}`,
@@ -405,43 +408,49 @@ class TutorUseCase {
         }
 
         const moduleWithSignedUrls = await Promise.all(
-          (course.chapters || []).map(async (module:any)=>{
+          (course.chapters || []).map(async (module: Modules) => {
             const lecturewithSignedUrls = await Promise.all(
-              (module.lectures || []).map(async (lecture:any)=>{
-                let pdfUrl ='';
-                let videoUrl ='';
+              (module.lectures || []).map(async (lecture: Lecture) => {
+                let pdfUrl = "";
+                let videoUrl = "";
 
                 if (lecture.pdf) {
                   try {
-                    pdfUrl = await this.S3Uploader.getSignedUrl(lecture.pdf)
+                    pdfUrl = await this._S3Uploader.getSignedUrl(lecture.pdf);
                   } catch (error) {
-                    console.error(`Error generating signed URL  for lecture pdf:${lecture.pdf}`,error);
-                    
+                    console.error(
+                      `Error generating signed URL  for lecture pdf:${lecture.pdf}`,
+                      error
+                    );
                   }
                 }
 
                 if (lecture.video) {
                   try {
-                    videoUrl = await this.S3Uploader.getSignedUrl(lecture.video)
+                    videoUrl = await this._S3Uploader.getSignedUrl(
+                      lecture.video
+                    );
                   } catch (error) {
-                    console.error(`error generating signed Url for lecture video:${lecture.video}`,error)
+                    console.error(
+                      `error generating signed Url for lecture video:${lecture.video}`,
+                      error
+                    );
                   }
                 }
 
                 return {
                   ...lecture,
-                  lecturePdf:pdfUrl,
-                  lectureVideo:videoUrl,
-                }
-
+                  lecturePdf: pdfUrl,
+                  lectureVideo: videoUrl,
+                };
               })
             );
 
             return {
               ...module,
-              name:module.name,
-              lectures:lecturewithSignedUrls,
-            }
+              name: module.name,
+              lectures: lecturewithSignedUrls,
+            };
           })
         );
 
@@ -449,7 +458,7 @@ class TutorUseCase {
           ...course,
           thumbnailSignedUrl: thumbnailUrl,
           trailerSignedUrl: trailerUrl,
-          modules:moduleWithSignedUrls
+          modules: moduleWithSignedUrls,
         };
       })
     );
@@ -465,7 +474,7 @@ class TutorUseCase {
   ) {
     // console.log(course_id, modules, "usecase data ");
     const modules_IDs: string[] = [];
-    const processedModulesIDs: any[] = [];
+    const processedModulesIDs: Modules[] = [];
     for (const [moduleIndex, module] of modules.entries()) {
       const processedLecturesIDs: any[] = [];
 
@@ -473,7 +482,6 @@ class TutorUseCase {
       // console.log("Module Name:", module.name);
 
       if (module.lectures) {
-       
         for (const [lectureIndex, lecture] of module.lectures.entries()) {
           // console.log("Lecture Data:", lecture);
 
@@ -485,88 +493,80 @@ class TutorUseCase {
           );
           const pdfFile = files.find((file) => file.fieldname === pdfFileName);
 
-          let videoUrl=''
-          let pdfUrl = ''
+          let videoUrl = "";
+          let pdfUrl = "";
 
           if (pdfFile) {
             // console.log("PDF File:", pdfFile);
-            pdfUrl = await this.S3Uploader.uploadPDF(pdfFile)
-           
+            pdfUrl = await this._S3Uploader.uploadPDF(pdfFile);
           }
           if (videoFile) {
             // console.log("Video File:", videoFile);
-            videoUrl = await this.S3Uploader.uploadVideo(videoFile)
-            
+            videoUrl = await this._S3Uploader.uploadVideo(videoFile);
           }
 
-
           const processedLecture = {
-            course_id:course_id,
+            course_id: course_id,
             title: lecture.title,
             description: lecture.description,
             video: videoUrl,
             pdf: pdfUrl,
           };
 
-          const savedLecture =await this.TutorRepository.saveLectures(processedLecture)
+          const savedLecture = await this._tutorRepository.saveLectures(
+            processedLecture
+          );
 
           if (savedLecture) {
-            processedLecturesIDs.push(savedLecture._id)
-          }else{
+            processedLecturesIDs.push(savedLecture._id);
+          } else {
             console.log("savedLecture is cause a error");
-            
           }
         }
-
       }
 
-      const processedModule ={
-        course_id:course_id,
-        name:module.name,
-        lectures:processedLecturesIDs
-      }
-      const savedModuleID = await this.TutorRepository.saveModules(processedModule)
-      if(savedModuleID){
-        processedModulesIDs.push(savedModuleID)
-      }else{
+      const processedModule = {
+        course_id: course_id,
+        name: module.name,
+        lectures: processedLecturesIDs,
+      };
+      const savedModuleID = await this._tutorRepository.saveModules(
+        processedModule
+      );
+      if (savedModuleID) {
+        processedModulesIDs.push(savedModuleID);
+      } else {
         console.log("savedModule cause a error");
-        
       }
-
-      
     }
     // save module id's to chapter field of array
-    const curicculumData = await this.TutorRepository.saveModulesIdToChapter(course_id,processedModulesIDs)
+    const curicculumData = await this._tutorRepository.saveModulesIdToChapter(
+      course_id,
+      processedModulesIDs
+    );
     if (curicculumData) {
-      console.log(curicculumData,"processed saved");
+      console.log(curicculumData, "processed saved");
       return {
-        status:200,
-        data:{
-          message:"Curicculum added successfully",
-          data:curicculumData
-        }
-      }
+        status: 200,
+        data: {
+          message: "Curicculum added successfully",
+          data: curicculumData,
+        },
+      };
     } else {
       console.log("something chapter updtion");
       return {
-        status:400,
-        data:{
-        message:"Somehting went wrong when adding curicculum"
-        }
-      }
+        status: 400,
+        data: {
+          message: "Somehting went wrong when adding curicculum",
+        },
+      };
     }
-
   }
 
-  // async getCurriculums(courseId:string){
-  //   console.log(courseId,"use case of get curriculum");
-    
-  // }
-
   //individual getViewCourse
-  async getViewCourse (course_id:string){
-    const getCourses =
-      await this.TutorRepository.getCourseView(course_id);
+  async getViewCourse(course_id: string) {
+    const getCourses = await this._tutorRepository.getCourseView(course_id);
     console.log(getCourses, "getInstructorCourses");
     const getTutorCourses = await this.s3GenerateForViewCourse(getCourses);
     console.log(getTutorCourses, "aray s3 bucke");
@@ -588,15 +588,15 @@ class TutorUseCase {
     }
   }
   // individual courseview
-  async s3GenerateForViewCourse (course:any){
+  async s3GenerateForViewCourse(course: ICourse) {
     console.log("Processing course...");
 
     let thumbnailUrl = "";
     let trailerUrl = "";
-  
+
     if (course.thambnail_Img) {
       try {
-        thumbnailUrl = await this.S3Uploader.getSignedUrl(course.thambnail_Img);
+        thumbnailUrl = await this._S3Uploader.getSignedUrl(course.thambnail_Img);
       } catch (error) {
         console.error(
           `Error generating signed URL for thumbnail: ${course.thambnail_Img}`,
@@ -604,10 +604,10 @@ class TutorUseCase {
         );
       }
     }
-  
+
     if (course.trailer_vd) {
       try {
-        trailerUrl = await this.S3Uploader.getSignedUrl(course.trailer_vd);
+        trailerUrl = await this._S3Uploader.getSignedUrl(course.trailer_vd);
       } catch (error) {
         console.error(
           `Error generating signed URL for trailer: ${course.trailer_vd}`,
@@ -615,30 +615,36 @@ class TutorUseCase {
         );
       }
     }
-  
+
     const moduleWithSignedUrls = await Promise.all(
-      (course.chapters || []).map(async (module: any) => {
+      (course.chapters || []).map(async (module: Modules) => {
         const lecturewithSignedUrls = await Promise.all(
-          (module.lectures || []).map(async (lecture: any) => {
-            let pdfUrl = '';
-            let videoUrl = '';
-  
+          (module.lectures || []).map(async (lecture: Lecture) => {
+            let pdfUrl = "";
+            let videoUrl = "";
+
             if (lecture.pdf) {
               try {
-                pdfUrl = await this.S3Uploader.getSignedUrl(lecture.pdf);
+                pdfUrl = await this._S3Uploader.getSignedUrl(lecture.pdf);
               } catch (error) {
-                console.error(`Error generating signed URL for lecture PDF: ${lecture.pdf}`, error);
+                console.error(
+                  `Error generating signed URL for lecture PDF: ${lecture.pdf}`,
+                  error
+                );
               }
             }
-  
+
             if (lecture.video) {
               try {
-                videoUrl = await this.S3Uploader.getSignedUrl(lecture.video);
+                videoUrl = await this._S3Uploader.getSignedUrl(lecture.video);
               } catch (error) {
-                console.error(`Error generating signed URL for lecture video: ${lecture.video}`, error);
+                console.error(
+                  `Error generating signed URL for lecture video: ${lecture.video}`,
+                  error
+                );
               }
             }
-  
+
             return {
               ...lecture,
               lecturePdf: pdfUrl,
@@ -646,7 +652,7 @@ class TutorUseCase {
             };
           })
         );
-  
+
         return {
           ...module,
           name: module.name,
@@ -654,13 +660,113 @@ class TutorUseCase {
         };
       })
     );
-  
+
     return {
       ...course,
       thumbnailSignedUrl: thumbnailUrl,
       trailerSignedUrl: trailerUrl,
       modules: moduleWithSignedUrls,
     };
+  }
+  // fetching profile data
+  async getInstructorData(tutor_id: string) {
+    console.log(tutor_id, "tutorId");
+    const getInstructorDetails = await this._tutorRepository.findById(tutor_id);
+    console.log(getInstructorDetails, "isnturcto");
+    let existDetailsDocument =
+      await this._tutorRepository.instructorDetailsExistId(tutor_id);
+    if (!existDetailsDocument) {
+      let data :ITutorDetails ={
+        instructorId:tutor_id,
+        profileImg:"nopic",
+        experience:"Please give your experience",
+        position:"Please give your role",
+        companyName:"Please give Company",
+        aboutBio:"write something about youself"
+      }
+      existDetailsDocument = await this._tutorRepository.uploadInstructorDetails(
+        data
+      );
+    }
+    if (getInstructorDetails && existDetailsDocument) {
+      return {
+        status: 200,
+        data: {
+          getInstructorDetails,
+          existDetailsDocument,
+        },
+      };
+    } else {
+      return {
+        status: 400,
+        data: {
+          message: "Something went wrong the fetching instructor data!",
+        },
+      };
+    }
+  }
+  // save profile data
+  async saveProfileDetailes (registerData:Tutor,instructorDetails:TutorDetails){
+    console.log(registerData,instructorDetails,"instructorDetails usecase");
+    const updateRegister = await this._tutorRepository.updateTheRegister(registerData)
+    const updateInstructorDetails = await this._tutorRepository.updateTheInstructorDetails(instructorDetails)
+
+    if (updateRegister || updateInstructorDetails) {
+      return {
+        status:200,
+        message:"SuccessFully updated"
+      }
+    }else{
+      return {
+
+        status:400,
+        message:"Something went wrong the updation...!"
+      }
+    }
+  }
+
+  // receiverConversations
+  async receiverConversations(instructor_id:string){
+const conversationLists = await this._tutorRepository.findConversationsByReceiverId(instructor_id)
+console.log(conversationLists);
+
+if (conversationLists) {
+  return {
+    status:200,
+   data:{
+    conversationLists
+   }
+  }
+} else {
+  return{
+    status:400,
+    data:{
+      message:"Something went wrong fetching conversations"
+    }
+  }
+}
+  }
+
+  // fetchInstructorCourses
+  async fetchInstructorCourses (instructor_id:string){
+    console.log(instructor_id,"instructor id for fetch courseName and Id");
+    const fetchCourses = await this._tutorRepository.instructorCourseData(instructor_id)
+    if (fetchCourses) {
+      console.log(fetchCourses,"course names and id");
+      return {
+        status:200,
+        data:{
+          fetchCourses
+        }
+      }
+      
+    } else {
+      return {
+        status:400,
+        message:"Something went wrong fetching the course data"
+      }
+    }
+    
   }
 }
 export default TutorUseCase;

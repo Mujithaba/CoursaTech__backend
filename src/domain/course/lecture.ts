@@ -1,5 +1,5 @@
 interface Lecture{
-    _id?:string;
+    _id?:string | undefined;
     course_id?:string;
     title:string;
     description:string;

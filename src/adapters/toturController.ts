@@ -3,10 +3,7 @@ import { Req, Res, Next, IFile } from "../infrastructure/type/expressTypes";
 import { VerifyData } from "../useCase/Interface/verifyData";
 import TutorUseCase from "../useCase/tutorUseCase";
 
-// interface FileFields {
-//   thumbnail?: Express.Multer.File[];
-//   video?: Express.Multer.File[];
-// }
+
 
 class TutorController {
   private tutorUseCase: TutorUseCase;
@@ -234,11 +231,15 @@ class TutorController {
       console.log("coming to instructor course");
       
       const id = req.query.id as string;
-      const instructorCourses = await this.tutorUseCase.getCourses(id);
+      const { page = 1, limit = 10 } = req.query;
+      const skip = (Number(page) - 1) * Number(limit);
+
+      const instructorCourses = await this.tutorUseCase.getCourses(id,Number(limit), skip);
       if (instructorCourses) {
-        return res
-          .status(instructorCourses.status)
-          .json(instructorCourses.data);
+        const totalItems = await this.tutorUseCase.countCourses(id);
+        console.log(totalItems,"total");
+        
+        return res.status(instructorCourses.status).json({ ...instructorCourses.data, totalItems });
       } else {
         return res.status(404).json({ message: "No courses found" });
       }
@@ -276,16 +277,6 @@ class TutorController {
       next(error); 
     }
   }
-// get curicculum 
-  // async getCuricculums(req:Req,res:Res,next:Next){
-  //   try {
-  //     const course_id =  req.body.id
-  //     console.log(course_id,"get curicculums");
-      
-  //   } catch (error) {
-  //     next(error)
-  //   }
-  // }
 
   async getViewCourse (req:Req,res:Res,next:Next){
     try {
@@ -303,6 +294,63 @@ class TutorController {
       }
       
       
+    } catch (error) {
+      next(error)
+    }
+  }
+// profile data fetching
+  async fetchtutorDetails (req:Req,res:Res,next:Next){
+    try {
+      const tutorID = req.query.tutorID as string 
+      const getInstructorDetails = await this.tutorUseCase.getInstructorData(tutorID)
+      if (getInstructorDetails) {
+        return res.status(getInstructorDetails.status).json(getInstructorDetails)
+      }
+      
+    } catch (error) {
+      next(error)
+    }
+  }
+  //profileDataSave
+  async profileDataSave (req:Req,res:Res,next:Next){
+    try {
+      const {registerData,instructorProfile} = req.body ;
+      console.log(registerData,instructorProfile,"{registerData,instructorProfile}");
+      const saveProfileDatas = await this.tutorUseCase.saveProfileDetailes(registerData,instructorProfile)
+      if (saveProfileDatas) {
+        return res.status(saveProfileDatas.status).json(saveProfileDatas)
+      }
+      
+    } catch (error) { 
+      next(error)
+    }
+  }
+
+  // storedMsgsFetching
+  async storedMsgFetching(req:Req,res:Res,next:Next){
+    try {
+      const instructorid = req.query.instructorId  as string
+      console.log(instructorid,"oooooo");
+      
+      const conversationReceiver = await this.tutorUseCase.receiverConversations(instructorid)
+     if (conversationReceiver) {
+      return res.status(conversationReceiver.status).json(conversationReceiver)
+     }
+    } catch (error) {
+      next(error)
+    }
+  }
+  // coursesForAssignment
+  async coursesForAssignment(req:Req,res:Res,next:Next){
+    try {
+      
+      const instructorId = req.query.instructorId as string
+      console.log(instructorId,"coursesForAssignment");
+      const courseDatas = await this.tutorUseCase.fetchInstructorCourses(instructorId)
+      if (courseDatas) {
+        return res.status(courseDatas.status).json(courseDatas)
+      }
+
     } catch (error) {
       next(error)
     }

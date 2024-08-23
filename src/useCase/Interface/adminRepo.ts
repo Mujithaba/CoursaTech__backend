@@ -1,6 +1,7 @@
 import User from "../../domain/user";
 import Tutor from "../../domain/tutor";
 import ICategory from "../../domain/Icategory";
+import ICourse from "../../domain/course/course";
 
 interface AdminRep {
   // users taking
@@ -27,7 +28,12 @@ interface AdminRep {
     newCategory: string,
     category_id: string
   ): Promise<{ success: boolean; reason: string }>;
-  getCourses():Promise<{}[]>
+  getCourses(page: number, limit: number):Promise<{}[]>;
+  coursesCount(id:string):Promise<number>
+
+  findUnapprovedCourse():Promise<any>
+  verifyCourse(courseId: string): Promise<boolean>
+  unverifyCourse(courseId:string):Promise<boolean>
 }
 
 export default AdminRep;

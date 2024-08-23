@@ -44,9 +44,13 @@ route.post('/basicInfoUpload',uploader.fields([
                                     { name: 'video', maxCount: 1 }
                                 ]) ,(req: Req, res: Res, next: Next) => tutorController.courseBasicInfoSave(req, res, next));
 route.get('/getAllCategories',(req:Req,res:Res,next:Next)=>tutorController.getCategories(req,res,next))
-route.get('/getInstructorCourses',(req:Req,res:Res,next:Next)=>tutorController.getInstructorCourses(req,res,next))
+route.get('/getInstructorCourses',tutorAuth,(req:Req,res:Res,next:Next)=>tutorController.getInstructorCourses(req,res,next))
 route.post('/uploadCuricculum',uploader.any(),(req:Req,res:Res,next:Next)=>tutorController.uploadingCuricculum(req,res,next))
-route.get('/getViewCourse',(req:Req,res:Res,next:Next)=>tutorController.getViewCourse(req,res,next))
+route.get('/getViewCourse',tutorAuth,(req:Req,res:Res,next:Next)=>tutorController.getViewCourse(req,res,next))
+route.get('/fetchtutorData',tutorAuth,(req:Req,res:Res,next:Next)=>tutorController.fetchtutorDetails(req,res,next))
+route.patch('/profileDataSave',tutorAuth,(req:Req,res:Res,next:Next)=>tutorController.profileDataSave(req,res,next))
+route.get('/storedMsgsFetching',tutorAuth,(req: Req, res: Res, next: Next)=>tutorController.storedMsgFetching(req,res,next))
+route.get('/coursesForAssignment',tutorAuth,(req: Req, res: Res, next: Next)=>tutorController.coursesForAssignment(req,res,next))
 
 
 

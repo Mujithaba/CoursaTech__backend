@@ -8,7 +8,8 @@ import EncryptPassword from "../services/bcryptPassword";
 import { Next, Req, Res } from "../type/expressTypes";
 import JwtToken from "../services/generateToken";
 import { userAuth } from "../middleware/userAuth";
-
+import S3Uploader from "../services/s3BucketAWS";
+import Razorpay from "razorpay";
 
 const route = express.Router();
 
@@ -17,11 +18,16 @@ const GenerateMail = new sendotp();
 const generateOtp = new GenerateOtp();
 const encryptPassword = new EncryptPassword()
 const jwtToken = new JwtToken()
-
+const s3Uploader = new S3Uploader();
+const razorpay = new Razorpay ({
+key_id:process.env.RAZORPAY_KEY_ID as string,
+key_secret:process.env.RAZORPAY_SECRET_KEY as string  
+})
+ 
 // userRepository
 const userRepository=new UserRepository()
 // userUse Case
-const userUseCase=new UserUseCase(userRepository,encryptPassword,generateOtp,GenerateMail,jwtToken)
+const userUseCase=new UserUseCase(userRepository,encryptPassword,generateOtp,GenerateMail,jwtToken,s3Uploader,razorpay)
 // userController
 const userController = new UserController(userUseCase)
 
@@ -36,5 +42,10 @@ route.post('/forgotPassEmail',(req:Req,res:Res,next:Next)=>userController.forgot
 route.post('/forgotOTPverify',(req:Req,res:Res,next:Next)=>userController.forgotOTPverify(req,res,next));
 route.patch('/forgotPasswordSave',(req:Req,res:Res,next:Next)=>userController.resetPassword(req,res,next));
 route.get('/homePage',userAuth ,(req: Req, res: Res, next: Next) => userController.homePage(req, res, next));
+route.get('/getCourse',userAuth ,(req: Req, res: Res, next: Next) => userController.getCourses(req, res, next));
+route.get('/getViewCourse',userAuth ,(req: Req, res: Res, next: Next) => userController.ViewCourses(req, res, next));
+route.post('/createPayment',userAuth,(req: Req, res: Res, next: Next)=>userController.coursePayment(req,res,next))
+route.post('/paymentSuccess',userAuth,(req: Req, res: Res, next: Next)=>userController.paymentCompleted(req,res,next))
+route.post('/sendUserMsg',userAuth,(req: Req, res: Res, next: Next)=>userController.storeUserMsg(req,res,next))
 
 export default route;

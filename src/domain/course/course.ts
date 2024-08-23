@@ -3,12 +3,12 @@ import Modules from "./chapter";
 import mongoose from "mongoose";
 
 interface ICourse{
-    _id?:string;
+    _id?:string ;
     title:string;
     description:string;
     instructor_id:string;
     category_id:string;
-    price:string;
+    price:string | number | undefined;
     thambnail_Img:string;
     trailer_vd:string;
     chapters?:Modules[];

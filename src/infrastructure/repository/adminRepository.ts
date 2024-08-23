@@ -7,6 +7,7 @@ import ICategory from "../../domain/Icategory";
 import categoryModel from "../database/adminModel/categoryModel";
 import { time } from "console";
 import courseModel from "../database/tutorModel/courseModel";
+import ICourse from "../../domain/course/course";
 
 class AdminRepository implements AdminRep {
   // async findUsers(page: number, limit: number): Promise<{ users: User[], totalUsers: number }> {
@@ -154,7 +155,7 @@ class AdminRepository implements AdminRep {
     };
   }
   // get all course
-  async getCourses(): Promise<{}[]> {
+  async getCourses(limit: number, skip: number): Promise<{}[]> {
     const coursesData = await courseModel.find().populate({
       path: 'category_id',
       select: 'categoryName',
@@ -168,10 +169,16 @@ class AdminRepository implements AdminRep {
         select: 'title description  video  pdf createdAt'
       }
       })
+      .limit(limit)
+      .skip(skip)
     .lean()
     .exec();
 
     return coursesData;
+  }
+  async coursesCount(): Promise<number> {
+    const counts = await courseModel.countDocuments();
+    return counts;
   }
   // getCourseView
   async getCourseView(course_id: string): Promise<any> {
@@ -195,6 +202,48 @@ class AdminRepository implements AdminRep {
     console.dir(getTutorCourses, { depth: null, colors: true });
     
   return getTutorCourses;
+  }
+  // course approvel
+ async findUnapprovedCourse(): Promise<any> {
+  const totalUnverify = await courseModel.countDocuments({is_verified:false})
+  console.log(totalUnverify,"totalUnverify............................................");
+  
+  const getCourses = await courseModel
+  .find({is_verified:false})
+  .populate({
+    path: 'category_id',
+    select: 'categoryName',
+  })
+  .populate({path:'chapters',
+    model:"Module",
+    select:'name lectures createdAt',
+    populate:{
+      path:'lectures',
+      model:"Lecture",
+      select: 'title description  video  pdf createdAt'
+    }
+    })
+  .lean()
+  .exec();
+  console.dir(getCourses, { depth: null, colors: true });
+  
+return{ getCourses,totalUnverify};
+  }
+  // verifyCourse
+  async verifyCourse(courseId: string): Promise<boolean> {
+    const result = await courseModel.updateOne(
+      { _id: courseId },
+      { $set: { is_verified: true } }
+    );
+    return result.modifiedCount > 0;
+  }
+  // unverifyCourse
+  async unverifyCourse(courseId: string): Promise<boolean> {
+    const result = await courseModel.updateOne(
+      { _id: courseId },
+      { $set: { is_verified: false } }
+    );
+    return result.modifiedCount > 0;
   }
 }
 

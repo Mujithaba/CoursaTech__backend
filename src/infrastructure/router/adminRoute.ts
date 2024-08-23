@@ -37,5 +37,8 @@ route.patch('/categorylist',adminAuth,(req:Req,res:Res,next:Next)=>adminControll
 route.patch('/categoryEdit',adminAuth,(req:Req,res:Res,next:Next)=>adminController.categoryEdit(req,res,next))
 route.get('/getCourse',adminAuth,(req:Req,res:Res,next:Next)=>adminController.getCourse(req,res,next))
 route.get('/getViewCourse',adminAuth,(req:Req,res:Res,next:Next)=>adminController.ViewCourses(req,res,next))
+route.get('/getUnapprovedCourse',adminAuth,(req:Req,res:Res,next:Next)=>adminController.unapprovedCourse(req,res,next))
+route.patch('/courseApprove',adminAuth,(req:Req,res:Res,next:Next)=>adminController.courseApproved(req,res,next))
+route.patch('/courseUnapprove',adminAuth,(req:Req,res:Res,next:Next)=>adminController.courseUnapproved(req,res,next))
   
 export default route

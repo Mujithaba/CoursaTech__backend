@@ -9,3 +9,4 @@ interface IOtpDoc extends Document {
 }
 
 export default IOtpDoc;
+

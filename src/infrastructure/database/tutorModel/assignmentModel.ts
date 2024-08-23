@@ -1,35 +1,28 @@
 import mongoose, { Schema, Document } from 'mongoose';
+import { Assignment } from '../../../domain/course/assignment';
 
 
-interface IAssignment extends Document {
-  title: string;
-  course_id: mongoose.Schema.Types.ObjectId;
-  pdf_url: string;
-  createdAt?: Date;
-}
+interface IAssignmentDocument extends Assignment,Document{}
 
 
-const AssignmentSchema: Schema<IAssignment> = new Schema({
-  title: {
-    type: String,
-    required: true
+
+const AssignmentSchema: Schema = new Schema({
+  title:{
+    type:String,
+    required:true
   },
-  course_id: {
-    type: Schema.Types.ObjectId,
-    ref: 'Course', 
-    required: true
+  pdf:{
+    type:String,
+    required:true
   },
-  pdf_url: {
-    type: String,
-    required: true
-  },
-  createdAt: {
-    type: Date,
-    default: Date.now
+  courseId:{
+    type:String,
+    required:true
   }
+
 });
 
 
-const assignmentModel = mongoose.model<IAssignment>('Assignment', AssignmentSchema);
+const assignmentModel = mongoose.model<IAssignmentDocument>('Assignment', AssignmentSchema);
 
 export default assignmentModel;
