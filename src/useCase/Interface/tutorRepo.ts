@@ -3,7 +3,7 @@ import Tutor from "../../domain/tutor";
 import ICategory from "../../domain/Icategory";
 import Lecture from "../../domain/course/lecture";
 import Modules from "../../domain/course/chapter";
-import { CourseData, IConversation, InterCourse, OtpDoc } from "../../infrastructure/type/expressTypes";
+import { CourseData, IAssignment, IConversation, IFile, InterCourse, OtpDoc } from "../../infrastructure/type/expressTypes";
 import { ITutorDetails } from "../../domain/tutorDetails";
 
 
@@ -31,6 +31,8 @@ interface TutorRepo {
     findConversationsByReceiverId(instructor_id:string):Promise<IConversation[]>
     // assignment
     instructorCourseData(instructor_id:string):Promise<CourseData[]>
+    addAssignment(courseId:string,courseTitle:string,assignmenturl:string):Promise<boolean>
+    findAssignments(instructor_id:string):Promise<IAssignment[]>
 }
 
 export default TutorRepo

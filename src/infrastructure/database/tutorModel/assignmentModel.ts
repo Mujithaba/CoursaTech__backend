@@ -11,7 +11,7 @@ const AssignmentSchema: Schema = new Schema({
     type:String,
     required:true
   },
-  pdf:{
+  pdf_file:{
     type:String,
     required:true
   },

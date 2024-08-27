@@ -1,9 +1,6 @@
-import { log } from "console";
 import { Req, Res, Next, IFile } from "../infrastructure/type/expressTypes";
 import { VerifyData } from "../useCase/Interface/verifyData";
 import TutorUseCase from "../useCase/tutorUseCase";
-
-
 
 class TutorController {
   private tutorUseCase: TutorUseCase;
@@ -229,17 +226,23 @@ class TutorController {
   async getInstructorCourses(req: Req, res: Res, next: Next) {
     try {
       console.log("coming to instructor course");
-      
+
       const id = req.query.id as string;
       const { page = 1, limit = 10 } = req.query;
       const skip = (Number(page) - 1) * Number(limit);
 
-      const instructorCourses = await this.tutorUseCase.getCourses(id,Number(limit), skip);
+      const instructorCourses = await this.tutorUseCase.getCourses(
+        id,
+        Number(limit),
+        skip
+      );
       if (instructorCourses) {
         const totalItems = await this.tutorUseCase.countCourses(id);
-        console.log(totalItems,"total");
-        
-        return res.status(instructorCourses.status).json({ ...instructorCourses.data, totalItems });
+        console.log(totalItems, "total");
+
+        return res
+          .status(instructorCourses.status)
+          .json({ ...instructorCourses.data, totalItems });
       } else {
         return res.status(404).json({ message: "No courses found" });
       }
@@ -253,14 +256,12 @@ class TutorController {
     try {
       console.log("curicculum");
 
-      
       const course_id = req.body.course_id;
       const modules = JSON.parse(req.body.modules);
       // console.log(course_id, modules, "llllllooooiiiiqqq");
-  
-     
+
       const files = req.files as Express.Multer.File[];
-  
+
       if (!Array.isArray(modules) || !course_id) {
         return res.status(400).json({ message: "Invalid input" });
       }
@@ -270,89 +271,129 @@ class TutorController {
         modules,
         files
       );
-  
-      return res.status(uploadData.status).json(uploadData.data)
+
+      return res.status(uploadData.status).json(uploadData.data);
     } catch (error) {
-      console.error("Error in uploadingCuricculum:", error); 
-      next(error); 
+      console.error("Error in uploadingCuricculum:", error);
+      next(error);
     }
   }
 
-  async getViewCourse (req:Req,res:Res,next:Next){
+  async getViewCourse(req: Req, res: Res, next: Next) {
     try {
       console.log("getViewCourse controller");
-      const id = req.query.id as string
-      console.log( id,"getViewCourse controller");
+      const id = req.query.id as string;
+      console.log(id, "getViewCourse controller");
       const courseViewData = await this.tutorUseCase.getViewCourse(id);
 
       if (courseViewData) {
-        return res
-          .status(courseViewData.status)
-          .json(courseViewData.data);
+        return res.status(courseViewData.status).json(courseViewData.data);
       } else {
         return res.status(404).json({ message: "No course found" });
       }
-      
-      
     } catch (error) {
-      next(error)
+      next(error);
     }
   }
-// profile data fetching
-  async fetchtutorDetails (req:Req,res:Res,next:Next){
+  // profile data fetching
+  async fetchtutorDetails(req: Req, res: Res, next: Next) {
     try {
-      const tutorID = req.query.tutorID as string 
-      const getInstructorDetails = await this.tutorUseCase.getInstructorData(tutorID)
+      const tutorID = req.query.tutorID as string;
+      const getInstructorDetails = await this.tutorUseCase.getInstructorData(
+        tutorID
+      );
       if (getInstructorDetails) {
-        return res.status(getInstructorDetails.status).json(getInstructorDetails)
+        return res
+          .status(getInstructorDetails.status)
+          .json(getInstructorDetails);
       }
-      
     } catch (error) {
-      next(error)
+      next(error);
     }
   }
   //profileDataSave
-  async profileDataSave (req:Req,res:Res,next:Next){
+  async profileDataSave(req: Req, res: Res, next: Next) {
     try {
-      const {registerData,instructorProfile} = req.body ;
-      console.log(registerData,instructorProfile,"{registerData,instructorProfile}");
-      const saveProfileDatas = await this.tutorUseCase.saveProfileDetailes(registerData,instructorProfile)
+      const { registerData, instructorProfile } = req.body;
+      console.log(
+        registerData,
+        instructorProfile,
+        "{registerData,instructorProfile}"
+      );
+      const saveProfileDatas = await this.tutorUseCase.saveProfileDetailes(
+        registerData,
+        instructorProfile
+      );
       if (saveProfileDatas) {
-        return res.status(saveProfileDatas.status).json(saveProfileDatas)
+        return res.status(saveProfileDatas.status).json(saveProfileDatas);
       }
-      
-    } catch (error) { 
-      next(error)
+    } catch (error) {
+      next(error);
     }
   }
 
   // storedMsgsFetching
-  async storedMsgFetching(req:Req,res:Res,next:Next){
+  async storedMsgFetching(req: Req, res: Res, next: Next) {
     try {
-      const instructorid = req.query.instructorId  as string
-      console.log(instructorid,"oooooo");
-      
-      const conversationReceiver = await this.tutorUseCase.receiverConversations(instructorid)
-     if (conversationReceiver) {
-      return res.status(conversationReceiver.status).json(conversationReceiver)
-     }
+      const instructorid = req.query.instructorId as string;
+      console.log(instructorid, "oooooo");
+
+      const conversationReceiver =
+        await this.tutorUseCase.receiverConversations(instructorid);
+      if (conversationReceiver) {
+        return res
+          .status(conversationReceiver.status)
+          .json(conversationReceiver);
+      }
     } catch (error) {
-      next(error)
+      next(error);
     }
   }
   // coursesForAssignment
-  async coursesForAssignment(req:Req,res:Res,next:Next){
+  async coursesForAssignment(req: Req, res: Res, next: Next) {
     try {
-      
-      const instructorId = req.query.instructorId as string
-      console.log(instructorId,"coursesForAssignment");
-      const courseDatas = await this.tutorUseCase.fetchInstructorCourses(instructorId)
+      const instructorId = req.query.instructorId as string;
+      console.log(instructorId, "coursesForAssignment");
+      const courseDatas = await this.tutorUseCase.fetchInstructorCourses(
+        instructorId
+      );
       if (courseDatas) {
-        return res.status(courseDatas.status).json(courseDatas)
+        return res.status(courseDatas.status).json(courseDatas);
       }
-
     } catch (error) {
-      next(error)
+      next(error);
+    }
+  }
+  // uploadingAssignment
+  async uploadingAssignment(req: Req, res: Res, next: Next) {
+    try {
+      const assignment: Express.Multer.File | undefined = req.file;
+      const { courseTitle, courseId } = req.body;
+      console.log(assignment, courseId, courseTitle, "uploadingAssignment");
+
+      const upload = await this.tutorUseCase.uploadAssignment(
+        courseId,
+        courseTitle,
+        assignment
+      );
+      if (upload) {
+        return res.status(upload.status).json(upload);
+      }
+    } catch (error) {
+      next(error);
+    }
+  }
+  // assignmentsFetch
+  async assignmentsFetch(req: Req, res: Res, next: Next) {
+    try {
+      const instructorId= req.query.instructorId as string
+      console.log(instructorId,"kkklllluuuu");
+      const assignmentData = await this.tutorUseCase.fetchingAssignments(instructorId)
+      console.log(assignmentData);
+     return res.status(assignmentData.status).json(assignmentData.data)
+      
+    } catch (error) {
+      next(error);
     }
   }
 }

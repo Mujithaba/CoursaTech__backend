@@ -13,11 +13,13 @@ import Modules from "../../domain/course/chapter";
 import moduleModel from "../database/tutorModel/moduleModel";
 import path from "path";
 import mongoose, { model } from "mongoose";
-import { CourseData, IConversation, OtpDoc, TutorDetails } from "../type/expressTypes";
+import { CourseData, IAssignment, IConversation, ICourseWithAssignments, OtpDoc, TutorDetails } from "../type/expressTypes";
 import { ITutorDetails } from "../../domain/tutorDetails";
 import InstructorDetails from "../database/tutorModel/tutorDetailsModel";
 import conversationModel from "../database/commonModel/conversationModel";
-import { count } from "console";
+import { count, log } from "console";
+import { Assignment } from "../../domain/course/assignment";
+import assignmentModel from "../database/tutorModel/assignmentModel";
 
 
 class TutorRepository implements TutorRepo {
@@ -232,6 +234,49 @@ async instructorCourseData(instructor_id: string): Promise<CourseData[]> {
   }))
   return courseData
 }
+// addAssignment
+ async addAssignment(courseId: string, courseTitle: string, assignmentUrl: string): Promise<boolean> {
+  const assigments:Assignment={
+    courseId:courseId,
+    pdf_file:assignmentUrl,
+    title:courseTitle
+  }
+  const newAssignment = new assignmentModel(assigments)
+  const saveAssignment = await newAssignment.save()
+  console.log(saveAssignment,"saveAssignment");
+ const updateCourse = await courseModel.findByIdAndUpdate(
+    courseId,
+    {
+      $push: {
+        assignments: saveAssignment._id,
+      },
+    },
+    {new:true}
+  )
+  return !!saveAssignment._id && !!updateCourse;
+}
+
+// findAssignments
+async findAssignments(instructor_id: string): Promise<IAssignment[]> {
+  const instructorCourses: ICourseWithAssignments[] = await courseModel.find({ instructor_id: instructor_id })
+  .populate({
+    path: "assignments",
+    model: "Assignment",
+    select: "title pdf_file courseId"
+  })
+  .lean();
+  
+  const assignments: IAssignment[] = instructorCourses.flatMap(course => 
+    course.assignments?.map(assignment => ({
+      _id: assignment._id.toString(),
+      title: assignment.title,
+      pdf_file: assignment.pdf_file,
+      courseId: assignment.courseId,
+    })) || []
+  );
+  return assignments;
+}
+
 }
 
 export default TutorRepository;

@@ -24,10 +24,10 @@ export interface IFile {
   mimetype: string;
   buffer: Buffer;
   size: number;
-  type: string;
+  type?: string;
 }
 
-import { Types } from "mongoose";
+import mongoose, { Types } from "mongoose";
 import{ Assignment }from "../../domain/course/assignment";
 import Modules from "../../domain/course/chapter";
 
@@ -123,6 +123,7 @@ export interface IConversation {
 
 
 export interface IAssignment {
+  _id?:string;
   title:string;
   pdf_file:string;
   courseId:string;
@@ -131,4 +132,15 @@ export interface IAssignment {
 export interface CourseData{
   _id:string;
   courseName:string;
+}
+
+export interface ICourseWithAssignments {
+  _id: string;
+  title: string;
+  assignments?: Array<{
+    _id: mongoose.Types.ObjectId;
+    title: string;
+    pdf_file: string;
+    courseId: string;
+  }>;
 }

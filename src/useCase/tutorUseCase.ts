@@ -10,7 +10,7 @@ import { IFile, Next, Req, Res, TutorDetails, courseInfo } from "../infrastructu
 import ICourse from "../domain/course/course";
 import Modules from "../domain/course/chapter";
 import Lecture from "../domain/course/lecture";
-import { log } from "console";
+import { log, time } from "console";
 import { ITutorDetails } from "../domain/tutorDetails";
 
 class TutorUseCase {
@@ -766,6 +766,49 @@ if (conversationLists) {
         message:"Something went wrong fetching the course data"
       }
     }
+    
+  }
+  // uploadAssignment
+  async uploadAssignment (course_id:string,courseTitle:string,assignment?:Express.Multer.File | undefined ){
+    console.log(course_id,courseTitle,assignment,"uploadAssignment");
+    if (!assignment) {
+      throw new Error("No assignment file provided");
+    }
+  
+    const pdfUrl = await this._S3Uploader.uploadPDF(assignment)
+    const upload = await this._tutorRepository.addAssignment(course_id,courseTitle,pdfUrl)
+    if (upload) {
+      return {
+        status:200,
+        message:"Assignment uploaded successfully"
+      }
+    } else {
+      return {
+        status:400,
+        message:"Something went wrong uploading assignment"
+      }
+    } 
+  }
+
+  // fetchingAssignments
+  async fetchingAssignments (instructor_id:string){
+    const assignmentsData = await this._tutorRepository.findAssignments(instructor_id)
+
+
+    const assignmentsWithUrlPromises = assignmentsData.map(async (assignment) => {
+      const assignmentUrl = await this._S3Uploader.getSignedUrl(assignment.pdf_file);
+      return {
+        ...assignment,
+        assignmentUrl,
+      };
+    });
+  
+    const assignmentsWithUrls = await Promise.all(assignmentsWithUrlPromises);
+  
+      return {
+        status:200,
+        data:assignmentsWithUrls
+      }
     
   }
 }

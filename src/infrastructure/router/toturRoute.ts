@@ -51,6 +51,8 @@ route.get('/fetchtutorData',tutorAuth,(req:Req,res:Res,next:Next)=>tutorControll
 route.patch('/profileDataSave',tutorAuth,(req:Req,res:Res,next:Next)=>tutorController.profileDataSave(req,res,next))
 route.get('/storedMsgsFetching',tutorAuth,(req: Req, res: Res, next: Next)=>tutorController.storedMsgFetching(req,res,next))
 route.get('/coursesForAssignment',tutorAuth,(req: Req, res: Res, next: Next)=>tutorController.coursesForAssignment(req,res,next))
+route.post('/uploadingAssignment',uploader.single('assignment'),tutorAuth,(req: Req, res: Res, next: Next)=>tutorController.uploadingAssignment(req,res,next))
+route.get('/assignmentsFetch',tutorAuth,(req: Req, res: Res, next: Next)=>tutorController.assignmentsFetch(req,res,next))
 
 
 
