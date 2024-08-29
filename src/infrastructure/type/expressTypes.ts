@@ -144,3 +144,20 @@ export interface ICourseWithAssignments {
     courseId: string;
   }>;
 }
+
+export interface IGetReviews {
+  userName?:string;
+  feedback:string;
+  rating:number
+}
+
+export interface IInstructorDetails {
+  instructorId:string ;
+  instructorName:string;
+  instructorEmail:string;
+  profileImg?:string;
+  experience?:string;
+  position?:string;
+  companyName?:string;
+  aboutBio?:string;
+}

@@ -9,6 +9,7 @@ import { Next, Req, Res } from "../type/expressTypes";
 import JwtToken from "../services/generateToken";
 import { userAuth } from "../middleware/userAuth";
 import S3Uploader from "../services/s3BucketAWS";
+import errorHandle from "../middleware/errorHandle";
 import Razorpay from "razorpay";
 
 const route = express.Router();
@@ -44,8 +45,19 @@ route.patch('/forgotPasswordSave',(req:Req,res:Res,next:Next)=>userController.re
 route.get('/homePage',userAuth ,(req: Req, res: Res, next: Next) => userController.homePage(req, res, next));
 route.get('/getCourse',userAuth ,(req: Req, res: Res, next: Next) => userController.getCourses(req, res, next));
 route.get('/getViewCourse',userAuth ,(req: Req, res: Res, next: Next) => userController.ViewCourses(req, res, next));
-route.post('/createPayment',userAuth,(req: Req, res: Res, next: Next)=>userController.coursePayment(req,res,next))
-route.post('/paymentSuccess',userAuth,(req: Req, res: Res, next: Next)=>userController.paymentCompleted(req,res,next))
-route.post('/sendUserMsg',userAuth,(req: Req, res: Res, next: Next)=>userController.storeUserMsg(req,res,next))
+route.post('/createPayment',userAuth,(req: Req, res: Res, next: Next)=>userController.coursePayment(req,res,next));
+route.post('/paymentSuccess',userAuth,(req: Req, res: Res, next: Next)=>userController.paymentCompleted(req,res,next));
+route.post('/sendUserMsg',userAuth,(req: Req, res: Res, next: Next)=>userController.storeUserMsg(req,res,next));
+route.post('/uploadReviews',userAuth,(req: Req, res: Res, next: Next)=>userController.uploadReviews(req,res,next));
+route.get('/reviewsFetch',userAuth,(req: Req, res: Res, next: Next)=>userController.getReviews(req,res,next));
+route.get('/fetchAssignments',userAuth,(req: Req, res: Res, next: Next)=>userController.fetchAssignments(req,res,next));
+route.get('/getInstructor',userAuth,(req: Req, res: Res, next: Next)=>userController.getInstructor(req,res,next));
+
+
+
+route.use(errorHandle)
+
+
+
 
 export default route;

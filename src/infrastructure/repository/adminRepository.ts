@@ -8,6 +8,11 @@ import categoryModel from "../database/adminModel/categoryModel";
 import { time } from "console";
 import courseModel from "../database/tutorModel/courseModel";
 import ICourse from "../../domain/course/course";
+import { IGetReviews, IInstructorDetails } from "../type/expressTypes";
+import InstructorDetails from "../database/tutorModel/tutorDetailsModel";
+import assignmentModel from "../database/tutorModel/assignmentModel";
+import { Assignment } from "../../domain/course/assignment";
+import Review from "../database/commonModel/reviewModel";
 
 class AdminRepository implements AdminRep {
   // async findUsers(page: number, limit: number): Promise<{ users: User[], totalUsers: number }> {
@@ -245,6 +250,52 @@ return{ getCourses,totalUnverify};
     );
     return result.modifiedCount > 0;
   }
+
+  // getReview
+async getReview(courseId: string): Promise<IGetReviews[]> {
+  const reviews = await Review.find({courseId:courseId}).sort({createdAt:-1});
+  console.log(reviews,"getReview");
+ const reviewData:IGetReviews[] =reviews.map((review)=>({
+  userName:review.userName,
+  feedback:review.feedback,
+  rating:review.rating
+ }))
+  
+ console.log(reviewData,"data reiew");
+ 
+ return reviewData
+}
+// fetchAssignments
+async fetchAssignments(courseId: string): Promise<Assignment[]> {
+  const assigmentsData = await assignmentModel.find({courseId:courseId})
+  return assigmentsData
+
+}
+// fetchInstructor
+async fetchInstructor(instructorId: string): Promise<IInstructorDetails> {
+  console.log("erepo insru data",instructorId);
+  
+  const tutor = await tutorModel.findById(instructorId)
+  const instructor = await InstructorDetails.findOne({ instructorId: instructorId });
+
+  console.log(tutor, instructor, "Fetched tutor and instructor details");
+  const instructor_id = tutor?._id as string
+  const instructorname = tutor?.name as string
+  const instructormail = tutor?.email as string
+  const instructorData: IInstructorDetails = {
+    instructorId: instructor_id,
+    instructorName: instructorname,
+    instructorEmail:instructormail,
+    aboutBio: instructor?.aboutBio || '',
+    companyName: instructor?.companyName || '',
+    experience: instructor?.experience || '',
+    position: instructor?.position || '',
+    profileImg: instructor?.profileImg || ''
+  };
+console.log(instructorData,"instructorData");
+
+  return instructorData;
+}
 }
 
 export default AdminRepository;

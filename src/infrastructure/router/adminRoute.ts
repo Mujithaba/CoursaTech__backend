@@ -40,5 +40,10 @@ route.get('/getViewCourse',adminAuth,(req:Req,res:Res,next:Next)=>adminControlle
 route.get('/getUnapprovedCourse',adminAuth,(req:Req,res:Res,next:Next)=>adminController.unapprovedCourse(req,res,next))
 route.patch('/courseApprove',adminAuth,(req:Req,res:Res,next:Next)=>adminController.courseApproved(req,res,next))
 route.patch('/courseUnapprove',adminAuth,(req:Req,res:Res,next:Next)=>adminController.courseUnapproved(req,res,next))
+route.get('/reviewsFetch',adminAuth,(req: Req, res: Res, next: Next)=>adminController.getReviews(req,res,next));
+route.get('/fetchAssignments',adminAuth,(req: Req, res: Res, next: Next)=>adminController.fetchAssignments(req,res,next));
+route.get('/getInstructor',adminAuth,(req: Req, res: Res, next: Next)=>adminController.getInstructor(req,res,next));
+
+
   
 export default route

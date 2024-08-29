@@ -396,5 +396,42 @@ class TutorController {
       next(error);
     }
   }
+  // reviewsFetch
+  async getReviews(req:Req,res:Res,next:Next){
+    try {
+      const courseId = req.query.courseId as string;
+      console.log(courseId,"hhh");
+      const getReview = await this.tutorUseCase.reviewsFetch(courseId)
+      if (getReview) {
+        return res.status(getReview.status).json(getReview)
+      }
+      
+    } catch (error) {
+      next(error)
+    }
+  }
+  // fetchAssignments
+  async fetchAssignments (req:Req,res:Res,next:Next){
+    try {
+
+      const courseId=  req.query.courseId  as string
+      console.log(courseId,"assignments---");
+      const assignmentsData= await this.tutorUseCase.getAssignments(courseId)
+      return res.status(assignmentsData.status).json(assignmentsData.data)
+      
+    } catch (error) {
+      next(error)
+    }
+  }
+  // getInstructor
+  async getInstructor (req:Req,res:Res,next:Next){
+    try {
+      const instructorId=  req.query.instructorId  as string
+      const instructorData = await this.tutorUseCase.getInstructorDetails(instructorId)
+      return res.status(instructorData.status).json(instructorData.data)
+    } catch (error) {
+      next(error)
+    }
+  }
 }
 export default TutorController;

@@ -13,13 +13,14 @@ import Modules from "../../domain/course/chapter";
 import moduleModel from "../database/tutorModel/moduleModel";
 import path from "path";
 import mongoose, { model } from "mongoose";
-import { CourseData, IAssignment, IConversation, ICourseWithAssignments, OtpDoc, TutorDetails } from "../type/expressTypes";
+import { CourseData, IAssignment, IConversation, ICourseWithAssignments, IGetReviews, IInstructorDetails, OtpDoc, TutorDetails } from "../type/expressTypes";
 import { ITutorDetails } from "../../domain/tutorDetails";
 import InstructorDetails from "../database/tutorModel/tutorDetailsModel";
 import conversationModel from "../database/commonModel/conversationModel";
 import { count, log } from "console";
 import { Assignment } from "../../domain/course/assignment";
 import assignmentModel from "../database/tutorModel/assignmentModel";
+import Review from "../database/commonModel/reviewModel";
 
 
 class TutorRepository implements TutorRepo {
@@ -277,6 +278,48 @@ async findAssignments(instructor_id: string): Promise<IAssignment[]> {
   return assignments;
 }
 
+// getReview
+async getReview(courseId: string): Promise<IGetReviews[]> {
+  const reviews = await Review.find({courseId:courseId}).sort({createdAt:-1});
+  console.log(reviews,"getReview");
+ const reviewData:IGetReviews[] =reviews.map((review)=>({
+  userName:review.userName,
+  feedback:review.feedback,
+  rating:review.rating
+ }))
+  
+ console.log(reviewData,"data reiew");
+ 
+ return reviewData
+}
+// fetchAssignments
+async fetchAssignments(courseId: string): Promise<Assignment[]> {
+  const assigmentsData = await assignmentModel.find({courseId:courseId})
+  return assigmentsData
+
+}
+// fetchInstructor
+async fetchInstructor(instructorId: string): Promise<IInstructorDetails> {
+  const tutor = await tutorModel.findById(instructorId)
+  const instructor = await InstructorDetails.findOne({ instructorId: instructorId });
+
+  console.log(tutor, instructor, "Fetched tutor and instructor details");
+  const instructor_id = tutor?._id as string
+  const instructorname = tutor?.name as string
+  const instructormail = tutor?.email as string
+  const instructorData: IInstructorDetails = {
+    instructorId: instructor_id,
+    instructorName: instructorname,
+    instructorEmail:instructormail,
+    aboutBio: instructor?.aboutBio || '',
+    companyName: instructor?.companyName || '',
+    experience: instructor?.experience || '',
+    position: instructor?.position || '',
+    profileImg: instructor?.profileImg || ''
+  };
+
+  return instructorData;
+}
 }
 
 export default TutorRepository;

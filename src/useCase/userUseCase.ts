@@ -14,6 +14,8 @@ import { IConversation, IPaymentComplete, Message } from "../infrastructure/type
 import { IPayment } from "../domain/payment";
 import items from "razorpay/dist/types/items";
 import { Conversation } from "../domain/conversationMsg";
+import { reviews } from "../domain/review";
+import { stat } from "fs";
 
 class UserUseCase {
   private _userRepository: UserRepository;
@@ -603,6 +605,77 @@ class UserUseCase {
       }
     }
     
+  }
+  // reviewsUpload
+  async reviewsUpload(courseId:string,userId:string,userName:string,feedback:string,rating:number){
+    const data:reviews ={
+      courseId:courseId,
+      userId:userId,
+      userName:userName,
+      feedback:feedback,
+      rating:rating
+    }
+
+    const uploadReviews = await this._userRepository.uploadReview(data)
+    if (uploadReviews) {
+      return {
+        status:200,
+        message:"your review added successfully"
+      }
+    }else{
+      return {
+        status:400,
+        message:"Something wrong adding the review!"
+      }
+    }
+  }
+  // reviewsFetch
+  async reviewsFetch (courseId:string){
+    const getReviews = await this._userRepository.getReview(courseId)
+    if (getReviews) {
+      return {
+        status:200,
+        data:{
+          getReviews
+        }
+      }
+    } else {
+      return {
+        status:400,
+        data:{
+          message:"Something went wrong fetching reviews"
+        }
+      }
+    }
+  }
+  // getAssignments
+  async getAssignments (courseId:string){
+    const assignmentsFetch = await this._userRepository.fetchAssignments(courseId)
+    console.log(assignmentsFetch);
+    
+    const assignmentsWithUrlPromises = assignmentsFetch.map(async (assignment) => {
+      const assignmentUrl = await this._S3Uploader.getSignedUrl(assignment.pdf_file);
+      return {
+        ...assignment,
+        assignmentUrl,
+      };
+    });
+  
+    const assignmentsWithUrls = await Promise.all(assignmentsWithUrlPromises);
+    console.log(assignmentsWithUrls,assignmentsWithUrls);
+
+      return {
+        status:200,
+        data:assignmentsWithUrls
+      }
+  }
+  // getInstructorDetails
+  async getInstructorDetails(instructorId:string){
+    const getInstructor = await this._userRepository.fetchInstructor(instructorId)
+    return {
+      status:200,
+     data: getInstructor
+    }
   }
 }
 

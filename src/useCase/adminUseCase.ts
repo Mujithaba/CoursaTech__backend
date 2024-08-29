@@ -534,6 +534,57 @@ class AdminUseCase {
       };
     }
   }
+
+  // reviewsFetch
+  async reviewsFetch (courseId:string){
+    const getReviews = await this._adminRepository.getReview(courseId)
+    if (getReviews) {
+      return {
+        status:200,
+        data:{
+          getReviews
+        }
+      }
+    } else {
+      return {
+        status:400,
+        data:{
+          message:"Something went wrong fetching reviews"
+        }
+      }
+    }
+  }
+  // getAssignments
+  async getAssignments (courseId:string){
+    const assignmentsFetch = await this._adminRepository.fetchAssignments(courseId)
+    console.log(assignmentsFetch);
+    
+    const assignmentsWithUrlPromises = assignmentsFetch.map(async (assignment) => {
+      const assignmentUrl = await this._S3Uploader.getSignedUrl(assignment.pdf_file);
+      return {
+        ...assignment,
+        assignmentUrl,
+      };
+    });
+  
+    const assignmentsWithUrls = await Promise.all(assignmentsWithUrlPromises);
+    console.log(assignmentsWithUrls,assignmentsWithUrls);
+
+      return {
+        status:200,
+        data:assignmentsWithUrls
+      }
+  }
+  // getInstructorDetails
+  async getInstructorDetails(instructorId:string){
+    console.log("coming admint usecase");
+    
+    const getInstructor = await this._adminRepository.fetchInstructor(instructorId)
+    return {
+      status:200,
+     data: getInstructor
+    }
+  }
   
 }
 export default AdminUseCase;

@@ -2,6 +2,8 @@ import User from "../../domain/user";
 import Tutor from "../../domain/tutor";
 import ICategory from "../../domain/Icategory";
 import ICourse from "../../domain/course/course";
+import { IGetReviews, IInstructorDetails } from "../../infrastructure/type/expressTypes";
+import { Assignment } from "../../domain/course/assignment";
 
 interface AdminRep {
   // users taking
@@ -34,6 +36,9 @@ interface AdminRep {
   findUnapprovedCourse():Promise<any>
   verifyCourse(courseId: string): Promise<boolean>
   unverifyCourse(courseId:string):Promise<boolean>
+  getReview(courseId:string):Promise<IGetReviews[]>
+    fetchAssignments(courseId:string):Promise<Assignment[]>
+    fetchInstructor(instructorId:string):Promise<IInstructorDetails>
 }
 
 export default AdminRep;

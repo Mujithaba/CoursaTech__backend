@@ -3,8 +3,9 @@ import Tutor from "../../domain/tutor";
 import ICategory from "../../domain/Icategory";
 import Lecture from "../../domain/course/lecture";
 import Modules from "../../domain/course/chapter";
-import { CourseData, IAssignment, IConversation, IFile, InterCourse, OtpDoc } from "../../infrastructure/type/expressTypes";
+import { CourseData, IAssignment, IConversation, IFile, IGetReviews, IInstructorDetails, InterCourse, OtpDoc } from "../../infrastructure/type/expressTypes";
 import { ITutorDetails } from "../../domain/tutorDetails";
+import { Assignment } from "../../domain/course/assignment";
 
 
 interface TutorRepo {
@@ -33,6 +34,9 @@ interface TutorRepo {
     instructorCourseData(instructor_id:string):Promise<CourseData[]>
     addAssignment(courseId:string,courseTitle:string,assignmenturl:string):Promise<boolean>
     findAssignments(instructor_id:string):Promise<IAssignment[]>
+    getReview(courseId:string):Promise<IGetReviews[]>
+    fetchAssignments(courseId:string):Promise<Assignment[]>
+    fetchInstructor(instructorId:string):Promise<IInstructorDetails>
 }
 
 export default TutorRepo

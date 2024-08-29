@@ -262,7 +262,7 @@ class userConroller {
   // sendUserMsg
   async storeUserMsg(req: Req, res: Res, next: Next) {
     try {
-      const { message, userId, instructorId, username } = req.body;
+      const { message,userId,instructorId,username} = req.body;
 
       const saveMsg = await this._userUseCase.storeUserMsg(
         message,
@@ -277,6 +277,58 @@ class userConroller {
       }
     } catch (error) {
       next(error);
+    }
+  }
+  // uploadReviews
+  async uploadReviews (req:Req,res:Res,next:Next){
+    try {
+      const {rating,feedback,courseId,userId,userName} = req.body;
+      console.log(rating,feedback,courseId,userId,userName,"rating,feedback,courseId,userId,userName");
+      
+      const reviewUpload = await this._userUseCase.reviewsUpload(courseId,userId,userName,feedback,rating)
+      if (reviewUpload) {
+        return res.status(reviewUpload.status).json(reviewUpload)
+      }
+      
+    } catch (error) {
+      next(error)
+    }
+  }
+  // reviewsFetch
+  async getReviews(req:Req,res:Res,next:Next){
+    try {
+      const courseId = req.query.courseId as string;
+      console.log(courseId,"hhh");
+      const getReview = await this._userUseCase.reviewsFetch(courseId)
+      if (getReview) {
+        return res.status(getReview.status).json(getReview)
+      }
+      
+    } catch (error) {
+      next(error)
+    }
+  }
+  // fetchAssignments
+  async fetchAssignments (req:Req,res:Res,next:Next){
+    try {
+
+      const courseId=  req.query.courseId  as string
+      console.log(courseId,"assignments---");
+      const assignmentsData= await this._userUseCase.getAssignments(courseId)
+      return res.status(assignmentsData.status).json(assignmentsData.data)
+      
+    } catch (error) {
+      next(error)
+    }
+  }
+  // getInstructor
+  async getInstructor (req:Req,res:Res,next:Next){
+    try {
+      const instructorId=  req.query.instructorId  as string
+      const instructorData = await this._userUseCase.getInstructorDetails(instructorId)
+      return res.status(instructorData.status).json(instructorData.data)
+    } catch (error) {
+      next(error)
     }
   }
 }

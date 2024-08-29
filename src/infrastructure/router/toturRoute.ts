@@ -53,6 +53,9 @@ route.get('/storedMsgsFetching',tutorAuth,(req: Req, res: Res, next: Next)=>tuto
 route.get('/coursesForAssignment',tutorAuth,(req: Req, res: Res, next: Next)=>tutorController.coursesForAssignment(req,res,next))
 route.post('/uploadingAssignment',uploader.single('assignment'),tutorAuth,(req: Req, res: Res, next: Next)=>tutorController.uploadingAssignment(req,res,next))
 route.get('/assignmentsFetch',tutorAuth,(req: Req, res: Res, next: Next)=>tutorController.assignmentsFetch(req,res,next))
+route.get('/reviewsFetch',tutorAuth,(req: Req, res: Res, next: Next)=>tutorController.getReviews(req,res,next));
+route.get('/fetchAssignments',tutorAuth,(req: Req, res: Res, next: Next)=>tutorController.fetchAssignments(req,res,next));
+route.get('/getInstructor',tutorAuth,(req: Req, res: Res, next: Next)=>tutorController.getInstructor(req,res,next));
 
 
 

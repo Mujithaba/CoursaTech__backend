@@ -1,9 +1,11 @@
 import { Conversation } from "../../domain/conversationMsg";
+import { Assignment } from "../../domain/course/assignment";
 import ICourse from "../../domain/course/course";
 import { IMessage } from "../../domain/message";
 import { IPayment } from "../../domain/payment";
+import { reviews } from "../../domain/review";
 import User from "../../domain/user";
-import {  OtpDoc } from "../../infrastructure/type/expressTypes";
+import {  IAssignment, IGetReviews, IInstructorDetails, OtpDoc } from "../../infrastructure/type/expressTypes";
 
 
 
@@ -21,6 +23,11 @@ interface UserRepo {
     savePayments(payment:IPayment):Promise<IPayment>
     storeMesssage(messages:IMessage):Promise<IMessage>
     createConversation(lastMessage:Conversation):Promise<Conversation | null>
+    uploadReview(data:reviews):Promise<boolean>
+    getReview(courseId:string):Promise<IGetReviews[]>
+    fetchAssignments(courseId:string):Promise<Assignment[]>
+    fetchInstructor(instructorId:string):Promise<IInstructorDetails>
+
 }
 
 export default UserRepo
