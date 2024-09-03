@@ -30,6 +30,7 @@ class AdminRepository implements AdminRep {
     const totalUsers = await userModel.countDocuments({ isAdmin: false });
     const users = await userModel
       .find({ isAdmin: false })
+      .select('-password')
       .skip((page - 1) * limit)
       .limit(limit);
     return { users, totalUsers };
