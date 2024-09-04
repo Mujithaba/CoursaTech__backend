@@ -161,3 +161,27 @@ export interface IInstructorDetails {
   companyName?:string;
   aboutBio?:string;
 }
+
+
+export interface IReportIssues {
+  issueType: string;
+  description: string;
+}
+
+export interface IReportRequest {
+  courseId: string;
+  userId: string[];
+  issuesType:string[];
+  descriptiion:string[];
+}
+
+export interface IReportedCourseData {
+  courseId:string;
+  courseName:string;
+  instructorId:string;
+  thamnail:string;
+}
+export interface IReportInstructor{
+  instructorName:string;
+  email:string;
+}

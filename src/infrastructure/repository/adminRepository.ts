@@ -8,11 +8,18 @@ import categoryModel from "../database/adminModel/categoryModel";
 import { time } from "console";
 import courseModel from "../database/tutorModel/courseModel";
 import ICourse from "../../domain/course/course";
-import { IGetReviews, IInstructorDetails } from "../type/expressTypes";
+import {
+  IGetReviews,
+  IInstructorDetails,
+  IReportedCourseData,
+  IReportInstructor,
+} from "../type/expressTypes";
 import InstructorDetails from "../database/tutorModel/tutorDetailsModel";
 import assignmentModel from "../database/tutorModel/assignmentModel";
 import { Assignment } from "../../domain/course/assignment";
 import Review from "../database/commonModel/reviewModel";
+import { IReport } from "../../domain/report";
+import Report from "../database/commonModel/reportModal";
 
 class AdminRepository implements AdminRep {
   // async findUsers(page: number, limit: number): Promise<{ users: User[], totalUsers: number }> {
@@ -30,7 +37,7 @@ class AdminRepository implements AdminRep {
     const totalUsers = await userModel.countDocuments({ isAdmin: false });
     const users = await userModel
       .find({ isAdmin: false })
-      .select('-password')
+      .select("-password")
       .skip((page - 1) * limit)
       .limit(limit);
     return { users, totalUsers };
@@ -162,23 +169,26 @@ class AdminRepository implements AdminRep {
   }
   // get all course
   async getCourses(limit: number, skip: number): Promise<{}[]> {
-    const coursesData = await courseModel.find().populate({
-      path: 'category_id',
-      select: 'categoryName',
-    })
-    .populate({path:'chapters',
-      model:"Module",
-      select:'name lectures createdAt',
-      populate:{
-        path:'lectures',
-        model:"Lecture",
-        select: 'title description  video  pdf createdAt'
-      }
+    const coursesData = await courseModel
+      .find()
+      .populate({
+        path: "category_id",
+        select: "categoryName",
+      })
+      .populate({
+        path: "chapters",
+        model: "Module",
+        select: "name lectures createdAt",
+        populate: {
+          path: "lectures",
+          model: "Lecture",
+          select: "title description  video  pdf createdAt",
+        },
       })
       .limit(limit)
       .skip(skip)
-    .lean()
-    .exec();
+      .lean()
+      .exec();
 
     return coursesData;
   }
@@ -189,51 +199,58 @@ class AdminRepository implements AdminRep {
   // getCourseView
   async getCourseView(course_id: string): Promise<any> {
     const getTutorCourses = await courseModel
-    .findById(course_id)
-    .populate({
-      path: 'category_id',
-      select: 'categoryName',
-    })
-    .populate({path:'chapters',
-      model:"Module",
-      select:'name lectures createdAt',
-      populate:{
-        path:'lectures',
-        model:"Lecture",
-        select: 'title description  video  pdf createdAt'
-      }
+      .findById(course_id)
+      .populate({
+        path: "category_id",
+        select: "categoryName",
       })
-    .lean()
-    .exec();
+      .populate({
+        path: "chapters",
+        model: "Module",
+        select: "name lectures createdAt",
+        populate: {
+          path: "lectures",
+          model: "Lecture",
+          select: "title description  video  pdf createdAt",
+        },
+      })
+      .lean()
+      .exec();
     console.dir(getTutorCourses, { depth: null, colors: true });
-    
-  return getTutorCourses;
+
+    return getTutorCourses;
   }
   // course approvel
- async findUnapprovedCourse(): Promise<any> {
-  const totalUnverify = await courseModel.countDocuments({is_verified:false})
-  console.log(totalUnverify,"totalUnverify............................................");
-  
-  const getCourses = await courseModel
-  .find({is_verified:false})
-  .populate({
-    path: 'category_id',
-    select: 'categoryName',
-  })
-  .populate({path:'chapters',
-    model:"Module",
-    select:'name lectures createdAt',
-    populate:{
-      path:'lectures',
-      model:"Lecture",
-      select: 'title description  video  pdf createdAt'
-    }
-    })
-  .lean()
-  .exec();
-  console.dir(getCourses, { depth: null, colors: true });
-  
-return{ getCourses,totalUnverify};
+  async findUnapprovedCourse(): Promise<any> {
+    const totalUnverify = await courseModel.countDocuments({
+      is_verified: false,
+    });
+    console.log(
+      totalUnverify,
+      "totalUnverify............................................"
+    );
+
+    const getCourses = await courseModel
+      .find({ is_verified: false })
+      .populate({
+        path: "category_id",
+        select: "categoryName",
+      })
+      .populate({
+        path: "chapters",
+        model: "Module",
+        select: "name lectures createdAt",
+        populate: {
+          path: "lectures",
+          model: "Lecture",
+          select: "title description  video  pdf createdAt",
+        },
+      })
+      .lean()
+      .exec();
+    console.dir(getCourses, { depth: null, colors: true });
+
+    return { getCourses, totalUnverify };
   }
   // verifyCourse
   async verifyCourse(courseId: string): Promise<boolean> {
@@ -253,50 +270,100 @@ return{ getCourses,totalUnverify};
   }
 
   // getReview
-async getReview(courseId: string): Promise<IGetReviews[]> {
-  const reviews = await Review.find({courseId:courseId}).sort({createdAt:-1});
-  console.log(reviews,"getReview");
- const reviewData:IGetReviews[] =reviews.map((review)=>({
-  userName:review.userName,
-  feedback:review.feedback,
-  rating:review.rating
- }))
-  
- console.log(reviewData,"data reiew");
- 
- return reviewData
-}
-// fetchAssignments
-async fetchAssignments(courseId: string): Promise<Assignment[]> {
-  const assigmentsData = await assignmentModel.find({courseId:courseId})
-  return assigmentsData
+  async getReview(courseId: string): Promise<IGetReviews[]> {
+    const reviews = await Review.find({ courseId: courseId }).sort({
+      createdAt: -1,
+    });
+    console.log(reviews, "getReview");
+    const reviewData: IGetReviews[] = reviews.map((review) => ({
+      userName: review.userName,
+      feedback: review.feedback,
+      rating: review.rating,
+    }));
 
-}
-// fetchInstructor
-async fetchInstructor(instructorId: string): Promise<IInstructorDetails> {
-  console.log("erepo insru data",instructorId);
-  
-  const tutor = await tutorModel.findById(instructorId)
-  const instructor = await InstructorDetails.findOne({ instructorId: instructorId });
+    console.log(reviewData, "data reiew");
 
-  console.log(tutor, instructor, "Fetched tutor and instructor details");
-  const instructor_id = tutor?._id as string
-  const instructorname = tutor?.name as string
-  const instructormail = tutor?.email as string
-  const instructorData: IInstructorDetails = {
-    instructorId: instructor_id,
-    instructorName: instructorname,
-    instructorEmail:instructormail,
-    aboutBio: instructor?.aboutBio || '',
-    companyName: instructor?.companyName || '',
-    experience: instructor?.experience || '',
-    position: instructor?.position || '',
-    profileImg: instructor?.profileImg || ''
-  };
-console.log(instructorData,"instructorData");
+    return reviewData;
+  }
+  // fetchAssignments
+  async fetchAssignments(courseId: string): Promise<Assignment[]> {
+    const assigmentsData = await assignmentModel.find({ courseId: courseId });
+    return assigmentsData;
+  }
+  // fetchInstructor
+  async fetchInstructor(instructorId: string): Promise<IInstructorDetails> {
+    console.log("erepo insru data", instructorId);
 
-  return instructorData;
-}
+    const tutor = await tutorModel.findById(instructorId);
+    const instructor = await InstructorDetails.findOne({
+      instructorId: instructorId,
+    });
+
+    console.log(tutor, instructor, "Fetched tutor and instructor details");
+    const instructor_id = tutor?._id as string;
+    const instructorname = tutor?.name as string;
+    const instructormail = tutor?.email as string;
+    const instructorData: IInstructorDetails = {
+      instructorId: instructor_id,
+      instructorName: instructorname,
+      instructorEmail: instructormail,
+      aboutBio: instructor?.aboutBio || "",
+      companyName: instructor?.companyName || "",
+      experience: instructor?.experience || "",
+      position: instructor?.position || "",
+      profileImg: instructor?.profileImg || "",
+    };
+    console.log(instructorData, "instructorData");
+
+    return instructorData;
+  }
+
+  // reportsFetch
+  async reportsFetch(): Promise<IReport[]> {
+    const reports = await Report.find();
+    return reports;
+  }
+  // findCourse for report course data
+  async findCourseById(course_id: string): Promise<IReportedCourseData> {
+    const courseData = await courseModel.findById(course_id);
+    const instructorId = String(courseData?.instructor_id);
+    let course: IReportedCourseData = {
+      courseId: courseData?._id as string,
+      courseName: courseData?.title as string,
+      instructorId: instructorId,
+      thamnail: courseData?.thambnail_Img as string,
+    };
+    return course;
+  }
+  // findInstructor for report course
+  async findInstructorById(instructorId: string): Promise<IReportInstructor> {
+    const instructorData = await tutorModel.findById(instructorId);
+    let instructor: IReportInstructor = {
+      instructorName: instructorData?.name as string,
+      email: instructorData?.email as string,
+    };
+    return instructor;
+  }
+  // courseDelete
+  async courseDelete(courseId: string): Promise<boolean> {
+    try {
+      const resultDelete = await courseModel.findByIdAndDelete(courseId);
+      return !!resultDelete; 
+    } catch (error) {
+      console.error("Error deleting course:", error);
+      return false; 
+    }
+  }
+  // deleteReport
+  async deleteReport(courseId: string): Promise<boolean> {
+    try {
+      const resultReport = await Report.findByIdAndDelete({courseId:courseId})
+      return !!resultReport
+    } catch (error) {
+      console.error("Error deleting report:", error);
+      return false; 
+    }
+  }
 }
 
 export default AdminRepository;

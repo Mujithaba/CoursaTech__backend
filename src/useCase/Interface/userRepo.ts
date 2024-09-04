@@ -5,7 +5,7 @@ import { IMessage } from "../../domain/message";
 import { IPayment } from "../../domain/payment";
 import { reviews } from "../../domain/review";
 import User from "../../domain/user";
-import {  IAssignment, IGetReviews, IInstructorDetails, OtpDoc } from "../../infrastructure/type/expressTypes";
+import {  IAssignment, IGetReviews, IInstructorDetails, IReportRequest, OtpDoc } from "../../infrastructure/type/expressTypes";
 
 
 
@@ -20,13 +20,15 @@ interface UserRepo {
     coursesCount():Promise<number>
     getCourseView(course_id: string,userid:string): Promise<any>;
     findCourseById(course_id:string):Promise<ICourse | null>;
-    savePayments(payment:IPayment):Promise<IPayment>
-    storeMesssage(messages:IMessage):Promise<IMessage>
-    createConversation(lastMessage:Conversation):Promise<Conversation | null>
-    uploadReview(data:reviews):Promise<boolean>
-    getReview(courseId:string):Promise<IGetReviews[]>
-    fetchAssignments(courseId:string):Promise<Assignment[]>
-    fetchInstructor(instructorId:string):Promise<IInstructorDetails>
+    savePayments(payment:IPayment):Promise<IPayment>;
+    storeMesssage(messages:IMessage):Promise<IMessage>;
+    createConversation(lastMessage:Conversation):Promise<Conversation | null>;
+    uploadReview(data:reviews):Promise<boolean>;
+    getReview(courseId:string):Promise<IGetReviews[]>;
+    fetchAssignments(courseId:string):Promise<Assignment[]>;
+    fetchInstructor(instructorId:string):Promise<IInstructorDetails>;
+    reportCourese(courseId:string,userId:string,issueType:string,description:string):Promise<boolean>;
+    userReportExist(courseId:string,userId:string):Promise<boolean>;
 
 }
 

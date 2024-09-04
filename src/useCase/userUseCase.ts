@@ -10,7 +10,13 @@ import Modules from "../domain/course/chapter";
 import Lecture from "../domain/course/lecture";
 import Razorpay from "razorpay";
 import { log } from "util";
-import { IConversation, IPaymentComplete, Message } from "../infrastructure/type/expressTypes";
+import {
+  IConversation,
+  IPaymentComplete,
+  IReportIssues,
+  IReportRequest,
+  Message,
+} from "../infrastructure/type/expressTypes";
 import { IPayment } from "../domain/payment";
 import items from "razorpay/dist/types/items";
 import { Conversation } from "../domain/conversationMsg";
@@ -331,13 +337,12 @@ class UserUseCase {
       };
     }
   }
-  
-  async countCourses(){
-    const itemsCount = await this._userRepository.coursesCount()
-    return itemsCount
+
+  async countCourses() {
+    const itemsCount = await this._userRepository.coursesCount();
+    return itemsCount;
   }
-  
- 
+
   // url thorugh data fetching from s3
   async s3GetFunction(getCourses: {}[]) {
     console.log("kkkk");
@@ -430,8 +435,9 @@ class UserUseCase {
   }
 
   //individual getViewCourse
-  async getViewCourse(course_id: string,userid:string) {
-    const {getCourses,isPurchased} = await this._userRepository.getCourseView(course_id,userid);
+  async getViewCourse(course_id: string, userid: string) {
+    const { getCourses, isPurchased } =
+      await this._userRepository.getCourseView(course_id, userid);
     const getViewCourses = await this.s3GenerateForViewCourse(getCourses);
     // console.log(getViewCourses, "aray s3 bucke");
 
@@ -440,7 +446,7 @@ class UserUseCase {
         status: 200,
         data: {
           getViewCourses,
-          isPurchased
+          isPurchased,
         },
       };
     } else {
@@ -461,7 +467,9 @@ class UserUseCase {
 
     if (course.thambnail_Img) {
       try {
-        thumbnailUrl = await this._S3Uploader.getSignedUrl(course.thambnail_Img);
+        thumbnailUrl = await this._S3Uploader.getSignedUrl(
+          course.thambnail_Img
+        );
       } catch (error) {
         console.error(
           `Error generating signed URL for thumbnail: ${course.thambnail_Img}`,
@@ -577,104 +585,164 @@ class UserUseCase {
     }
   }
   // storeUserMsg
-  async storeUserMsg(message:string,userId:string,instructorId:string,username:string){
-    const msg:Message = {
-      senderId:userId,
-      receiverId:instructorId,
-      message:message
-    }
-    const storeMsg = await this._userRepository.storeMesssage(msg)
-    let lastMsg:Conversation={
-      senderName:username,
-      senderId:userId,
-      receiverId:instructorId,
-      lastMessage:message
-    }
-    const conversationMsg = await this._userRepository.createConversation(lastMsg)
-    console.log(storeMsg,conversationMsg,"stored msg");
+  async storeUserMsg(
+    message: string,
+    userId: string,
+    instructorId: string,
+    username: string
+  ) {
+    const msg: Message = {
+      senderId: userId,
+      receiverId: instructorId,
+      message: message,
+    };
+    const storeMsg = await this._userRepository.storeMesssage(msg);
+    let lastMsg: Conversation = {
+      senderName: username,
+      senderId: userId,
+      receiverId: instructorId,
+      lastMessage: message,
+    };
+    const conversationMsg = await this._userRepository.createConversation(
+      lastMsg
+    );
+    console.log(storeMsg, conversationMsg, "stored msg");
 
     if (storeMsg) {
       return {
-        status:200,
-        message:"msg is stored"
-      }
+        status: 200,
+        message: "msg is stored",
+      };
     } else {
       return {
-        status:400,
-        message:"something went wrong the msg storing"
-      }
+        status: 400,
+        message: "something went wrong the msg storing",
+      };
     }
-    
   }
   // reviewsUpload
-  async reviewsUpload(courseId:string,userId:string,userName:string,feedback:string,rating:number){
-    const data:reviews ={
-      courseId:courseId,
-      userId:userId,
-      userName:userName,
-      feedback:feedback,
-      rating:rating
-    }
+  async reviewsUpload(
+    courseId: string,
+    userId: string,
+    userName: string,
+    feedback: string,
+    rating: number
+  ) {
+    const data: reviews = {
+      courseId: courseId,
+      userId: userId,
+      userName: userName,
+      feedback: feedback,
+      rating: rating,
+    };
 
-    const uploadReviews = await this._userRepository.uploadReview(data)
+    const uploadReviews = await this._userRepository.uploadReview(data);
     if (uploadReviews) {
       return {
-        status:200,
-        message:"your review added successfully"
-      }
-    }else{
+        status: 200,
+        message: "your review added successfully",
+      };
+    } else {
       return {
-        status:400,
-        message:"Something wrong adding the review!"
-      }
+        status: 400,
+        message: "Something wrong adding the review!",
+      };
     }
   }
   // reviewsFetch
-  async reviewsFetch (courseId:string){
-    const getReviews = await this._userRepository.getReview(courseId)
+  async reviewsFetch(courseId: string) {
+    const getReviews = await this._userRepository.getReview(courseId);
     if (getReviews) {
       return {
-        status:200,
-        data:{
-          getReviews
-        }
-      }
+        status: 200,
+        data: {
+          getReviews,
+        },
+      };
     } else {
       return {
-        status:400,
-        data:{
-          message:"Something went wrong fetching reviews"
-        }
-      }
+        status: 400,
+        data: {
+          message: "Something went wrong fetching reviews",
+        },
+      };
     }
   }
   // getAssignments
-  async getAssignments (courseId:string){
-    const assignmentsFetch = await this._userRepository.fetchAssignments(courseId)
+  async getAssignments(courseId: string) {
+    const assignmentsFetch = await this._userRepository.fetchAssignments(
+      courseId
+    );
     console.log(assignmentsFetch);
-    
-    const assignmentsWithUrlPromises = assignmentsFetch.map(async (assignment) => {
-      const assignmentUrl = await this._S3Uploader.getSignedUrl(assignment.pdf_file);
-      return {
-        ...assignment,
-        assignmentUrl,
-      };
-    });
-  
-    const assignmentsWithUrls = await Promise.all(assignmentsWithUrlPromises);
-    console.log(assignmentsWithUrls,assignmentsWithUrls);
 
-      return {
-        status:200,
-        data:assignmentsWithUrls
+    const assignmentsWithUrlPromises = assignmentsFetch.map(
+      async (assignment) => {
+        const assignmentUrl = await this._S3Uploader.getSignedUrl(
+          assignment.pdf_file
+        );
+        return {
+          ...assignment,
+          assignmentUrl,
+        };
       }
+    );
+
+    const assignmentsWithUrls = await Promise.all(assignmentsWithUrlPromises);
+    console.log(assignmentsWithUrls, assignmentsWithUrls);
+
+    return {
+      status: 200,
+      data: assignmentsWithUrls,
+    };
   }
   // getInstructorDetails
-  async getInstructorDetails(instructorId:string){
-    const getInstructor = await this._userRepository.fetchInstructor(instructorId)
+  async getInstructorDetails(instructorId: string) {
+    const getInstructor = await this._userRepository.fetchInstructor(
+      instructorId
+    );
     return {
-      status:200,
-     data: getInstructor
+      status: 200,
+      data: getInstructor,
+    };
+  }
+  // reportingCourse
+  async reportingCourse(
+    courseId: string,
+    userId: string,
+    formState: IReportIssues
+  ) {
+    console.log(courseId, userId, formState, "userusecase report");
+
+    // Check if the user has already reported the course
+    const hasUserReported = await this._userRepository.userReportExist(
+      courseId,
+      userId
+    );
+
+    if (hasUserReported) {
+      return {
+        status: 200,
+        message: "You have already reported this course.",
+        data:"AlreadyAdded"
+      };
+    }
+
+    const reportAction = await this._userRepository.reportCourese(
+      courseId,
+      userId,
+      formState.issueType,
+      formState.description
+    );
+    if (reportAction) {
+      return {
+        status: 200,
+        message: "Your report is successfully added",
+      };
+    } else {
+      return {
+        status: 400,
+        message: "Something went wrong reporting, Please try later!",
+      };
     }
   }
 }

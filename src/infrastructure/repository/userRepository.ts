@@ -5,7 +5,14 @@ import otpDocModel from "../database/commonModel/otpDocModel";
 import UserRepo from "../../useCase/Interface/userRepo";
 import { log } from "console";
 import courseModel from "../database/tutorModel/courseModel";
-import { IAssignment, IGetReviews, IInstructorDetails, itemsCount, OtpDoc } from "../type/expressTypes";
+import {
+  IAssignment,
+  IGetReviews,
+  IInstructorDetails,
+  IReportRequest,
+  itemsCount,
+  OtpDoc,
+} from "../type/expressTypes";
 import ICourse from "../../domain/course/course";
 import { IPayment } from "../../domain/payment";
 import Payment from "../database/commonModel/paymentModel";
@@ -19,6 +26,7 @@ import assignmentModel from "../database/tutorModel/assignmentModel";
 import { Assignment } from "../../domain/course/assignment";
 import InstructorDetails from "../database/tutorModel/tutorDetailsModel";
 import tutorModel from "../database/tutorModel/tutorModel";
+import Report from "../database/commonModel/reportModal";
 
 class UserRepository implements UserRepo {
   // saving user details to  database
@@ -81,7 +89,7 @@ class UserRepository implements UserRepo {
   // get all course
   async getCourses(limit: number, skip: number): Promise<{}[]> {
     const coursesData = await courseModel
-      .find({is_verified:true})
+      .find({ is_verified: true })
       .populate({ path: "category_id", select: "categoryName" })
       .populate({
         path: "chapters",
@@ -101,11 +109,9 @@ class UserRepository implements UserRepo {
   }
 
   async coursesCount(): Promise<number> {
-    const counts = await courseModel.countDocuments({is_verified:true});
+    const counts = await courseModel.countDocuments({ is_verified: true });
     return counts;
   }
-
-  
 
   // getCourseView
   async getCourseView(course_id: string, userid: string): Promise<any> {
@@ -162,7 +168,9 @@ class UserRepository implements UserRepo {
     return storeMsgs;
   }
   // createConversation
-  async createConversation(lastMessage: Conversation): Promise<Conversation |null> {
+  async createConversation(
+    lastMessage: Conversation
+  ): Promise<Conversation | null> {
     const conversationMsg = await conversationModel.findOne({
       senderId: lastMessage.senderId,
       receiverId: lastMessage.receiverId,
@@ -190,49 +198,103 @@ class UserRepository implements UserRepo {
   async uploadReview(data: reviews): Promise<boolean> {
     const newReview = new Review(data);
     const saveReview = await newReview.save();
-    return !!saveReview
+    return !!saveReview;
   }
   // getReview
   async getReview(courseId: string): Promise<IGetReviews[]> {
-    const reviews = await Review.find({courseId:courseId}).sort({createdAt:-1});
-    console.log(reviews,"getReview");
-   const reviewData:IGetReviews[] =reviews.map((review)=>({
-    userName:review.userName,
-    feedback:review.feedback,
-    rating:review.rating
-   }))
-    
-   console.log(reviewData,"data reiew");
-   
-   return reviewData
+    const reviews = await Review.find({ courseId: courseId }).sort({
+      createdAt: -1,
+    });
+    console.log(reviews, "getReview");
+    const reviewData: IGetReviews[] = reviews.map((review) => ({
+      userName: review.userName,
+      feedback: review.feedback,
+      rating: review.rating,
+    }));
+
+    console.log(reviewData, "data reiew");
+
+    return reviewData;
   }
   // fetchAssignments
   async fetchAssignments(courseId: string): Promise<Assignment[]> {
-    const assigmentsData = await assignmentModel.find({courseId:courseId})
-    return assigmentsData
-
+    const assigmentsData = await assignmentModel.find({ courseId: courseId });
+    return assigmentsData;
   }
   // fetchInstructor
   async fetchInstructor(instructorId: string): Promise<IInstructorDetails> {
-    const tutor = await tutorModel.findById(instructorId)
-    const instructor = await InstructorDetails.findOne({ instructorId: instructorId });
+    const tutor = await tutorModel.findById(instructorId);
+    const instructor = await InstructorDetails.findOne({
+      instructorId: instructorId,
+    });
 
     console.log(tutor, instructor, "Fetched tutor and instructor details");
-    const instructor_id = tutor?._id as string
-    const instructorname = tutor?.name as string
-    const instructormail = tutor?.email as string
+    const instructor_id = tutor?._id as string;
+    const instructorname = tutor?.name as string;
+    const instructormail = tutor?.email as string;
     const instructorData: IInstructorDetails = {
       instructorId: instructor_id,
       instructorName: instructorname,
-      instructorEmail:instructormail,
-      aboutBio: instructor?.aboutBio || '',
-      companyName: instructor?.companyName || '',
-      experience: instructor?.experience || '',
-      position: instructor?.position || '',
-      profileImg: instructor?.profileImg || ''
+      instructorEmail: instructormail,
+      aboutBio: instructor?.aboutBio || "",
+      companyName: instructor?.companyName || "",
+      experience: instructor?.experience || "",
+      position: instructor?.position || "",
+      profileImg: instructor?.profileImg || "",
     };
 
     return instructorData;
+  }
+  // reportCourese
+  async reportCourese(
+    courseId: string,
+    userId: string,
+    issueType: string,
+    description: string
+  ): Promise<boolean> {
+    try {
+      const reportExist = await Report.findOne({ courseId });
+
+      if (reportExist) {
+        if (!reportExist.userId.includes(userId)) {
+          reportExist.userId.push(userId);
+
+          if (!reportExist.issueType.includes(issueType)) {
+            reportExist.issueType.push(issueType);
+          }
+
+          if (!reportExist.description.includes(description)) {
+            reportExist.description.push(description);
+          }
+        }
+
+        reportExist.reportedCount += 1;
+        await reportExist.save();
+      } else {
+        const newReport = new Report({
+          courseId,
+          userId: [userId],
+          issueType: [issueType],
+          description: [description],
+          reportedCount: 1,
+        });
+
+        await newReport.save();
+      }
+
+      return true;
+    } catch (error) {
+      console.error("Error reporting course:", error);
+      return false;
+    }
+  }
+  // userReportExist
+  async userReportExist(courseId: string, userId: string): Promise<boolean> {
+    const userExistReport = await Report.findOne({ courseId });
+    if (userExistReport) {
+      return userExistReport.userId.includes(userId); 
+    }
+    return false;
   }
 }
 

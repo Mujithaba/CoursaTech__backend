@@ -194,13 +194,18 @@ class AdminController {
       console.log("course admin conroller getting");
       const { page = 1, limit = 10 } = req.query;
       const skip = (Number(page) - 1) * Number(limit);
-      
-      const getAllCourses = await this.adminUseCase.allCourseGet(Number(limit), skip);
+
+      const getAllCourses = await this.adminUseCase.allCourseGet(
+        Number(limit),
+        skip
+      );
       if (getAllCourses) {
         const totalItems = await this.adminUseCase.countCourses();
-        console.log(totalItems,"total");
-        
-        return res.status(getAllCourses.status).json({ ...getAllCourses.data, totalItems });
+        console.log(totalItems, "total");
+
+        return res
+          .status(getAllCourses.status)
+          .json({ ...getAllCourses.data, totalItems });
       } else {
         return res.status(404).json({ message: "No courses found" });
       }
@@ -209,43 +214,35 @@ class AdminController {
     }
   }
   // get view course
-  async ViewCourses(req:Req,res:Res,next:Next){
+  async ViewCourses(req: Req, res: Res, next: Next) {
     try {
-      
-      const id = req.query.id as string
-      
+      const id = req.query.id as string;
+
       const courseViewData = await this.adminUseCase.getViewCourse(id);
 
       if (courseViewData) {
-        return res
-          .status(courseViewData.status)
-          .json(courseViewData.data);
+        return res.status(courseViewData.status).json(courseViewData.data);
       } else {
         return res.status(404).json({ message: "No course found" });
       }
-      
-      
     } catch (error) {
-      next(error)
+      next(error);
     }
   }
   // getUnapprovedCourse
-  async unapprovedCourse (req:Req,res:Res,next:Next){
+  async unapprovedCourse(req: Req, res: Res, next: Next) {
     try {
       console.log("getViewCourse controller");
-      const getUnapprCourse = await this.adminUseCase.unapprovedCourses()
-      console.log(getUnapprCourse,"get course unapprove");
-      
+      const getUnapprCourse = await this.adminUseCase.unapprovedCourses();
+      console.log(getUnapprCourse, "get course unapprove");
+
       if (getUnapprCourse) {
-        return res
-          .status(getUnapprCourse.status)
-          .json(getUnapprCourse.data);
+        return res.status(getUnapprCourse.status).json(getUnapprCourse.data);
       } else {
         return res.status(404).json({ message: "No course found" });
       }
-      
     } catch (error) {
-      next(error)
+      next(error);
     }
   }
   async courseApproved(req: Req, res: Res, next: Next) {
@@ -279,40 +276,59 @@ class AdminController {
     }
   }
   // reviewsFetch
-  async getReviews(req:Req,res:Res,next:Next){
+  async getReviews(req: Req, res: Res, next: Next) {
     try {
       const courseId = req.query.courseId as string;
-      console.log(courseId,"hhh");
-      const getReview = await this.adminUseCase.reviewsFetch(courseId)
+      console.log(courseId, "hhh");
+      const getReview = await this.adminUseCase.reviewsFetch(courseId);
       if (getReview) {
-        return res.status(getReview.status).json(getReview)
+        return res.status(getReview.status).json(getReview);
       }
-      
     } catch (error) {
-      next(error)
+      next(error);
     }
   }
   // fetchAssignments
-  async fetchAssignments (req:Req,res:Res,next:Next){
+  async fetchAssignments(req: Req, res: Res, next: Next) {
     try {
-
-      const courseId=  req.query.courseId  as string
-      console.log(courseId,"assignments---");
-      const assignmentsData= await this.adminUseCase.getAssignments(courseId)
-      return res.status(assignmentsData.status).json(assignmentsData.data)
-      
+      const courseId = req.query.courseId as string;
+      console.log(courseId, "assignments---");
+      const assignmentsData = await this.adminUseCase.getAssignments(courseId);
+      return res.status(assignmentsData.status).json(assignmentsData.data);
     } catch (error) {
-      next(error)
+      next(error);
     }
   }
   // getInstructor
-  async getInstructor (req:Req,res:Res,next:Next){
+  async getInstructor(req: Req, res: Res, next: Next) {
     try {
-      const instructorId=  req.query.instructorId  as string
+      const instructorId = req.query.instructorId as string;
       console.log("coming cotrl");
-      
-      const instructorData = await this.adminUseCase.getInstructorDetails(instructorId)
-      return res.status(instructorData.status).json(instructorData.data)
+
+      const instructorData = await this.adminUseCase.getInstructorDetails(
+        instructorId
+      );
+      return res.status(instructorData.status).json(instructorData.data);
+    } catch (error) {
+      next(error);
+    }
+  }
+  // getReports
+  async getReports(req: Req, res: Res, next: Next) {
+    try {
+      const reports = await this.adminUseCase.fetchReports();
+      return res.status(reports.status).json(reports.data);
+    } catch (error) {
+      next(error);
+    }
+  }
+  // deleteReportCourse
+  async deleteReportCourse(req:Req,res:Res,next:Next){
+    try {
+      const {courseId,courseName,email,instructorName } = req.body ;
+      console.log(courseId,courseName,email,instructorName,"oooo");
+      const result = await this.adminUseCase.deleteCourse(courseId,courseName,email,instructorName );
+      return res.status(result.status).json(result)
     } catch (error) {
       next(error)
     }

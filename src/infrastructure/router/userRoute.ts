@@ -52,6 +52,7 @@ route.post('/uploadReviews',userAuth,(req: Req, res: Res, next: Next)=>userContr
 route.get('/reviewsFetch',userAuth,(req: Req, res: Res, next: Next)=>userController.getReviews(req,res,next));
 route.get('/fetchAssignments',userAuth,(req: Req, res: Res, next: Next)=>userController.fetchAssignments(req,res,next));
 route.get('/getInstructor',userAuth,(req: Req, res: Res, next: Next)=>userController.getInstructor(req,res,next));
+route.post('/submitReport',userAuth,(req: Req, res: Res, next: Next)=>userController.submitTheReport(req,res,next))
 
 
 
