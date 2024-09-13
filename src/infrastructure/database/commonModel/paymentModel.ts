@@ -14,8 +14,12 @@ const paymentSchema: Schema = new Schema(
       type: String,
       required: true,
     },
-    price: {
+    instructorID:{
       type: String,
+      required: true,
+    },
+    price: {
+      type: Number,
       required: true,
     },
   },

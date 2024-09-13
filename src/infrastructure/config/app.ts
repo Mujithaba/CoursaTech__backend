@@ -57,8 +57,12 @@ app.use('/api/admin',adminRoute)
 
 
 io.on('connection', (socket) => {
+  console.log("connected:",socket.id);
+  
   socket.on('joinRoom', ({ roomId }) => {
     socket.join(roomId);
+    console.log(roomId,"socket.id room");
+    
   });
 
   socket.on('private message', (message) => {

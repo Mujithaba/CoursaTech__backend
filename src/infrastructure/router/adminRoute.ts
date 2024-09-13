@@ -44,7 +44,8 @@ route.get('/reviewsFetch',adminAuth,(req: Req, res: Res, next: Next)=>adminContr
 route.get('/fetchAssignments',adminAuth,(req: Req, res: Res, next: Next)=>adminController.fetchAssignments(req,res,next));
 route.get('/getInstructor',adminAuth,(req: Req, res: Res, next: Next)=>adminController.getInstructor(req,res,next));
 route.get('/getReports',adminAuth,(req: Req, res: Res, next: Next)=>adminController.getReports(req,res,next));
-route.patch('/deleteReportCourse',adminAuth,(req: Req, res: Res, next: Next)=>adminController.deleteReportCourse(req,res,next));
+route.delete('/deleteReportCourse',adminAuth,(req: Req, res: Res, next: Next)=>adminController.deleteReportCourse(req,res,next));
+route.get('/getRating',adminAuth,(req: Req, res: Res, next: Next)=>adminController.getRating(req,res,next));
 
 
   

@@ -74,6 +74,7 @@ export interface IPaymentComplete {
   res: {};
   courseID: string;
   userID: string;
+  instructorId:string;
 }
 
 export interface InterCourse {
@@ -184,4 +185,43 @@ export interface IReportedCourseData {
 export interface IReportInstructor{
   instructorName:string;
   email:string;
+}
+
+export interface AvgRating {
+  _id: string;
+  title: string;
+  averageRating: number;
+  totalReviews: number;
+}
+
+// dashbboard data
+export interface InstructorDashboardData {
+  totalEarnings: number;
+  totalStudents: number;
+  totalCourses: number;
+  allCoursesCount: number;
+  listedCoursesCount: number;
+  bestCourse: {
+    _id: string;
+    title: string;
+    totalEarnings: number;
+    studentsCount: number;
+    averageRating: number;
+    reviewsCount: number;
+  } | null;
+  coursePerformance: Array<{
+    _id: string;
+    title: string;
+    totalEarnings: number;
+    studentsCount: number;
+    averageRating: number;
+    reviewsCount: number;
+  }>;
+}
+
+
+export interface DashboardData {
+  totalEarnings: number;
+  listedCourses: number;
+  totalStudents: number;
 }

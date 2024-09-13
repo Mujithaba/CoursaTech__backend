@@ -317,6 +317,9 @@ class AdminController {
   async getReports(req: Req, res: Res, next: Next) {
     try {
       const reports = await this.adminUseCase.fetchReports();
+      if (!reports) {
+        return res.status(404).json({ message: "No reports found" });
+      }
       return res.status(reports.status).json(reports.data);
     } catch (error) {
       next(error);
@@ -325,10 +328,21 @@ class AdminController {
   // deleteReportCourse
   async deleteReportCourse(req:Req,res:Res,next:Next){
     try {
-      const {courseId,courseName,email,instructorName } = req.body ;
-      console.log(courseId,courseName,email,instructorName,"oooo");
+      const { courseId, courseName, email, instructorName } = req.body;
+            console.log(courseId,courseName,email,instructorName,"oooo");
       const result = await this.adminUseCase.deleteCourse(courseId,courseName,email,instructorName );
       return res.status(result.status).json(result)
+    } catch (error) {
+      next(error)
+    }
+  }
+
+  // getRating
+  async getRating(req:Req,res:Res,next:Next){
+    try {
+      const getRate = await this.adminUseCase.getRates()
+      console.log(getRate,"oouuuyy");
+      return res.status(getRate.status).json(getRate)
     } catch (error) {
       next(error)
     }

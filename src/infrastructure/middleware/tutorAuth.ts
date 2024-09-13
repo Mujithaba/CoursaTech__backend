@@ -13,7 +13,7 @@ export const tutorAuth = async (req: Request, res: Response, next: NextFunction)
 
   try {
     const decodedToken = jwt.verify(token, process.env.SECRET_KEY as string) as JwtPayload;
-    console.log(decodedToken,"hhhh tockennnnn");
+    // console.log(decodedToken,"hhhh tockennnnn");
 
     if (decodedToken.role !== "tutor") {
       return res.status(400).json({ message: "Unauthorized access" });

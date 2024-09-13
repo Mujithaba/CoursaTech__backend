@@ -613,6 +613,17 @@ class AdminUseCase {
   // fetchReports
   async fetchReports() {
     const getReports = await this._adminRepository.reportsFetch();
+  
+    if (getReports === null) {
+      return {
+        status: 200,
+        data: {
+          data: "",
+          message: "No reports are yet",
+        },
+      };
+    }
+  
     const reportedCourses = await Promise.all(
       getReports.map(async (course) => {
         // Fetch course details
@@ -623,7 +634,7 @@ class AdminUseCase {
           console.error(`Course with ID ${course.courseId} not found.`);
           return null;
         }
-
+  
         // Fetch instructor details
         const findInstructor = await this._adminRepository.findInstructorById(
           findCourse.instructorId
@@ -634,40 +645,35 @@ class AdminUseCase {
           );
           return null;
         }
-
+  
         const S3ThumbnailImg = await this._S3Uploader.getSignedUrl(
           findCourse.thamnail
         );
-
+  
         return {
           courseId: findCourse.courseId,
           courseName: findCourse.courseName,
           thumbnail: S3ThumbnailImg,
           reportedCount: course.reportedCount,
-          instructor: findInstructor,
+          instructor: {
+            instructorName: findInstructor.instructorName,
+            email: findInstructor.email,
+          },
         };
       })
     );
-
+  
     const validReports = reportedCourses.filter((report) => report !== null);
-    if (validReports) {
-      return {
-        status: 200,
-        data: {
-          data: validReports,
-          message: "Successfully fetching reports;",
-        },
-      };
-    } else {
-      return {
-        status: 400,
-        data: {
-          data: "",
-          message: "Something went wrong fetch reports!",
-        },
-      };
-    }
+  
+    return {
+      status: 200,
+      data: {
+        data: validReports,
+        message: "Successfully fetched reports",
+      },
+    };
   }
+  
   // deleteCourse
   async deleteCourse(courseId:string,courseName:string,email:string,instructorName :string){
     const sendMail = await this._generateMail.sendCourseDeleteMail(email,instructorName,courseName)
@@ -684,5 +690,15 @@ class AdminUseCase {
       message:"Something went wrong the course and report deletion"}
     }
   }
+
+    // getRates
+    async getRates(){
+      const getRate = await this._adminRepository.ratesGet();
+      return {
+        status:200,
+        getRate
+      }
+      
+    }
 }
 export default AdminUseCase;

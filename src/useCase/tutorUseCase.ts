@@ -6,7 +6,14 @@ import EncryptPassword from "../infrastructure/services/bcryptPassword";
 import { VerifyData } from "./Interface/verifyData";
 import JwtToken from "../infrastructure/services/generateToken";
 import S3Uploader from "../infrastructure/services/s3BucketAWS";
-import { IFile, Next, Req, Res, TutorDetails, courseInfo } from "../infrastructure/type/expressTypes";
+import {
+  IFile,
+  Next,
+  Req,
+  Res,
+  TutorDetails,
+  courseInfo,
+} from "../infrastructure/type/expressTypes";
 import ICourse from "../domain/course/course";
 import Modules from "../domain/course/chapter";
 import Lecture from "../domain/course/lecture";
@@ -85,9 +92,7 @@ class TutorUseCase {
       data.roleData.email,
       data.role
     );
-    console.log(
-      otpDetailes,
-    );
+    console.log(otpDetailes);
 
     if (otpDetailes === null) {
       return { status: 400, message: "Invalid or expired OTP" };
@@ -348,9 +353,13 @@ class TutorUseCase {
     }
   }
 
-  async getCourses(instructor_id: string,limit: number, skip: number) {
+  async getCourses(instructor_id: string, limit: number, skip: number) {
     const getInstructorCourses =
-      await this._tutorRepository.getInstructorCourses(instructor_id,limit, skip);
+      await this._tutorRepository.getInstructorCourses(
+        instructor_id,
+        limit,
+        skip
+      );
     // console.log(getInstructorCourses, "getInstructorCourses");
     const getTutorCourses = await this.s3GetFunction(getInstructorCourses);
 
@@ -370,9 +379,9 @@ class TutorUseCase {
       };
     }
   }
-  async countCourses(id:string){
-    const itemsCount = await this._tutorRepository.coursesCount(id)
-    return itemsCount
+  async countCourses(id: string) {
+    const itemsCount = await this._tutorRepository.coursesCount(id);
+    return itemsCount;
   }
 
   // url thorugh data fetching from s3
@@ -596,7 +605,9 @@ class TutorUseCase {
 
     if (course.thambnail_Img) {
       try {
-        thumbnailUrl = await this._S3Uploader.getSignedUrl(course.thambnail_Img);
+        thumbnailUrl = await this._S3Uploader.getSignedUrl(
+          course.thambnail_Img
+        );
       } catch (error) {
         console.error(
           `Error generating signed URL for thumbnail: ${course.thambnail_Img}`,
@@ -676,17 +687,16 @@ class TutorUseCase {
     let existDetailsDocument =
       await this._tutorRepository.instructorDetailsExistId(tutor_id);
     if (!existDetailsDocument) {
-      let data :ITutorDetails ={
-        instructorId:tutor_id,
-        profileImg:"nopic",
-        experience:"Please give your experience",
-        position:"Please give your role",
-        companyName:"Please give Company",
-        aboutBio:"write something about youself"
-      }
-      existDetailsDocument = await this._tutorRepository.uploadInstructorDetails(
-        data
-      );
+      let data: ITutorDetails = {
+        instructorId: tutor_id,
+        profileImg: "nopic",
+        experience: "Please give your experience",
+        position: "Please give your role",
+        companyName: "Please give Company",
+        aboutBio: "write something about youself",
+      };
+      existDetailsDocument =
+        await this._tutorRepository.uploadInstructorDetails(data);
     }
     if (getInstructorDetails && existDetailsDocument) {
       return {
@@ -706,161 +716,225 @@ class TutorUseCase {
     }
   }
   // save profile data
-  async saveProfileDetailes (registerData:Tutor,instructorDetails:TutorDetails){
-    console.log(registerData,instructorDetails,"instructorDetails usecase");
-    const updateRegister = await this._tutorRepository.updateTheRegister(registerData)
-    const updateInstructorDetails = await this._tutorRepository.updateTheInstructorDetails(instructorDetails)
+  async saveProfileDetailes(
+    registerData: Tutor,
+    instructorDetails: TutorDetails
+  ) {
+    console.log(registerData, instructorDetails, "instructorDetails usecase");
+    const updateRegister = await this._tutorRepository.updateTheRegister(
+      registerData
+    );
+    const updateInstructorDetails =
+      await this._tutorRepository.updateTheInstructorDetails(instructorDetails);
 
     if (updateRegister || updateInstructorDetails) {
       return {
-        status:200,
-        message:"SuccessFully updated"
-      }
-    }else{
+        status: 200,
+        message: "SuccessFully updated",
+      };
+    } else {
       return {
-
-        status:400,
-        message:"Something went wrong the updation...!"
-      }
+        status: 400,
+        message: "Something went wrong the updation...!",
+      };
     }
   }
 
   // receiverConversations
-  async receiverConversations(instructor_id:string){
-const conversationLists = await this._tutorRepository.findConversationsByReceiverId(instructor_id)
-console.log(conversationLists);
+  async receiverConversations(instructor_id: string) {
+    const conversationLists =
+      await this._tutorRepository.findConversationsByReceiverId(instructor_id);
+    console.log(conversationLists);
 
-if (conversationLists) {
-  return {
-    status:200,
-   data:{
-    conversationLists
-   }
-  }
-} else {
-  return{
-    status:400,
-    data:{
-      message:"Something went wrong fetching conversations"
+    if (conversationLists) {
+      return {
+        status: 200,
+        data: {
+          conversationLists,
+        },
+      };
+    } else {
+      return {
+        status: 400,
+        data: {
+          message: "Something went wrong fetching conversations",
+        },
+      };
     }
-  }
-}
   }
 
   // fetchInstructorCourses
-  async fetchInstructorCourses (instructor_id:string){
-    console.log(instructor_id,"instructor id for fetch courseName and Id");
-    const fetchCourses = await this._tutorRepository.instructorCourseData(instructor_id)
+  async fetchInstructorCourses(instructor_id: string) {
+    console.log(instructor_id, "instructor id for fetch courseName and Id");
+    const fetchCourses = await this._tutorRepository.instructorCourseData(
+      instructor_id
+    );
     if (fetchCourses) {
-      console.log(fetchCourses,"course names and id");
+      console.log(fetchCourses, "course names and id");
       return {
-        status:200,
-        data:{
-          fetchCourses
-        }
-      }
-      
+        status: 200,
+        data: {
+          fetchCourses,
+        },
+      };
     } else {
       return {
-        status:400,
-        message:"Something went wrong fetching the course data"
-      }
+        status: 400,
+        message: "Something went wrong fetching the course data",
+      };
     }
-    
   }
   // uploadAssignment
-  async uploadAssignment (course_id:string,courseTitle:string,assignment?:Express.Multer.File | undefined ){
-    console.log(course_id,courseTitle,assignment,"uploadAssignment");
+  async uploadAssignment(
+    course_id: string,
+    courseTitle: string,
+    assignment?: Express.Multer.File | undefined
+  ) {
+    console.log(course_id, courseTitle, assignment, "uploadAssignment");
     if (!assignment) {
       throw new Error("No assignment file provided");
     }
-  
-    const pdfUrl = await this._S3Uploader.uploadPDF(assignment)
-    const upload = await this._tutorRepository.addAssignment(course_id,courseTitle,pdfUrl)
+
+    const pdfUrl = await this._S3Uploader.uploadPDF(assignment);
+    const upload = await this._tutorRepository.addAssignment(
+      course_id,
+      courseTitle,
+      pdfUrl
+    );
     if (upload) {
       return {
-        status:200,
-        message:"Assignment uploaded successfully"
-      }
+        status: 200,
+        message: "Assignment uploaded successfully",
+      };
     } else {
       return {
-        status:400,
-        message:"Something went wrong uploading assignment"
-      }
-    } 
+        status: 400,
+        message: "Something went wrong uploading assignment",
+      };
+    }
   }
 
   // fetchingAssignments
-  async fetchingAssignments (instructor_id:string){
-    const assignmentsData = await this._tutorRepository.findAssignments(instructor_id)
+  async fetchingAssignments(instructor_id: string) {
+    const assignmentsData = await this._tutorRepository.findAssignments(
+      instructor_id
+    );
 
-
-    const assignmentsWithUrlPromises = assignmentsData.map(async (assignment) => {
-      const assignmentUrl = await this._S3Uploader.getSignedUrl(assignment.pdf_file);
-      return {
-        ...assignment,
-        assignmentUrl,
-      };
-    });
-  
-    const assignmentsWithUrls = await Promise.all(assignmentsWithUrlPromises);
-  
-      return {
-        status:200,
-        data:assignmentsWithUrls
+    const assignmentsWithUrlPromises = assignmentsData.map(
+      async (assignment) => {
+        const assignmentUrl = await this._S3Uploader.getSignedUrl(
+          assignment.pdf_file
+        );
+        return {
+          ...assignment,
+          assignmentUrl,
+        };
       }
-    
+    );
+
+    const assignmentsWithUrls = await Promise.all(assignmentsWithUrlPromises);
+
+    return {
+      status: 200,
+      data: assignmentsWithUrls,
+    };
   }
 
   // reviewsFetch
-  async reviewsFetch (courseId:string){
-    console.log(courseId,"revie cour id");
-    
-    const getReviews = await this._tutorRepository.getReview(courseId)
+  async reviewsFetch(courseId: string) {
+    console.log(courseId, "revie cour id");
+
+    const getReviews = await this._tutorRepository.getReview(courseId);
     if (getReviews) {
       return {
-        status:200,
-        data:{
-          getReviews
-        }
-      }
+        status: 200,
+        data: {
+          getReviews,
+        },
+      };
     } else {
       return {
-        status:400,
-        data:{
-          message:"Something went wrong fetching reviews"
-        }
-      }
+        status: 400,
+        data: {
+          message: "Something went wrong fetching reviews",
+        },
+      };
     }
   }
   // getAssignments
-  async getAssignments (courseId:string){
-    const assignmentsFetch = await this._tutorRepository.fetchAssignments(courseId)
+  async getAssignments(courseId: string) {
+    const assignmentsFetch = await this._tutorRepository.fetchAssignments(
+      courseId
+    );
     console.log(assignmentsFetch);
-    
-    const assignmentsWithUrlPromises = assignmentsFetch.map(async (assignment) => {
-      const assignmentUrl = await this._S3Uploader.getSignedUrl(assignment.pdf_file);
-      return {
-        ...assignment,
-        assignmentUrl,
-      };
-    });
-  
-    const assignmentsWithUrls = await Promise.all(assignmentsWithUrlPromises);
-    console.log(assignmentsWithUrls,assignmentsWithUrls);
 
-      return {
-        status:200,
-        data:assignmentsWithUrls
+    const assignmentsWithUrlPromises = assignmentsFetch.map(
+      async (assignment) => {
+        const assignmentUrl = await this._S3Uploader.getSignedUrl(
+          assignment.pdf_file
+        );
+        return {
+          ...assignment,
+          assignmentUrl,
+        };
       }
+    );
+
+    const assignmentsWithUrls = await Promise.all(assignmentsWithUrlPromises);
+    console.log(assignmentsWithUrls, assignmentsWithUrls);
+
+    return {
+      status: 200,
+      data: assignmentsWithUrls,
+    };
   }
   // getInstructorDetails
-  async getInstructorDetails(instructorId:string){
-    const getInstructor = await this._tutorRepository.fetchInstructor(instructorId)
+  async getInstructorDetails(instructorId: string) {
+    const getInstructor = await this._tutorRepository.fetchInstructor(
+      instructorId
+    );
     return {
-      status:200,
-     data: getInstructor
-    }
+      status: 200,
+      data: getInstructor,
+    };
+  }
+
+  // dashboardFetch
+  async dashboardFetch(instructorId: string) {
+    const totalEarnings = await this._tutorRepository.getTotalEarnings(
+      instructorId
+    );
+    const totalStudents = await this._tutorRepository.getTotalStudents(
+      instructorId
+    );
+    const activeCourses = await this._tutorRepository.getActiveCourses(
+      instructorId
+    );
+    const recentEnrollments = await this._tutorRepository.getRecentEnrollments(
+      instructorId
+    );
+    const coursePerformance = await this._tutorRepository.getCoursePerformance(
+      instructorId
+    );
+    console.log(
+      totalEarnings,
+      totalStudents,
+      activeCourses,
+      recentEnrollments,
+      coursePerformance,
+      "---000----000------"
+    );
+
+    return {
+      status: 200,
+      data: {
+        totalEarnings,
+        totalStudents,
+        activeCourses,
+        recentEnrollments,
+        coursePerformance,
+      },
+    };
   }
 }
 export default TutorUseCase;

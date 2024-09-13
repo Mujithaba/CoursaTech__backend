@@ -1,5 +1,6 @@
 export interface IPayment {
   userId: string;
   courseId: string;
-  price: string;
+  instructorID:string;
+  price: number;
 }

@@ -56,6 +56,7 @@ route.get('/assignmentsFetch',tutorAuth,(req: Req, res: Res, next: Next)=>tutorC
 route.get('/reviewsFetch',tutorAuth,(req: Req, res: Res, next: Next)=>tutorController.getReviews(req,res,next));
 route.get('/fetchAssignments',tutorAuth,(req: Req, res: Res, next: Next)=>tutorController.fetchAssignments(req,res,next));
 route.get('/getInstructor',tutorAuth,(req: Req, res: Res, next: Next)=>tutorController.getInstructor(req,res,next));
+route.get('/fetchDashboardData',tutorAuth,(req: Req, res: Res, next: Next)=>tutorController.fetchDashboardData(req,res,next));
 
 
 

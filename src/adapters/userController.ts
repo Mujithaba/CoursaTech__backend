@@ -248,6 +248,7 @@ class userConroller {
       console.log(data.res, "res data");
       console.log(data.courseID, "res data");
       console.log(data.userID, "res data");
+      console.log(data.instructorId, "res data instructorId");
       const successPayment = await this._userUseCase.successPayment(data);
       if (successPayment) {
         return res.status(200).json(successPayment);
@@ -270,7 +271,7 @@ class userConroller {
         instructorId,
         username
       );
-      console.log(saveMsg, "sss");
+      // console.log(saveMsg, "sss");
 
       if (saveMsg) {
         return res.status(saveMsg.status).json(saveMsg);
@@ -358,6 +359,17 @@ class userConroller {
         .json(reportResponse);
     } catch (error) {
       next(error);
+    }
+  }
+
+  // getRating
+  async getRating(req:Req,res:Res,next:Next){
+    try {
+      const getRate = await this._userUseCase.getRates()
+      console.log(getRate,"oouuuyy");
+      return res.status(getRate.status).json(getRate)
+    } catch (error) {
+      next(error)
     }
   }
 }

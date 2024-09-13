@@ -6,6 +6,7 @@ import UserRepo from "../../useCase/Interface/userRepo";
 import { log } from "console";
 import courseModel from "../database/tutorModel/courseModel";
 import {
+  AvgRating,
   IAssignment,
   IGetReviews,
   IInstructorDetails,
@@ -195,6 +196,7 @@ class UserRepository implements UserRepo {
 
     return lastConverstion;
   }
+  // upload reviews
   async uploadReview(data: reviews): Promise<boolean> {
     const newReview = new Review(data);
     const saveReview = await newReview.save();
@@ -295,6 +297,20 @@ class UserRepository implements UserRepo {
       return userExistReport.userId.includes(userId); 
     }
     return false;
+  }
+  // ratesGet
+  async ratesGet():Promise<AvgRating[]>{
+    const ratings = await Review.aggregate([
+      {
+        $group:{
+          _id:'$courseId',
+          averageRating:{$avg:'$rating'},
+          totalReviews:{$sum:1},
+        }
+      },
+
+    ])
+    return ratings
   }
 }
 

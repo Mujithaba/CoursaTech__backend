@@ -15,7 +15,7 @@ class TutorController {
 
       if (tutorVerify.data.status == true) {
         const sendOtp = await this.tutorUseCase.signup(
-          req.body.name,
+          req.body.name,     
           req.body.email
         );
 
@@ -165,11 +165,11 @@ class TutorController {
   // homePage
   async dashboardPage(req: Req, res: Res, next: Next) {
     try {
-      console.log(req.query.id, "tutor id in controller");
+      // console.log(req.query.id, "tutor id in controller");
       const tutorId = req.query.id as string;
 
       const tutor = await this.tutorUseCase.getUser(tutorId);
-      console.log(tutor);
+      // console.log(tutor);
 
       if (tutor.status == 200) {
         return res.status(tutor.status).json(tutor.data?.data);
@@ -283,7 +283,7 @@ class TutorController {
     try {
       console.log("getViewCourse controller");
       const id = req.query.id as string;
-      console.log(id, "getViewCourse controller");
+      // console.log(id, "getViewCourse controller");
       const courseViewData = await this.tutorUseCase.getViewCourse(id);
 
       if (courseViewData) {
@@ -336,7 +336,7 @@ class TutorController {
   async storedMsgFetching(req: Req, res: Res, next: Next) {
     try {
       const instructorid = req.query.instructorId as string;
-      console.log(instructorid, "oooooo");
+      // console.log(instructorid, "oooooo");
 
       const conversationReceiver =
         await this.tutorUseCase.receiverConversations(instructorid);
@@ -353,7 +353,7 @@ class TutorController {
   async coursesForAssignment(req: Req, res: Res, next: Next) {
     try {
       const instructorId = req.query.instructorId as string;
-      console.log(instructorId, "coursesForAssignment");
+      // console.log(instructorId, "coursesForAssignment");
       const courseDatas = await this.tutorUseCase.fetchInstructorCourses(
         instructorId
       );
@@ -387,7 +387,7 @@ class TutorController {
   async assignmentsFetch(req: Req, res: Res, next: Next) {
     try {
       const instructorId= req.query.instructorId as string
-      console.log(instructorId,"kkklllluuuu");
+      // console.log(instructorId,"kkklllluuuu");
       const assignmentData = await this.tutorUseCase.fetchingAssignments(instructorId)
       console.log(assignmentData);
      return res.status(assignmentData.status).json(assignmentData.data)
@@ -400,7 +400,7 @@ class TutorController {
   async getReviews(req:Req,res:Res,next:Next){
     try {
       const courseId = req.query.courseId as string;
-      console.log(courseId,"hhh");
+      // console.log(courseId,"hhh");
       const getReview = await this.tutorUseCase.reviewsFetch(courseId)
       if (getReview) {
         return res.status(getReview.status).json(getReview)
@@ -429,6 +429,19 @@ class TutorController {
       const instructorId=  req.query.instructorId  as string
       const instructorData = await this.tutorUseCase.getInstructorDetails(instructorId)
       return res.status(instructorData.status).json(instructorData.data)
+    } catch (error) {
+      next(error)
+    }
+  }
+  // fetchDashboardData
+  async fetchDashboardData (req:Req,res:Res,next:Next){
+    try {
+      const instructorId = req.query.instructorId  as string;
+      
+      const dashboardData = await this.tutorUseCase.dashboardFetch(instructorId)
+      console.log(dashboardData,"fetchDashboardData");
+      return res.status(dashboardData.status).json(dashboardData);
+      
     } catch (error) {
       next(error)
     }

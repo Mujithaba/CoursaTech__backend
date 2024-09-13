@@ -568,7 +568,8 @@ class UserUseCase {
     const paymentData: IPayment = {
       userId: data.userID,
       courseId: data.courseID,
-      price: courseData?.price as string,
+      instructorID:data.instructorId,
+      price: courseData?.price as number,
     };
     const savePayment = await this._userRepository.savePayments(paymentData);
     console.log(savePayment, "savePayment");
@@ -606,7 +607,7 @@ class UserUseCase {
     const conversationMsg = await this._userRepository.createConversation(
       lastMsg
     );
-    console.log(storeMsg, conversationMsg, "stored msg");
+    // console.log(storeMsg, conversationMsg, "stored msg");
 
     if (storeMsg) {
       return {
@@ -744,6 +745,15 @@ class UserUseCase {
         message: "Something went wrong reporting, Please try later!",
       };
     }
+  }
+  // getRates
+  async getRates(){
+    const getRate = await this._userRepository.ratesGet();
+    return {
+      status:200,
+      getRate
+    }
+    
   }
 }
 

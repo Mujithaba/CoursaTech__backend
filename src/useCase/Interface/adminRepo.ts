@@ -3,6 +3,7 @@ import Tutor from "../../domain/tutor";
 import ICategory from "../../domain/Icategory";
 import ICourse from "../../domain/course/course";
 import {
+  AvgRating,
   IGetReviews,
   IInstructorDetails,
   IReportedCourseData,
@@ -51,6 +52,7 @@ interface AdminRep {
   findInstructorById(instructorId:string):Promise<IReportInstructor>;
   courseDelete(courseId:string):Promise<boolean>;
   deleteReport(courseId:string):Promise<boolean>;
+  ratesGet():Promise<AvgRating[]>;
 }
 
 export default AdminRep;

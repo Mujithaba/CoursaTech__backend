@@ -9,6 +9,7 @@ import { time } from "console";
 import courseModel from "../database/tutorModel/courseModel";
 import ICourse from "../../domain/course/course";
 import {
+  AvgRating,
   IGetReviews,
   IInstructorDetails,
   IReportedCourseData,
@@ -49,8 +50,6 @@ class AdminRepository implements AdminRep {
       { _id: userID },
       { $set: { isBlocked: true } }
     );
-    console.log(result, "repos user");
-
     return result.modifiedCount > 0;
   }
 
@@ -82,8 +81,6 @@ class AdminRepository implements AdminRep {
       { _id: tutorID },
       { $set: { isBlocked: true } }
     );
-    console.log(result, "repos user");
-
     return result.modifiedCount > 0;
   }
 
@@ -347,22 +344,48 @@ class AdminRepository implements AdminRep {
   // courseDelete
   async courseDelete(courseId: string): Promise<boolean> {
     try {
-      const resultDelete = await courseModel.findByIdAndDelete(courseId);
-      return !!resultDelete; 
+      const resultDelete = await courseModel.findOne({_id:courseId});
+      if (!resultDelete) {
+        console.error("No course found for the given course ID.");
+        return false;
+      }
+      const result = await resultDelete.deleteOne();
+      return !!result;
     } catch (error) {
       console.error("Error deleting course:", error);
-      return false; 
+      return false;
     }
   }
   // deleteReport
   async deleteReport(courseId: string): Promise<boolean> {
     try {
-      const resultReport = await Report.findByIdAndDelete({courseId:courseId})
-      return !!resultReport
+      console.log(courseId,"iiiiiiii");
+      
+      const report = await Report.findOne({courseId: courseId });
+      if (!report) {
+        console.error("No report found for the given course ID.");
+        return false;
+      }
+      const result = await report.deleteOne();
+      return !!result;
     } catch (error) {
       console.error("Error deleting report:", error);
-      return false; 
+      return false;
     }
+  }
+   // ratesGet
+   async ratesGet():Promise<AvgRating[]>{
+    const ratings = await Review.aggregate([
+      {
+        $group:{
+          _id:'$courseId',
+          averageRating:{$avg:'$rating'},
+          totalReviews:{$sum:1},
+        }
+      },
+
+    ])
+    return ratings
   }
 }
 

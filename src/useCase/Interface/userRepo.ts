@@ -5,7 +5,7 @@ import { IMessage } from "../../domain/message";
 import { IPayment } from "../../domain/payment";
 import { reviews } from "../../domain/review";
 import User from "../../domain/user";
-import {  IAssignment, IGetReviews, IInstructorDetails, IReportRequest, OtpDoc } from "../../infrastructure/type/expressTypes";
+import {  AvgRating, IAssignment, IGetReviews, IInstructorDetails, IReportRequest, OtpDoc } from "../../infrastructure/type/expressTypes";
 
 
 
@@ -29,6 +29,7 @@ interface UserRepo {
     fetchInstructor(instructorId:string):Promise<IInstructorDetails>;
     reportCourese(courseId:string,userId:string,issueType:string,description:string):Promise<boolean>;
     userReportExist(courseId:string,userId:string):Promise<boolean>;
+    ratesGet():Promise<AvgRating[]>;
 
 }
 

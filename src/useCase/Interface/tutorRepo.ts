@@ -3,7 +3,7 @@ import Tutor from "../../domain/tutor";
 import ICategory from "../../domain/Icategory";
 import Lecture from "../../domain/course/lecture";
 import Modules from "../../domain/course/chapter";
-import { CourseData, IAssignment, IConversation, IFile, IGetReviews, IInstructorDetails, InterCourse, OtpDoc } from "../../infrastructure/type/expressTypes";
+import { CourseData, IAssignment, IConversation, IFile, IGetReviews, IInstructorDetails, InstructorDashboardData, InterCourse, OtpDoc } from "../../infrastructure/type/expressTypes";
 import { ITutorDetails } from "../../domain/tutorDetails";
 import { Assignment } from "../../domain/course/assignment";
 
@@ -23,20 +23,21 @@ interface TutorRepo {
     createCourse(course:InterCourse):Promise<ICourse>;
     getCategory():Promise<ICategory[]>;
     getInstructorCourses(id:string,limit: number, skip: number):Promise<{}[]>;
-    coursesCount(id:string):Promise<number>
+    coursesCount(id:string):Promise<number>;
     // curicculum stuffs
-    saveLectures(lecture:Lecture):Promise<Lecture>
-    saveModules(module:Modules):Promise<Modules>
-    saveModulesIdToChapter(course_id:string,modules_Id:any[]):Promise<any>
-    getCourseView(course_id:string):Promise<any>
-    findConversationsByReceiverId(instructor_id:string):Promise<IConversation[]>
+    saveLectures(lecture:Lecture):Promise<Lecture>;
+    saveModules(module:Modules):Promise<Modules>;
+    saveModulesIdToChapter(course_id:string,modules_Id:any[]):Promise<any>;
+    getCourseView(course_id:string):Promise<any>;
+    findConversationsByReceiverId(instructor_id:string):Promise<IConversation[]>;
     // assignment
-    instructorCourseData(instructor_id:string):Promise<CourseData[]>
-    addAssignment(courseId:string,courseTitle:string,assignmenturl:string):Promise<boolean>
-    findAssignments(instructor_id:string):Promise<IAssignment[]>
-    getReview(courseId:string):Promise<IGetReviews[]>
-    fetchAssignments(courseId:string):Promise<Assignment[]>
-    fetchInstructor(instructorId:string):Promise<IInstructorDetails>
+    instructorCourseData(instructor_id:string):Promise<CourseData[]>;
+    addAssignment(courseId:string,courseTitle:string,assignmenturl:string):Promise<boolean>;
+    findAssignments(instructor_id:string):Promise<IAssignment[]>;
+    getReview(courseId:string):Promise<IGetReviews[]>;
+    fetchAssignments(courseId:string):Promise<Assignment[]>;
+    fetchInstructor(instructorId:string):Promise<IInstructorDetails>;
+    // fetchDashboardData(instructorId:string):Promise<InstructorDashboardData>
 }
 
 export default TutorRepo
