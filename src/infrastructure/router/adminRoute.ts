@@ -46,6 +46,7 @@ route.get('/getInstructor',adminAuth,(req: Req, res: Res, next: Next)=>adminCont
 route.get('/getReports',adminAuth,(req: Req, res: Res, next: Next)=>adminController.getReports(req,res,next));
 route.delete('/deleteReportCourse',adminAuth,(req: Req, res: Res, next: Next)=>adminController.deleteReportCourse(req,res,next));
 route.get('/getRating',adminAuth,(req: Req, res: Res, next: Next)=>adminController.getRating(req,res,next));
+route.get('/getDashboardData',adminAuth,(req: Req, res: Res, next: Next)=>adminController.getDashboardData(req,res,next));
 
 
   

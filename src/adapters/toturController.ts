@@ -446,5 +446,18 @@ class TutorController {
       next(error)
     }
   }
+  // getCourseGrowth
+  async getCourseGrowth (req:Req,res:Res,next:Next){
+    try {
+      const instructorId = req.query.instructorId  as string;
+      
+      const courseGrowthData = await this.tutorUseCase.courseGrowth(instructorId)
+      console.log(courseGrowthData,"courseGrowth");
+      return res.status(courseGrowthData.status).json(courseGrowthData);
+      
+    } catch (error) {
+      next(error)
+    }
+  }
 }
 export default TutorController;

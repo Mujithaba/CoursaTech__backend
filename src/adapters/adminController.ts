@@ -347,5 +347,17 @@ class AdminController {
       next(error)
     }
   }
+
+  //getDashboardData
+  async getDashboardData (req:Req,res:Res,next:Next){
+    try {
+      const getData = await this.adminUseCase.getDashboard()
+      console.log(getData,"getDashboardData");
+      
+      return res.status(getData.status).json(getData)
+    } catch (error) {
+      next(error)
+    }
+  } 
 }
 export default AdminController;

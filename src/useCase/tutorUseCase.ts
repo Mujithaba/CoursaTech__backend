@@ -916,14 +916,7 @@ class TutorUseCase {
     const coursePerformance = await this._tutorRepository.getCoursePerformance(
       instructorId
     );
-    console.log(
-      totalEarnings,
-      totalStudents,
-      activeCourses,
-      recentEnrollments,
-      coursePerformance,
-      "---000----000------"
-    );
+    const getCourseGrowth = await this._tutorRepository.getCourseGrowth(instructorId)
 
     return {
       status: 200,
@@ -933,6 +926,17 @@ class TutorUseCase {
         activeCourses,
         recentEnrollments,
         coursePerformance,
+        getCourseGrowth,
+      },
+    };
+  }
+  // courseGrowth
+  async courseGrowth(instructorId:string){
+    const getCourseGrowth = await this._tutorRepository.getCourseGrowth(instructorId)
+    return {
+      status: 200,
+      data: {
+        getCourseGrowth,
       },
     };
   }

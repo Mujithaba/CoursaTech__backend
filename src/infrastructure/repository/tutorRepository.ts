@@ -4,8 +4,8 @@ import tutorModel from "../database/tutorModel/tutorModel";
 import OtpDocModel from "../database/commonModel/otpDocModel";
 import courseModel from "../database/tutorModel/courseModel";
 import ICourse from "../../domain/course/course";
-import { ObjectId } from 'mongodb';
-import { PipelineStage } from 'mongoose';
+import { ObjectId } from "mongodb";
+import { PipelineStage } from "mongoose";
 import ICategory from "../../domain/Icategory";
 import categoryModel from "../database/adminModel/categoryModel";
 import Lecture from "../../domain/course/lecture";
@@ -31,8 +31,6 @@ import assignmentModel from "../database/tutorModel/assignmentModel";
 import Review from "../database/commonModel/reviewModel";
 import mongoose from "mongoose";
 import Payment from "../database/commonModel/paymentModel";
-
-
 
 class TutorRepository implements TutorRepo {
   //save tutor to DB
@@ -355,113 +353,188 @@ class TutorRepository implements TutorRepo {
     return instructorData;
   }
 
-// dashboard funtions 
-async getTotalEarnings(instructorId: string): Promise<number> {
-  const totalEarnings = await Payment.aggregate([
-    { $match: { instructorID: instructorId } },
-    { $group: { _id: null, total: { $sum: '$price' } } }
-  ]);
-  return totalEarnings[0]?.total || 0;
-}
-
-async getTotalStudents(instructorId: string): Promise<number> {
-  const uniqueStudents = await Payment.distinct('userId', { instructorID: instructorId });
-  return uniqueStudents.length;
-}
-
-async getActiveCourses(instructorId: string): Promise<number> {
-  return courseModel.countDocuments({ instructor_id: instructorId, is_listed: false });
-}
-
-async getRecentEnrollments(instructorId: string): Promise<any[]> {
-  const pipeline: PipelineStage[] = [
-    { 
-      $match: { 
-        instructorID: new ObjectId(instructorId) 
-      } 
-    },
-    {
-      $group: { 
-        _id: '$courseId', 
-        count: { $sum: 1 } 
-      }
-    },
-    {
-      $sort: { 
-        count: -1 
-      }
-    },
-    {
-      $limit: 4
-    },
-    {
-      $lookup: {
-        from: 'courses',
-        localField: '_id',
-        foreignField: '_id',
-        as: 'course'
-      }
-    },
-    {
-      $unwind: '$course'
-    },
-    {
-      $project: { 
-        title: '$course.title', 
-        students: '$count' 
-      }
-    }
-  ];
-
-  for (let i = 0; i < pipeline.length; i++) {
-    const partialPipeline = pipeline.slice(0, i + 1) as PipelineStage[];
-    const result = await Payment.aggregate(partialPipeline);
-    console.log(`Stage ${i + 1} result:`, result);
-    if (result.length === 0) {
-      console.log(`No results after stage ${i + 1}`);
-      break;
-    }
+  // dashboard funtions
+  async getTotalEarnings(instructorId: string): Promise<number> {
+    const totalEarnings = await Payment.aggregate([
+      { $match: { instructorID: instructorId } },
+      { $group: { _id: null, total: { $sum: "$price" } } },
+    ]);
+    return totalEarnings[0]?.total || 0;
   }
 
-  const recentEnrollments = await Payment.aggregate(pipeline);
-  console.log("Final result:", recentEnrollments);
+  async getTotalStudents(instructorId: string): Promise<number> {
+    const uniqueStudents = await Payment.distinct("userId", {
+      instructorID: instructorId,
+    });
+    return uniqueStudents.length;
+  }
+
+  async getActiveCourses(instructorId: string): Promise<number> {
+    return courseModel.countDocuments({
+      instructor_id: instructorId,
+      is_listed: false,
+    });
+  }
+
+  async getRecentEnrollments(instructorId: string): Promise<any[]> {
+    const pipeline: PipelineStage[] = [
+      {
+        $match: {
+          instructorID: instructorId, 
+        },
+      },
+      {
+        $group: {
+          _id: "$courseId",
+          count: { $sum: 1 },
+        },
+      },
+      {
+        $sort: {
+          count: -1,
+        },
+      },
+      {
+        $limit: 4,
+      },
+      {
+        $lookup: {
+          from: "courses",
+          // Convert string to ObjectId
+          let: { courseId: { $toObjectId: "$_id" } }, 
+          pipeline: [
+            { $match: { $expr: { $eq: ["$_id", "$$courseId"] } } }
+          ],
+          as: "course",
+        },
+      },
+      {
+        $unwind: "$course",
+      },
+      {
+        $project: {
+          title: "$course.title",
+          students: "$count",
+        },
+      },
+    ];
   
-  return recentEnrollments;
-}
+    console.log(JSON.stringify(pipeline, null, 2), "pipeline");
+  
+    const recentEnrollments = await Payment.aggregate(pipeline);
+    console.log("Final result:", recentEnrollments);
+  
+    return recentEnrollments;
+  }
 
+  async getCoursePerformance(instructorId: string): Promise<any[]> {
+    
+    const courses = await courseModel.find({ instructor_id: instructorId });
+    console.log(courses, "courses");
 
-async getCoursePerformance(instructorId: string): Promise<any[]> {
-  // Fetch all courses for the given instructor
-  const courses = await courseModel.find({ instructor_id: instructorId });
-console.log(courses,"courses");
+    const courseIds = courses.map((course) => String(course._id));
+    console.log(courseIds, "courseIds");
 
-  // Extract course IDs for aggregation
-  const courseIds = courses.map(course => String(course._id));
-console.log(courseIds,"courseIds");
+    const ratings = await Review.aggregate([
+      {
+        $match: { courseId: { $in: courseIds } },
+      },
+      {
+        $group: {
+          _id: "$courseId",
+          averageRating: { $avg: "$rating" },
+          totalReviews: { $sum: 1 },
+        },
+      },
+    ]);
 
-  // Aggregate reviews to calculate average ratings for the instructor's courses
-  const ratings = await Review.aggregate([
-    {
-      $match: { courseId: { $in: courseIds } } // Match reviews only for the instructor's courses
-    },
-    {
-      $group: {
-        _id: '$courseId',
-        averageRating: { $avg: '$rating' },
-        totalReviews: { $sum: 1 }
+    console.log(ratings, "Ratings Data");
+
+    return courses.map((course) => ({
+      title: course.title,
+      rating: ratings.find((r) => r._id == course._id)?.averageRating || 1,
+    }));
+  }
+
+  async getCourseGrowth(instructorId: string): Promise<any[]> {
+    const sixMonthsAgo = new Date();
+    sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 5); // -5 to include current month
+    sixMonthsAgo.setDate(1); // Start from the 1st of the month
+    sixMonthsAgo.setHours(0, 0, 0, 0);
+  
+    const pipeline: PipelineStage[] = [
+      {
+        $match: {
+          instructorID: instructorId,
+          createdAt: { $gte: sixMonthsAgo }
+        }
+      },
+      {
+        $group: {
+          _id: {
+            courseId: "$courseId",
+            year: { $year: "$createdAt" },
+            month: { $month: "$createdAt" }
+          },
+          count: { $sum: 1 }
+        }
+      },
+      {
+        $lookup: {
+          from: "courses",
+          let: { courseId: { $toObjectId: "$_id.courseId" } },
+          pipeline: [
+            { $match: { $expr: { $eq: ["$_id", "$$courseId"] } } }
+          ],
+          as: "course"
+        }
+      },
+      {
+        $unwind: "$course"
+      },
+      {
+        $project: {
+          _id: 0,
+          courseId: "$_id.courseId",
+          courseTitle: "$course.title",
+          year: "$_id.year",
+          month: "$_id.month",
+          count: 1
+        }
       }
+    ];
+  
+    const result = await Payment.aggregate(pipeline);
+  
+    const courseTitles = [...new Set(result.map(item => item.courseTitle))];
+  
+    // Generate all months in the last 6 months
+    const allMonths = [];
+    for (let i = 0; i < 6; i++) {
+      const date = new Date(sixMonthsAgo);
+      date.setMonth(date.getMonth() + i);
+      allMonths.push({
+        year: date.getFullYear(),
+        month: date.getMonth() + 1
+      });
     }
-  ]);
-
-  console.log(ratings, "Ratings Data");
-
-  // Map the course details with the corresponding average rating
-  return courses.map(course => ({
-    title: course.title,
-    rating: ratings.find(r => r._id == course._id)?.averageRating || 1
-  }));
-}
-
+  
+    //  quick lookup of existing data
+    const dataMap = new Map(result.map(item => [`${item.year}-${item.month}-${item.courseTitle}`, item.count]));
+  
+    // Generate the final data array
+    const processedData = allMonths.map(({ year, month }) => {
+      const monthData: any = {
+        date: `${year}-${month.toString().padStart(2, '0')}`
+      };
+      courseTitles.forEach(title => {
+        monthData[title] = dataMap.get(`${year}-${month}-${title}`) || 0;
+      });
+      return monthData;
+    });
+  
+    return processedData;
+  }
 }
 
 export default TutorRepository;

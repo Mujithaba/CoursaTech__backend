@@ -318,8 +318,8 @@ class UserUseCase {
   }
 
   // get all courses
-  async allCourseGet(limit: number, skip: number) {
-    const courses = await this._userRepository.getCourses(limit, skip);
+  async allCourseGet(limit: number, skip: number, searchTerm: string, category: string) {
+    const courses = await this._userRepository.getCourses(limit, skip, searchTerm, category);
     const getCourses = await this.s3GetFunction(courses);
     if (getCourses) {
       return {
@@ -337,11 +337,35 @@ class UserUseCase {
       };
     }
   }
-
-  async countCourses() {
-    const itemsCount = await this._userRepository.coursesCount();
+  
+  async countCourses(searchTerm: string, category: string) {
+    const itemsCount = await this._userRepository.coursesCount(searchTerm, category);
     return itemsCount;
   }
+  // async allCourseGet(limit: number, skip: number) {
+  //   const courses = await this._userRepository.getCourses(limit, skip);
+  //   const getCourses = await this.s3GetFunction(courses);
+  //   if (getCourses) {
+  //     return {
+  //       status: 200,
+  //       data: {
+  //         getCourses,
+  //       },
+  //     };
+  //   } else {
+  //     return {
+  //       status: 400,
+  //       data: {
+  //         message: "Something went wrong fetching courses",
+  //       },
+  //     };
+  //   }
+  // }
+
+  // async countCourses() {
+  //   const itemsCount = await this._userRepository.coursesCount();
+  //   return itemsCount;
+  // }
 
   // url thorugh data fetching from s3
   async s3GetFunction(getCourses: {}[]) {

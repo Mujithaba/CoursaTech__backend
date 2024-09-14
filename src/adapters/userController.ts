@@ -185,12 +185,12 @@ class userConroller {
   // get all courses list
   async getCourses(req: Req, res: Res, next: Next) {
     try {
-      const { page = 1, limit = 10 } = req.query;
+      const { page = 1, limit = 10, searchTerm = '', category = '' } = req.query;
       const skip = (Number(page) - 1) * Number(limit);
-      const courses = await this._userUseCase.allCourseGet(Number(limit), skip);
-
+      const courses = await this._userUseCase.allCourseGet(Number(limit), skip, searchTerm as string, category as string);
+  
       if (courses) {
-        const totalItems = await this._userUseCase.countCourses();
+        const totalItems = await this._userUseCase.countCourses(searchTerm as string, category as string);
         return res.status(courses.status).json({ ...courses.data, totalItems });
       } else {
         return res.status(404).json({ message: "No courses found" });
@@ -199,6 +199,22 @@ class userConroller {
       next(error);
     }
   }
+  // async getCourses(req: Req, res: Res, next: Next) {
+  //   try {
+  //     const { page = 1, limit = 10 } = req.query;
+  //     const skip = (Number(page) - 1) * Number(limit);
+  //     const courses = await this._userUseCase.allCourseGet(Number(limit), skip);
+
+  //     if (courses) {
+  //       const totalItems = await this._userUseCase.countCourses();
+  //       return res.status(courses.status).json({ ...courses.data, totalItems });
+  //     } else {
+  //       return res.status(404).json({ message: "No courses found" });
+  //     }
+  //   } catch (error) {
+  //     next(error);
+  //   }
+  // }
 
   // get view course
   async ViewCourses(req: Req, res: Res, next: Next) {

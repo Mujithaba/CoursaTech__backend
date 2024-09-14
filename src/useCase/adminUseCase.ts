@@ -613,7 +613,7 @@ class AdminUseCase {
   // fetchReports
   async fetchReports() {
     const getReports = await this._adminRepository.reportsFetch();
-  
+
     if (getReports === null) {
       return {
         status: 200,
@@ -623,7 +623,7 @@ class AdminUseCase {
         },
       };
     }
-  
+
     const reportedCourses = await Promise.all(
       getReports.map(async (course) => {
         // Fetch course details
@@ -634,7 +634,7 @@ class AdminUseCase {
           console.error(`Course with ID ${course.courseId} not found.`);
           return null;
         }
-  
+
         // Fetch instructor details
         const findInstructor = await this._adminRepository.findInstructorById(
           findCourse.instructorId
@@ -645,11 +645,11 @@ class AdminUseCase {
           );
           return null;
         }
-  
+
         const S3ThumbnailImg = await this._S3Uploader.getSignedUrl(
           findCourse.thamnail
         );
-  
+
         return {
           courseId: findCourse.courseId,
           courseName: findCourse.courseName,
@@ -662,9 +662,9 @@ class AdminUseCase {
         };
       })
     );
-  
+
     const validReports = reportedCourses.filter((report) => report !== null);
-  
+
     return {
       status: 200,
       data: {
@@ -673,32 +673,73 @@ class AdminUseCase {
       },
     };
   }
-  
+
   // deleteCourse
-  async deleteCourse(courseId:string,courseName:string,email:string,instructorName :string){
-    const sendMail = await this._generateMail.sendCourseDeleteMail(email,instructorName,courseName)
-    const result = await this._adminRepository.courseDelete(courseId)
-    const deleteReport = await this._adminRepository.deleteReport(courseId)
+  async deleteCourse(
+    courseId: string,
+    courseName: string,
+    email: string,
+    instructorName: string
+  ) {
+    const sendMail = await this._generateMail.sendCourseDeleteMail(
+      email,
+      instructorName,
+      courseName
+    );
+    const result = await this._adminRepository.courseDelete(courseId);
+    const deleteReport = await this._adminRepository.deleteReport(courseId);
     if (result && deleteReport) {
       return {
-        status:200,
-        message:"This course deleted Successfully"
-      }
+        status: 200,
+        message: "This course deleted Successfully",
+      };
     } else {
-      return{
-      status:400,
-      message:"Something went wrong the course and report deletion"}
+      return {
+        status: 400,
+        message: "Something went wrong the course and report deletion",
+      };
     }
   }
 
-    // getRates
-    async getRates(){
-      const getRate = await this._adminRepository.ratesGet();
-      return {
-        status:200,
-        getRate
-      }
+  // getRates
+  async getRates() {
+    const getRate = await this._adminRepository.ratesGet();
+    return {
+      status: 200,
+      getRate,
+    };
+  }
+  // getDashboard
+  async getDashboard (){
+
+    const totalEarnings = await this._adminRepository.getTotalEarnings(
       
-    }
+    );
+    const totalStudents = await this._adminRepository.getTotalStudents(
+      
+    );
+    const activeCourses = await this._adminRepository.getActiveCourses(
+      
+    );
+    const getTopCourses = await this._adminRepository.getTopCourses(
+      
+    );
+    const coursePerformance = await this._adminRepository.getCoursePerformance(
+
+    );
+   
+
+
+    return {
+      status: 200,
+      data: {
+        totalEarnings,
+        totalStudents,
+        activeCourses,
+        getTopCourses,
+        coursePerformance,
+      },
+    };
+  }
 }
 export default AdminUseCase;

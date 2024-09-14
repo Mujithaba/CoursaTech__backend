@@ -28,6 +28,7 @@ import { Assignment } from "../../domain/course/assignment";
 import InstructorDetails from "../database/tutorModel/tutorDetailsModel";
 import tutorModel from "../database/tutorModel/tutorModel";
 import Report from "../database/commonModel/reportModal";
+import categoryModel from "../database/adminModel/categoryModel";
 
 class UserRepository implements UserRepo {
   // saving user details to  database
@@ -88,9 +89,22 @@ class UserRepository implements UserRepo {
   }
 
   // get all course
-  async getCourses(limit: number, skip: number): Promise<{}[]> {
+  async getCourses(limit: number, skip: number, searchTerm: string, category: string): Promise<{}[]> {
+    let query: any = { is_verified: true };
+    
+    if (searchTerm) {
+      query.title = { $regex: searchTerm, $options: 'i' };
+    }
+    
+    if (category) {
+      const categoryObj = await categoryModel.findOne({ categoryName: category });
+      if (categoryObj) {
+        query.category_id = categoryObj._id;
+      }
+    }
+  
     const coursesData = await courseModel
-      .find({ is_verified: true })
+      .find(query)
       .populate({ path: "category_id", select: "categoryName" })
       .populate({
         path: "chapters",
@@ -108,11 +122,49 @@ class UserRepository implements UserRepo {
       .exec();
     return coursesData;
   }
-
-  async coursesCount(): Promise<number> {
-    const counts = await courseModel.countDocuments({ is_verified: true });
+  
+  async coursesCount(searchTerm: string, category: string): Promise<number> {
+    let query: any = { is_verified: true };
+    
+    if (searchTerm) {
+      query.title = { $regex: searchTerm, $options: 'i' };
+    }
+    
+    if (category) {
+      const categoryObj = await categoryModel.findOne({ categoryName: category });
+      if (categoryObj) {
+        query.category_id = categoryObj._id;
+      }
+    }
+  
+    const counts = await courseModel.countDocuments(query);
     return counts;
   }
+  // async getCourses(limit: number, skip: number): Promise<{}[]> {
+  //   const coursesData = await courseModel
+  //     .find({ is_verified: true })
+  //     .populate({ path: "category_id", select: "categoryName" })
+  //     .populate({
+  //       path: "chapters",
+  //       model: "Module",
+  //       select: "name lectures createdAt",
+  //       populate: {
+  //         path: "lectures",
+  //         model: "Lecture",
+  //         select: "title description video pdf createdAt",
+  //       },
+  //     })
+  //     .limit(limit)
+  //     .skip(skip)
+  //     .lean()
+  //     .exec();
+  //   return coursesData;
+  // }
+
+  // async coursesCount(): Promise<number> {
+  //   const counts = await courseModel.countDocuments({ is_verified: true });
+  //   return counts;
+  // }
 
   // getCourseView
   async getCourseView(course_id: string, userid: string): Promise<any> {

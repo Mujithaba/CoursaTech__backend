@@ -5,9 +5,8 @@ import tutorModel from "../database/tutorModel/tutorModel";
 import userModel from "../database/userModels/userModel";
 import ICategory from "../../domain/Icategory";
 import categoryModel from "../database/adminModel/categoryModel";
-import { time } from "console";
 import courseModel from "../database/tutorModel/courseModel";
-import ICourse from "../../domain/course/course";
+import { PipelineStage } from "mongoose";
 import {
   AvgRating,
   IGetReviews,
@@ -21,6 +20,8 @@ import { Assignment } from "../../domain/course/assignment";
 import Review from "../database/commonModel/reviewModel";
 import { IReport } from "../../domain/report";
 import Report from "../database/commonModel/reportModal";
+import Payment from "../database/commonModel/paymentModel";
+import { log } from "console";
 
 class AdminRepository implements AdminRep {
   // async findUsers(page: number, limit: number): Promise<{ users: User[], totalUsers: number }> {
@@ -386,6 +387,90 @@ class AdminRepository implements AdminRep {
 
     ])
     return ratings
+  }
+
+  // dashboard funtions 
+  async getTotalEarnings(): Promise<number> {
+    const totalEarnings = await Payment.aggregate([
+      { $group: { _id: null, total: { $sum: "$price" } } },
+    ]);
+    return totalEarnings[0]?.total || 0;
+  }
+
+  async getTotalStudents(): Promise<number> {
+    const uniqueStudents = await userModel.find();
+    return uniqueStudents.length;
+  }
+
+  async getActiveCourses(): Promise<number> {
+    return courseModel.countDocuments({
+      is_listed: false, 
+    });
+  }
+
+  async getTopCourses(): Promise<any[]> {
+    const courses = await courseModel.find();
+    console.log(courses, "courses");
+
+    const courseIds = courses.map((course) => String(course._id));
+    console.log(courseIds, "courseIds");
+
+    const ratings = await Review.aggregate([
+      {
+        $match: { courseId: { $in: courseIds } },
+      },
+      {
+        $group: {
+          _id: "$courseId",
+          averageRating: { $avg: "$rating" },
+          totalReviews: { $sum: 1 },
+        },
+      },
+      {
+        $sort: { averageRating: -1 },
+      },
+      {
+        $limit: 4,
+      },
+    ]);
+console.log(ratings,"ratinfs sdaffkdkj");
+
+
+  // Map course details with average ratings
+  return courses
+    .filter((course) => ratings.some((r) => r._id == course._id ))
+    .map((course) => ({
+      title: course.title,
+      rating: ratings.find((r) => r._id  == course._id )?.averageRating || 1,
+    }));
+  }
+
+  async getCoursePerformance(): Promise<any[]> {
+    const courses = await courseModel.find();
+    console.log(courses, "courses");
+
+    const courseIds = courses.map((course) => String(course._id));
+    console.log(courseIds, "courseIds");
+
+    const ratings = await Review.aggregate([
+      {
+        $match: { courseId: { $in: courseIds } },
+      },
+      {
+        $group: {
+          _id: "$courseId",
+          averageRating: { $avg: "$rating" },
+          totalReviews: { $sum: 1 },
+        },
+      },
+    ]);
+
+
+    return courses.map((course) => ({
+      title: course.title,
+      rating: ratings.find((r) => r._id == course._id)?.averageRating || 1,
+    }));
+
   }
 }
 

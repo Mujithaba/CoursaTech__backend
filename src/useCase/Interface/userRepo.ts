@@ -16,8 +16,8 @@ interface UserRepo {
     saveOtp(name:string,email:string,otp:number,user:string):Promise<OtpDoc>;
     findOtpByEmail(email:string,role:string):Promise<OtpDoc | null>;
     forgotPassUpdate(email:string,password:string):Promise<boolean>;
-    getCourses(limit: number, skip: number): Promise<{}[]>;
-    coursesCount():Promise<number>
+    getCourses(limit: number, skip: number, searchTerm: string, category: string): Promise<{}[]>;
+    coursesCount(searchTerm: string, category: string):Promise<number>
     getCourseView(course_id: string,userid:string): Promise<any>;
     findCourseById(course_id:string):Promise<ICourse | null>;
     savePayments(payment:IPayment):Promise<IPayment>;
