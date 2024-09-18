@@ -70,6 +70,19 @@ io.on('connection', (socket) => {
     // Broadcast the message to all clients in the room, including the sender
     io.to(roomId).emit('private message', message);
   });
+
+  // videocall
+  socket.on('private Videocall', ({ senderId, receiverId, instructorName }) => {
+    console.log(senderId, receiverId, instructorName, "senderId, receiverId, instructorName");
+    
+    // Create a unique room ID for the video call
+    const roomId = [senderId,receiverId].sort().join('-');
+    console.log(roomId,"joinVideoCall");
+    
+    // Emit an event to both the sender and receiver to join the video call room
+    io.to(roomId).emit('joinVideoCall', { roomId, instructorName });
+  });
+  
 });
 
 

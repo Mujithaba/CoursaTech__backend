@@ -46,7 +46,7 @@ class UserRepository implements UserRepo {
 
   // find by id
   async findById(userId: string): Promise<User | null> {
-    const userData = await userModel.findById({ _id: userId });
+    const userData = await userModel.findById(userId).select('-password').exec();
     console.log(userData, "find by id");
     return userData;
   }

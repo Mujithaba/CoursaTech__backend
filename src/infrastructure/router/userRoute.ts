@@ -11,6 +11,7 @@ import { userAuth } from "../middleware/userAuth";
 import S3Uploader from "../services/s3BucketAWS";
 import errorHandle from "../middleware/errorHandle";
 import Razorpay from "razorpay";
+import { uploader } from "../middleware/multer";
 
 const route = express.Router();
 
@@ -54,6 +55,8 @@ route.get('/fetchAssignments',userAuth,(req: Req, res: Res, next: Next)=>userCon
 route.get('/getInstructor',userAuth,(req: Req, res: Res, next: Next)=>userController.getInstructor(req,res,next));
 route.post('/submitReport',userAuth,(req: Req, res: Res, next: Next)=>userController.submitTheReport(req,res,next));
 route.get('/getRating',userAuth,(req: Req, res: Res, next: Next)=>userController.getRating(req,res,next));
+route.get('/getStudentInfo',userAuth,(req: Req, res: Res, next: Next)=>userController.getStudentInfo(req,res,next));
+route.patch('/updatedUserData',userAuth,uploader.single('profileImage'),(req: Req, res: Res, next: Next)=>userController.updatedUserData(req,res,next));
 
 
 

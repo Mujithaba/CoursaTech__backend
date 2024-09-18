@@ -779,6 +779,17 @@ class UserUseCase {
     }
     
   }
+
+  // updateEditData
+  async updateEditData(userid:string,name:string,email:string,phone:string,profileImage?:Express.Multer.File | undefined){
+    console.log(userid, name, email, phone, profileImage, "phone");
+    let uploadImg ="nopic";
+    if (profileImage !== undefined) {
+      uploadImg = await this._S3Uploader.uploadImage(profileImage)
+    }
+    const data = user
+    const saveStudentData = await this._userRepository.saveEditData()
+  }
 }
 
 export default UserUseCase;

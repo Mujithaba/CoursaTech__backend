@@ -13,7 +13,12 @@ const UserSchema:Schema = new Schema<User | Document>(
             unique:true
         },
         phone:{
-            type:String
+            type:String,
+          
+        },
+        img:{
+            type:String,
+              default:"nopic"
         },
         password:{
             type:String,

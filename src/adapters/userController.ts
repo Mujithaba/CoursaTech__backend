@@ -2,8 +2,10 @@ import { Req, Res, Next } from "../infrastructure/type/expressTypes";
 import UserUseCase from "../useCase/userUseCase";
 import { VerifyData } from "../useCase/Interface/verifyData";
 import { Request, Response, NextFunction } from "express";
-import Razorpay from "razorpay";
-import { log } from "console";
+interface CustomRequest extends Request {
+  file?: Express.Multer.File;
+}
+
 
 class userConroller {
   private _userUseCase: UserUseCase;
@@ -167,7 +169,6 @@ class userConroller {
   // homePage
   async homePage(req: Req, res: Res, next: Next) {
     try {
-      console.log(req.query.id, "user id in controller");
       const userId = req.query.id as string;
 
       const user = await this._userUseCase.getUser(userId);
@@ -199,22 +200,7 @@ class userConroller {
       next(error);
     }
   }
-  // async getCourses(req: Req, res: Res, next: Next) {
-  //   try {
-  //     const { page = 1, limit = 10 } = req.query;
-  //     const skip = (Number(page) - 1) * Number(limit);
-  //     const courses = await this._userUseCase.allCourseGet(Number(limit), skip);
-
-  //     if (courses) {
-  //       const totalItems = await this._userUseCase.countCourses();
-  //       return res.status(courses.status).json({ ...courses.data, totalItems });
-  //     } else {
-  //       return res.status(404).json({ message: "No courses found" });
-  //     }
-  //   } catch (error) {
-  //     next(error);
-  //   }
-  // }
+  
 
   // get view course
   async ViewCourses(req: Req, res: Res, next: Next) {
@@ -384,6 +370,35 @@ class userConroller {
       const getRate = await this._userUseCase.getRates()
       console.log(getRate,"oouuuyy");
       return res.status(getRate.status).json(getRate)
+    } catch (error) {
+      next(error)
+    }
+  }
+  // getStudentInfo
+  async getStudentInfo(req:Req,res:Res,next:Next){
+    try {
+      const userId = req.query.userId as string;
+      const userData = await this._userUseCase.getUser(userId)
+      console.log(userData,"getUserData");
+      if (userData.status == 200) {
+        return res.status(userData.status).json(userData.data?.data);
+      } else {
+        return res.status(userData.status).json(userData.data?.message);
+      }
+    } catch (error) {
+      next(error)
+    }
+  }
+  
+  // updatedUserData
+  async updatedUserData(req: CustomRequest,res:Res,next:Next){
+    try {
+      const { userId, name, email, phoneNumber } = req.body;
+      const profileImage = req.file;
+      console.log(userId, name, email, phoneNumber, profileImage, "updatedUserData");
+
+      const saveData = await this._userUseCase.updateEditData(userId,name,email,phoneNumber,profileImage)
+      
     } catch (error) {
       next(error)
     }
