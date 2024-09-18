@@ -12,6 +12,7 @@ import {
   IInstructorDetails,
   IReportRequest,
   itemsCount,
+  IUpdateEditData,
   OtpDoc,
 } from "../type/expressTypes";
 import ICourse from "../../domain/course/course";
@@ -46,8 +47,8 @@ class UserRepository implements UserRepo {
 
   // find by id
   async findById(userId: string): Promise<User | null> {
-    const userData = await userModel.findById(userId).select('-password').exec();
-    console.log(userData, "find by id");
+    const userData = await userModel.findById(userId).exec();
+    // console.log(userData, "find by id");
     return userData;
   }
 
@@ -363,6 +364,30 @@ class UserRepository implements UserRepo {
 
     ])
     return ratings
+  }
+  // saveEditData
+  async saveEditData(userId: string, data: IUpdateEditData): Promise<boolean> {
+    const user = await userModel.findById(userId)
+    const result = await userModel.updateOne(
+      { _id: userId }, 
+      { $set: data }    
+  );
+
+  return result.modifiedCount > 0;
+  }
+  // findUser
+  async findUser(userId: string): Promise<User | null> {
+    const user = await userModel.findById(userId)
+    return user;
+  }
+  // changedPassword
+  async changedPassword(userId: string, hashedNewPassword: string): Promise<boolean> {
+    const result = await userModel.updateOne(
+      { _id: userId },          
+      { $set: { password: hashedNewPassword } }  
+    );
+  
+    return result.modifiedCount > 0;  
   }
 }
 

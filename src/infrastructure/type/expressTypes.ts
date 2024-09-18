@@ -225,3 +225,10 @@ export interface DashboardData {
   listedCourses: number;
   totalStudents: number;
 }
+
+export interface IUpdateEditData {
+  name?: string;
+  email?: string;
+  phone?: string;
+  img?: string | undefined; 
+}

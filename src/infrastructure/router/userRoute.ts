@@ -57,6 +57,7 @@ route.post('/submitReport',userAuth,(req: Req, res: Res, next: Next)=>userContro
 route.get('/getRating',userAuth,(req: Req, res: Res, next: Next)=>userController.getRating(req,res,next));
 route.get('/getStudentInfo',userAuth,(req: Req, res: Res, next: Next)=>userController.getStudentInfo(req,res,next));
 route.patch('/updatedUserData',userAuth,uploader.single('profileImage'),(req: Req, res: Res, next: Next)=>userController.updatedUserData(req,res,next));
+route.patch('/changePassword',userAuth,(req: Req, res: Res, next: Next)=>userController.changePassword(req,res,next));
 
 
 

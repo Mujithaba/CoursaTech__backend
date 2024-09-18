@@ -395,10 +395,28 @@ class userConroller {
     try {
       const { userId, name, email, phoneNumber } = req.body;
       const profileImage = req.file;
-      console.log(userId, name, email, phoneNumber, profileImage, "updatedUserData");
+      // console.log(userId, name, email, phoneNumber, profileImage, "updatedUserData");
 
       const saveData = await this._userUseCase.updateEditData(userId,name,email,phoneNumber,profileImage)
+      if (saveData.status==200) {
+        return res.status(saveData.status).json(saveData)
+      }else{
+        return res.status(saveData.status).json(saveData.message)
+      }
       
+    } catch (error) {
+      next(error)
+    }
+  }
+  // changePassword
+  async changePassword(req:Req,res:Res,next:Next){
+    try {
+      const { userId, currentPassword, newPassword } = req.body;
+    console.log(userId, currentPassword, newPassword, "pooooi");
+    
+    const result = await this._userUseCase.updatePassword(userId, currentPassword, newPassword);
+    
+    return res.status(result?.status).json(result);
     } catch (error) {
       next(error)
     }

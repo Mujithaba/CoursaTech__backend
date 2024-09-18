@@ -5,7 +5,7 @@ import { IMessage } from "../../domain/message";
 import { IPayment } from "../../domain/payment";
 import { reviews } from "../../domain/review";
 import User from "../../domain/user";
-import {  AvgRating, IAssignment, IGetReviews, IInstructorDetails, IReportRequest, OtpDoc } from "../../infrastructure/type/expressTypes";
+import {  AvgRating, IAssignment, IGetReviews, IInstructorDetails, IReportRequest, IUpdateEditData, OtpDoc } from "../../infrastructure/type/expressTypes";
 
 
 
@@ -30,6 +30,9 @@ interface UserRepo {
     reportCourese(courseId:string,userId:string,issueType:string,description:string):Promise<boolean>;
     userReportExist(courseId:string,userId:string):Promise<boolean>;
     ratesGet():Promise<AvgRating[]>;
+    saveEditData(userId:string,data:IUpdateEditData):Promise<boolean>;
+    findUser(userId:string):Promise<User|null>;
+    changedPassword(userid:string,updatePassword:string):Promise<boolean>
 
 }
 

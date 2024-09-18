@@ -15,6 +15,7 @@ import {
   IPaymentComplete,
   IReportIssues,
   IReportRequest,
+  IUpdateEditData,
   Message,
 } from "../infrastructure/type/expressTypes";
 import { IPayment } from "../domain/payment";
@@ -301,20 +302,25 @@ class UserUseCase {
     console.log("get user use case");
 
     const userData = await this._userRepository.findById(userId);
+     
     if (userData) {
+      if (userData.img && userData.img !== 'nopic') {
+          userData.img = await this._S3Uploader.getSignedUrl(userData.img);
+      }
+      
       return {
-        status: 200,
-        data: {
-          message: " getting the user data",
-          data: userData,
-        },
+          status: 200,
+          data: {
+              message: "Getting the user data",
+              data: userData,
+          },
       };
-    } else {
+  } else {
       return {
-        status: 400,
-        message: "something went wrong getting the user data",
+          status: 400,
+          message: "Something went wrong getting the user data",
       };
-    }
+  }
   }
 
   // get all courses
@@ -787,9 +793,63 @@ class UserUseCase {
     if (profileImage !== undefined) {
       uploadImg = await this._S3Uploader.uploadImage(profileImage)
     }
-    const data = user
-    const saveStudentData = await this._userRepository.saveEditData()
+    const data:IUpdateEditData = {
+      name:name,
+      email:email,
+      phone:phone,
+      img:uploadImg
+    }
+    const saveStudentData = await this._userRepository.saveEditData(userid,data)
+    if (saveStudentData) {
+      return {
+        status:200,
+        message:"Updated Successfully"
+      }
+    }else{
+      return{
+        status:400,
+        message:"Something went wrong updating,Try later"
+      }
+    }
   }
+  // updatePassword
+  async updatePassword(userId:string,currentPassword: string, newPassword: string){
+    const userData = await this._userRepository.findUser(userId)
+    let result ;
+    if (!userData) {
+      return {
+        status: 404,
+        message: "User not found",
+      };
+    }
+  
+    const matchingCurrent = await this._encryptPassword.compare(currentPassword, userData.password);
+
+  if (matchingCurrent) {
+    // Encrypt the new password
+    const hashedNewPassword = await this._encryptPassword.encryptPassword(newPassword);
+
+    // Update the password in the repository
+    result = await this._userRepository.changedPassword(userId, hashedNewPassword);
+
+    if (result) {
+      return {
+        status: 200,
+        message: "Password changed successfully",
+      };
+    } else {
+      return {
+        status: 400,
+        message: "Failed to change password",
+      };
+    }
+  } else {
+    return {
+      status: 400,
+      message: "The entered current password is incorrect",
+    };
+  }
+}
 }
 
 export default UserUseCase;
