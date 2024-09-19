@@ -232,3 +232,12 @@ export interface IUpdateEditData {
   phone?: string;
   img?: string | undefined; 
 }
+
+export interface IInstructorHomePage{
+  _id:string; 
+  instructorImg:string;
+  profileUrl?:string;
+  name:string;
+  position:string;
+}
+

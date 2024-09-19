@@ -10,6 +10,7 @@ import {
   IAssignment,
   IGetReviews,
   IInstructorDetails,
+  IInstructorHomePage,
   IReportRequest,
   itemsCount,
   IUpdateEditData,
@@ -30,6 +31,7 @@ import InstructorDetails from "../database/tutorModel/tutorDetailsModel";
 import tutorModel from "../database/tutorModel/tutorModel";
 import Report from "../database/commonModel/reportModal";
 import categoryModel from "../database/adminModel/categoryModel";
+import ICategory from "../../domain/Icategory";
 
 class UserRepository implements UserRepo {
   // saving user details to  database
@@ -203,6 +205,8 @@ class UserRepository implements UserRepo {
   // find course
   async findCourseById(course_id: string): Promise<ICourse | null> {
     const course = await courseModel.findById(course_id);
+    console.log(course,"doud to");
+    
     return course?.toObject() as unknown as ICourse;
   }
 
@@ -389,6 +393,55 @@ class UserRepository implements UserRepo {
   
     return result.modifiedCount > 0;  
   }
+
+  // get category*******************
+  async getCategory(): Promise<ICategory[]> {
+    const getData = await categoryModel.find({ is_listed: true });
+    return getData;
+  }
+  // ratedCourseHome
+  async ratedCourseHome(): Promise<AvgRating[]> {
+    const ratings = await Review.aggregate([
+      {
+        $group: {
+          _id: '$courseId',
+          averageRating: { $avg: '$rating' },
+          totalReviews: { $sum: 1 },
+        },
+      },
+      {
+        $sort: { averageRating: -1 }, 
+      },
+      {
+        $limit: 3, 
+      },
+    ]);
+  
+    return ratings;
+  }
+
+  async findInstructorById(instructorId: string): Promise<IInstructorHomePage> {
+    console.log("home instructor");
+  
+    const name = await tutorModel.findById(instructorId);
+    const details = await InstructorDetails.findOne({ instructorId: instructorId });
+    
+    const instructorData: IInstructorHomePage = {
+      _id:name?._id as string,
+      name: name?.name as string,
+      instructorImg: details?.profileImg as string,
+      position: details?.position as string,
+    };
+    
+    return instructorData;
+  }
+// entrolledUserExist
+  async enrolledUserExist(userId: string): Promise<IPayment[] | null> {
+    const existUser = await Payment.find({userId:userId})
+    return existUser
+  }
+  // 
+
 }
 
 export default UserRepository;

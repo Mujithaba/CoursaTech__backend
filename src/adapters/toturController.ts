@@ -2,6 +2,8 @@ import { Req, Res, Next, IFile } from "../infrastructure/type/expressTypes";
 import { VerifyData } from "../useCase/Interface/verifyData";
 import TutorUseCase from "../useCase/tutorUseCase";
 
+
+
 class TutorController {
   private tutorUseCase: TutorUseCase;
   constructor(tutorUseCase: TutorUseCase) {
@@ -455,6 +457,19 @@ class TutorController {
       console.log(courseGrowthData,"courseGrowth");
       return res.status(courseGrowthData.status).json(courseGrowthData);
       
+    } catch (error) {
+      next(error)
+    }
+  }
+  // updateProfileImg
+  async updateProfileImg(req:Req,res:Res,next:Next){
+    try {
+      const {tutorId} = req.body 
+      const profileImage = req.file as Express.Multer.File;
+      console.log(tutorId,profileImage,"090909");
+      
+      const result = await this.tutorUseCase.updateProfileDp(tutorId,profileImage)
+      return res.status(result.status).json(result.data)
     } catch (error) {
       next(error)
     }

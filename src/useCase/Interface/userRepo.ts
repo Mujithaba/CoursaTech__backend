@@ -1,11 +1,12 @@
 import { Conversation } from "../../domain/conversationMsg";
 import { Assignment } from "../../domain/course/assignment";
 import ICourse from "../../domain/course/course";
+import ICategory from "../../domain/Icategory";
 import { IMessage } from "../../domain/message";
 import { IPayment } from "../../domain/payment";
 import { reviews } from "../../domain/review";
 import User from "../../domain/user";
-import {  AvgRating, IAssignment, IGetReviews, IInstructorDetails, IReportRequest, IUpdateEditData, OtpDoc } from "../../infrastructure/type/expressTypes";
+import {  AvgRating, IAssignment, IGetReviews, IInstructorDetails, IInstructorHomePage, IReportRequest, IUpdateEditData, OtpDoc } from "../../infrastructure/type/expressTypes";
 
 
 
@@ -32,8 +33,11 @@ interface UserRepo {
     ratesGet():Promise<AvgRating[]>;
     saveEditData(userId:string,data:IUpdateEditData):Promise<boolean>;
     findUser(userId:string):Promise<User|null>;
-    changedPassword(userid:string,updatePassword:string):Promise<boolean>
-
+    changedPassword(userid:string,updatePassword:string):Promise<boolean>;
+    getCategory():Promise<ICategory[]>;
+    ratedCourseHome():Promise<AvgRating[]>;
+    findInstructorById(instructorId:string):Promise<IInstructorHomePage>;
+    enrolledUserExist(userId:string):Promise<IPayment[] | null>;
 }
 
 export default UserRepo

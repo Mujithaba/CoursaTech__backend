@@ -12,6 +12,7 @@ import Razorpay from "razorpay";
 import { log } from "util";
 import {
   IConversation,
+  IInstructorHomePage,
   IPaymentComplete,
   IReportIssues,
   IReportRequest,
@@ -23,6 +24,8 @@ import items from "razorpay/dist/types/items";
 import { Conversation } from "../domain/conversationMsg";
 import { reviews } from "../domain/review";
 import { stat } from "fs";
+import { get } from "http";
+import ICourse from "../domain/course/course";
 
 class UserUseCase {
   private _userRepository: UserRepository;
@@ -302,30 +305,40 @@ class UserUseCase {
     console.log("get user use case");
 
     const userData = await this._userRepository.findById(userId);
-     
+
     if (userData) {
-      if (userData.img && userData.img !== 'nopic') {
-          userData.img = await this._S3Uploader.getSignedUrl(userData.img);
+      if (userData.img && userData.img !== "nopic") {
+        userData.img = await this._S3Uploader.getSignedUrl(userData.img);
       }
-      
+
       return {
-          status: 200,
-          data: {
-              message: "Getting the user data",
-              data: userData,
-          },
+        status: 200,
+        data: {
+          message: "Getting the user data",
+          data: userData,
+        },
       };
-  } else {
+    } else {
       return {
-          status: 400,
-          message: "Something went wrong getting the user data",
+        status: 400,
+        message: "Something went wrong getting the user data",
       };
-  }
+    }
   }
 
   // get all courses
-  async allCourseGet(limit: number, skip: number, searchTerm: string, category: string) {
-    const courses = await this._userRepository.getCourses(limit, skip, searchTerm, category);
+  async allCourseGet(
+    limit: number,
+    skip: number,
+    searchTerm: string,
+    category: string
+  ) {
+    const courses = await this._userRepository.getCourses(
+      limit,
+      skip,
+      searchTerm,
+      category
+    );
     const getCourses = await this.s3GetFunction(courses);
     if (getCourses) {
       return {
@@ -343,9 +356,12 @@ class UserUseCase {
       };
     }
   }
-  
+
   async countCourses(searchTerm: string, category: string) {
-    const itemsCount = await this._userRepository.coursesCount(searchTerm, category);
+    const itemsCount = await this._userRepository.coursesCount(
+      searchTerm,
+      category
+    );
     return itemsCount;
   }
   // async allCourseGet(limit: number, skip: number) {
@@ -598,7 +614,7 @@ class UserUseCase {
     const paymentData: IPayment = {
       userId: data.userID,
       courseId: data.courseID,
-      instructorID:data.instructorId,
+      instructorID: data.instructorId,
       price: courseData?.price as number,
     };
     const savePayment = await this._userRepository.savePayments(paymentData);
@@ -731,9 +747,16 @@ class UserUseCase {
     const getInstructor = await this._userRepository.fetchInstructor(
       instructorId
     );
+    console.log(getInstructor,"getInstructor");
+    let instructorImgUrl : string | undefined = undefined; 
+    if (getInstructor.profileImg != "nopic") {
+      instructorImgUrl = await this._S3Uploader.getSignedUrl(getInstructor.profileImg as string)
+    }else{
+      instructorImgUrl = "nopic"
+    }
     return {
       status: 200,
-      data: getInstructor,
+      data: {getInstructor,instructorImgUrl},
     };
   }
   // reportingCourse
@@ -754,7 +777,7 @@ class UserUseCase {
       return {
         status: 200,
         message: "You have already reported this course.",
-        data:"AlreadyAdded"
+        data: "AlreadyAdded",
       };
     }
 
@@ -777,79 +800,247 @@ class UserUseCase {
     }
   }
   // getRates
-  async getRates(){
+  async getRates() {
     const getRate = await this._userRepository.ratesGet();
     return {
-      status:200,
-      getRate
-    }
-    
+      status: 200,
+      getRate,
+    };
   }
 
   // updateEditData
-  async updateEditData(userid:string,name:string,email:string,phone:string,profileImage?:Express.Multer.File | undefined){
+  async updateEditData(
+    userid: string,
+    name: string,
+    email: string,
+    phone: string,
+    profileImage?: Express.Multer.File | undefined
+  ) {
     console.log(userid, name, email, phone, profileImage, "phone");
-    let uploadImg ="nopic";
+    let uploadImg = "nopic";
     if (profileImage !== undefined) {
-      uploadImg = await this._S3Uploader.uploadImage(profileImage)
+      uploadImg = await this._S3Uploader.uploadImage(profileImage);
     }
-    const data:IUpdateEditData = {
-      name:name,
-      email:email,
-      phone:phone,
-      img:uploadImg
-    }
-    const saveStudentData = await this._userRepository.saveEditData(userid,data)
+    const data: IUpdateEditData = {
+      name: name,
+      email: email,
+      phone: phone,
+      img: uploadImg,
+    };
+    const saveStudentData = await this._userRepository.saveEditData(
+      userid,
+      data
+    );
     if (saveStudentData) {
       return {
-        status:200,
-        message:"Updated Successfully"
-      }
-    }else{
-      return{
-        status:400,
-        message:"Something went wrong updating,Try later"
-      }
+        status: 200,
+        message: "Updated Successfully",
+      };
+    } else {
+      return {
+        status: 400,
+        message: "Something went wrong updating,Try later",
+      };
     }
   }
   // updatePassword
-  async updatePassword(userId:string,currentPassword: string, newPassword: string){
-    const userData = await this._userRepository.findUser(userId)
-    let result ;
+  async updatePassword(
+    userId: string,
+    currentPassword: string,
+    newPassword: string
+  ) {
+    const userData = await this._userRepository.findUser(userId);
+    let result;
     if (!userData) {
       return {
         status: 404,
         message: "User not found",
       };
     }
-  
-    const matchingCurrent = await this._encryptPassword.compare(currentPassword, userData.password);
 
-  if (matchingCurrent) {
-    // Encrypt the new password
-    const hashedNewPassword = await this._encryptPassword.encryptPassword(newPassword);
+    const matchingCurrent = await this._encryptPassword.compare(
+      currentPassword,
+      userData.password
+    );
 
-    // Update the password in the repository
-    result = await this._userRepository.changedPassword(userId, hashedNewPassword);
+    if (matchingCurrent) {
+      // Encrypt the new password
+      const hashedNewPassword = await this._encryptPassword.encryptPassword(
+        newPassword
+      );
 
-    if (result) {
+      // Update the password in the repository
+      result = await this._userRepository.changedPassword(
+        userId,
+        hashedNewPassword
+      );
+
+      if (result) {
+        return {
+          status: 200,
+          message: "Password changed successfully",
+        };
+      } else {
+        return {
+          status: 400,
+          message: "Failed to change password",
+        };
+      }
+    } else {
+      return {
+        status: 400,
+        message: "The entered current password is incorrect",
+      };
+    }
+  }
+  // get categories
+  async getCategory() {
+    const getCateData = await this._userRepository.getCategory();
+    if (getCateData) {
       return {
         status: 200,
-        message: "Password changed successfully",
+        data: {
+          getCateData,
+        },
       };
     } else {
       return {
         status: 400,
-        message: "Failed to change password",
+        data: {
+          message: "Something went wrong fetching category",
+        },
       };
     }
-  } else {
+  }
+  // getDataToHome
+  async getDataToHome() {
+    try {
+      const ratedCourses = await this._userRepository.ratedCourseHome();
+      console.log(ratedCourses, "rated courses");
+  
+      let instructorArray: IInstructorHomePage[] = [];
+      const instructorCache = new Map<string, Promise<IInstructorHomePage>>();
+  
+      const topCoursesPromises = ratedCourses.map(async (course) => {
+        try {
+          const getCourses = await this._userRepository.findCourseById(course._id);
+          console.log(getCourses,"ppppppppppppppppppppp");
+          
+  
+          if (!getCourses) {
+            console.log(`Course not found for id: ${course._id}`);
+            return null;
+          }
+  
+          const thumbnailUrl = await this._S3Uploader.getSignedUrl(
+            getCourses.thambnail_Img as string
+          );
+  
+          let instructorDataPromise = instructorCache.get(
+            getCourses.instructor_id as string
+          );
+  
+          if (!instructorDataPromise) {
+            instructorDataPromise = this._userRepository
+              .findInstructorById(getCourses.instructor_id as string)
+              .then(async (instructorData) => {
+                const profileUrl =
+                  instructorData.instructorImg === "nopic"
+                    ? "nopic"
+                    : await this._S3Uploader.getSignedUrl(
+                        instructorData.instructorImg
+                      );
+  
+                return { ...instructorData, profileUrl };
+              });
+  
+            instructorCache.set(
+              getCourses.instructor_id as string,
+              instructorDataPromise
+            );
+          }
+  
+          const instructorData = await instructorDataPromise;
+  
+        
+          if (!instructorArray.some((instructor) => instructor._id.toString() === instructorData._id.toString())) {
+            instructorArray.push(instructorData);
+          }
+  
+          return {
+            _id:getCourses._id,
+            courseName: getCourses.title,
+            thumbnail: thumbnailUrl,
+            averageRating: course.averageRating,
+            instructor: {
+              _id: instructorData._id,
+              name: instructorData.name,
+              profileUrl: instructorData.profileUrl,
+              position: instructorData.position,
+            },
+          };
+        } catch (error) {
+          console.error(`Error processing course ${course._id}:`, error);
+          return null;
+        }
+      });
+  
+      const topCourses = await Promise.all(topCoursesPromises);
+  
+      console.log(topCourses, "topCourses before filtering");
+  
+      const homeData = topCourses.filter((course) => course !== null);
+      console.log(homeData, "filtered topCourses");
+  
+      if (homeData.length > 0) {
+        return {
+          status: 200,
+          data: { homeData, instructorArray },
+        };
+      } else {
+        console.log("No courses found after filtering");
+        return {
+          status: 400,
+          data: "No valid courses found",
+        };
+      }
+    } catch (error) {
+      console.error("Error in getDataToHome:", error);
+      return {
+        status: 500,
+        data: "Internal server error",
+      };
+    }
+  }
+  // entrolledCourseData
+  async enrolledCourseData(userId: string) {
+    const existEnrolledUser = await this._userRepository.enrolledUserExist(userId);
+  
+    if (existEnrolledUser == null) {
+      return {
+        status: 200,
+        data: "No courses you are enrolled in",
+      };
+    }
+  
+    const enrolledData = await Promise.all(
+      existEnrolledUser.map(async (courseEnrolled) => {
+        const getCourse = await this._userRepository.findCourseById(courseEnrolled.courseId as string);
+        const thumbnailImgUrl = await this._S3Uploader.getSignedUrl(getCourse?.thambnail_Img as string);
+  
+        return {
+          ...getCourse,
+          thumbnailImgUrl,
+        };
+      })
+    );
+  
     return {
-      status: 400,
-      message: "The entered current password is incorrect",
+      status: 200,
+      data: enrolledData,
     };
   }
-}
+  
 }
 
 export default UserUseCase;

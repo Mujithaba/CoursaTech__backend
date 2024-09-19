@@ -3,7 +3,7 @@ import Tutor from "../../domain/tutor";
 import ICategory from "../../domain/Icategory";
 import Lecture from "../../domain/course/lecture";
 import Modules from "../../domain/course/chapter";
-import { CourseData, IAssignment, IConversation, IFile, IGetReviews, IInstructorDetails, InstructorDashboardData, InterCourse, OtpDoc } from "../../infrastructure/type/expressTypes";
+import { CourseData, IAssignment, IConversation, IFile, IGetReviews, IInstructorDetails, InstructorDashboardData, InterCourse, OtpDoc, TutorDetails } from "../../infrastructure/type/expressTypes";
 import { ITutorDetails } from "../../domain/tutorDetails";
 import { Assignment } from "../../domain/course/assignment";
 
@@ -37,6 +37,7 @@ interface TutorRepo {
     getReview(courseId:string):Promise<IGetReviews[]>;
     fetchAssignments(courseId:string):Promise<Assignment[]>;
     fetchInstructor(instructorId:string):Promise<IInstructorDetails>;
+    findByIdInstructorDetailsAndUpdate(instructor_id:string,newImageUrl:string):Promise<TutorDetails |null>
     // fetchDashboardData(instructorId:string):Promise<InstructorDashboardData>
 }
 

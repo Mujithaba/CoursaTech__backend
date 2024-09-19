@@ -6,7 +6,6 @@ interface CustomRequest extends Request {
   file?: Express.Multer.File;
 }
 
-
 class userConroller {
   private _userUseCase: UserUseCase;
 
@@ -186,12 +185,25 @@ class userConroller {
   // get all courses list
   async getCourses(req: Req, res: Res, next: Next) {
     try {
-      const { page = 1, limit = 10, searchTerm = '', category = '' } = req.query;
+      const {
+        page = 1,
+        limit = 10,
+        searchTerm = "",
+        category = "",
+      } = req.query;
       const skip = (Number(page) - 1) * Number(limit);
-      const courses = await this._userUseCase.allCourseGet(Number(limit), skip, searchTerm as string, category as string);
-  
+      const courses = await this._userUseCase.allCourseGet(
+        Number(limit),
+        skip,
+        searchTerm as string,
+        category as string
+      );
+
       if (courses) {
-        const totalItems = await this._userUseCase.countCourses(searchTerm as string, category as string);
+        const totalItems = await this._userUseCase.countCourses(
+          searchTerm as string,
+          category as string
+        );
         return res.status(courses.status).json({ ...courses.data, totalItems });
       } else {
         return res.status(404).json({ message: "No courses found" });
@@ -200,7 +212,6 @@ class userConroller {
       next(error);
     }
   }
-  
 
   // get view course
   async ViewCourses(req: Req, res: Res, next: Next) {
@@ -356,67 +367,109 @@ class userConroller {
         formState
       );
 
-      res
-        .status(reportResponse.status)
-        .json(reportResponse);
+      res.status(reportResponse.status).json(reportResponse);
     } catch (error) {
       next(error);
     }
   }
 
   // getRating
-  async getRating(req:Req,res:Res,next:Next){
+  async getRating(req: Req, res: Res, next: Next) {
     try {
-      const getRate = await this._userUseCase.getRates()
-      console.log(getRate,"oouuuyy");
-      return res.status(getRate.status).json(getRate)
+      const getRate = await this._userUseCase.getRates();
+      console.log(getRate, "oouuuyy");
+      return res.status(getRate.status).json(getRate);
     } catch (error) {
-      next(error)
+      next(error);
     }
   }
   // getStudentInfo
-  async getStudentInfo(req:Req,res:Res,next:Next){
+  async getStudentInfo(req: Req, res: Res, next: Next) {
     try {
       const userId = req.query.userId as string;
-      const userData = await this._userUseCase.getUser(userId)
-      console.log(userData,"getUserData");
+      const userData = await this._userUseCase.getUser(userId);
+      console.log(userData, "getUserData");
       if (userData.status == 200) {
         return res.status(userData.status).json(userData.data?.data);
       } else {
         return res.status(userData.status).json(userData.data?.message);
       }
     } catch (error) {
-      next(error)
+      next(error);
     }
   }
-  
+
   // updatedUserData
-  async updatedUserData(req: CustomRequest,res:Res,next:Next){
+  async updatedUserData(req: CustomRequest, res: Res, next: Next) {
     try {
       const { userId, name, email, phoneNumber } = req.body;
       const profileImage = req.file;
       // console.log(userId, name, email, phoneNumber, profileImage, "updatedUserData");
 
-      const saveData = await this._userUseCase.updateEditData(userId,name,email,phoneNumber,profileImage)
-      if (saveData.status==200) {
-        return res.status(saveData.status).json(saveData)
-      }else{
-        return res.status(saveData.status).json(saveData.message)
+      const saveData = await this._userUseCase.updateEditData(
+        userId,
+        name,
+        email,
+        phoneNumber,
+        profileImage
+      );
+      if (saveData.status == 200) {
+        return res.status(saveData.status).json(saveData);
+      } else {
+        return res.status(saveData.status).json(saveData.message);
       }
-      
     } catch (error) {
-      next(error)
+      next(error);
     }
   }
   // changePassword
-  async changePassword(req:Req,res:Res,next:Next){
+  async changePassword(req: Req, res: Res, next: Next) {
     try {
       const { userId, currentPassword, newPassword } = req.body;
-    console.log(userId, currentPassword, newPassword, "pooooi");
-    
-    const result = await this._userUseCase.updatePassword(userId, currentPassword, newPassword);
-    
-    return res.status(result?.status).json(result);
+      console.log(userId, currentPassword, newPassword, "pooooi");
+
+      const result = await this._userUseCase.updatePassword(
+        userId,
+        currentPassword,
+        newPassword
+      );
+
+      return res.status(result?.status).json(result);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  // getCategories
+  async getCategories(req: Req, res: Res, next: Next) {
+    try {
+      const categories = await this._userUseCase.getCategory();
+      if (categories) {
+        return res.status(categories.status).json(categories.data);
+      }
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  // getHomePageData
+  async getHomePageData(req: Req, res: Res, next: Next) {
+    try {
+      const getHomeData = await this._userUseCase.getDataToHome();
+      return res.status(getHomeData.status).json(getHomeData);
+    } catch (error) {
+      next(error);
+    }
+  }
+  // getEntrolledCourse
+  async entrolledCourseGet (req:Req,res:Res,next:Next){
+    try {
+      const userId  = req.query.userId as string
+      console.log(userId,"console.log page route");
+      const entrolledCourses =await this._userUseCase.enrolledCourseData(userId)
+      console.log(entrolledCourses,"entrolledCourses");
+      
+      return res.status(entrolledCourses.status).json(entrolledCourses.data)
     } catch (error) {
       next(error)
     }

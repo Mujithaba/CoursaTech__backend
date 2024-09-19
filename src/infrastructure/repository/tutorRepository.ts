@@ -519,10 +519,10 @@ class TutorRepository implements TutorRepo {
       });
     }
   
-    //  quick lookup of existing data
+  
     const dataMap = new Map(result.map(item => [`${item.year}-${item.month}-${item.courseTitle}`, item.count]));
   
-    // Generate the final data array
+ 
     const processedData = allMonths.map(({ year, month }) => {
       const monthData: any = {
         date: `${year}-${month.toString().padStart(2, '0')}`
@@ -534,6 +534,16 @@ class TutorRepository implements TutorRepo {
     });
   
     return processedData;
+  }
+  // findByIdInstructorDetailsAndUpdate
+  async findByIdInstructorDetailsAndUpdate(instructor_id: string,newImageUrl:string ): Promise<TutorDetails | null> {
+    const result = await InstructorDetails.findOneAndUpdate(
+      { instructorId: instructor_id },
+      { $set: { profileImg: newImageUrl } },
+      { new: true } 
+    ).exec() as TutorDetails | null;
+
+    return result;
   }
 }
 

@@ -680,41 +680,108 @@ class TutorUseCase {
     };
   }
   // fetching profile data
+  // async getInstructorData(tutor_id: string) {
+  //   console.log(tutor_id, "tutorId");
+  //   const getInstructorDetails = await this._tutorRepository.findById(tutor_id);
+  //   console.log(getInstructorDetails, "isnturcto");
+  //   let existDetailsDocument =
+  //     await this._tutorRepository.instructorDetailsExistId(tutor_id);
+  //   if (!existDetailsDocument) {
+  //     let data: ITutorDetails = {
+  //       instructorId: tutor_id,
+  //       profileImg: "nopic",
+  //       experience: "Please give your experience",
+  //       position: "Please give your role",
+  //       companyName: "Please give Company",
+  //       aboutBio: "write something about yousrelf",
+  //     };
+  //     existDetailsDocument =
+  //       await this._tutorRepository.uploadInstructorDetails(data);
+  //   }
+  //   if (getInstructorDetails && existDetailsDocument) {
+  //     if (existDetailsDocument.profileImg != "nopic") {
+        
+  //       const imgUrl = await this._S3Uploader.getSignedUrl(existDetailsDocument.profileImg as string)
+  //       existDetailsDocument.ProfileImgUrl = imgUrl
+  //     }
+  //     return {
+  //       status: 200,
+  //       data: {
+  //         getInstructorDetails,
+  //         existDetailsDocument,
+  //       },
+  //     };
+  //   } else {
+  //     return {
+  //       status: 400,
+  //       data: {
+  //         message: "Something went wrong the fetching instructor data!",
+  //       },
+  //     };
+  //   }
+  // }
   async getInstructorData(tutor_id: string) {
-    console.log(tutor_id, "tutorId");
-    const getInstructorDetails = await this._tutorRepository.findById(tutor_id);
-    console.log(getInstructorDetails, "isnturcto");
-    let existDetailsDocument =
-      await this._tutorRepository.instructorDetailsExistId(tutor_id);
-    if (!existDetailsDocument) {
-      let data: ITutorDetails = {
-        instructorId: tutor_id,
-        profileImg: "nopic",
-        experience: "Please give your experience",
-        position: "Please give your role",
-        companyName: "Please give Company",
-        aboutBio: "write something about youself",
-      };
-      existDetailsDocument =
-        await this._tutorRepository.uploadInstructorDetails(data);
-    }
-    if (getInstructorDetails && existDetailsDocument) {
+    try {
+      console.log(tutor_id, "tutorId");
+      
+     
+      const getInstructorDetails = await this._tutorRepository.findById(tutor_id);
+      console.log(getInstructorDetails, "instructorDetails");
+      
+      
+      let existDetailsDocument = await this._tutorRepository.instructorDetailsExistId(tutor_id);
+      
+     
+      if (!existDetailsDocument) {
+        let data: ITutorDetails = {
+          instructorId: tutor_id,
+          profileImg: "nopic",
+          experience: "Please give your experience",
+          position: "Please give your role",
+          companyName: "Please give Company",
+          aboutBio: "Write something about yourself",
+        };
+        existDetailsDocument = await this._tutorRepository.uploadInstructorDetails(data);
+      }
+      
+     
+      let profileImgUrl: string | undefined = undefined;
+            if (getInstructorDetails && existDetailsDocument) {
+        
+      
+        if (existDetailsDocument.profileImg !== "nopic") {
+          const imgUrl = await this._S3Uploader.getSignedUrl(existDetailsDocument.profileImg as string);
+         profileImgUrl = imgUrl; 
+        }
+        
+       
+        return {
+          status: 200,
+          data: {
+            getInstructorDetails,
+            existDetailsDocument,
+            profileImgUrl
+          },
+        };
+      } else {
+        return {
+          status: 400,
+          data: {
+            message: "Something went wrong with fetching instructor data!",
+          },
+        };
+      }
+    } catch (error) {
+      console.error("Error fetching instructor data:", error);
       return {
-        status: 200,
+        status: 500,
         data: {
-          getInstructorDetails,
-          existDetailsDocument,
-        },
-      };
-    } else {
-      return {
-        status: 400,
-        data: {
-          message: "Something went wrong the fetching instructor data!",
+          message: "Internal server error",
         },
       };
     }
   }
+  
   // save profile data
   async saveProfileDetailes(
     registerData: Tutor,
@@ -745,8 +812,9 @@ class TutorUseCase {
     const conversationLists =
       await this._tutorRepository.findConversationsByReceiverId(instructor_id);
     console.log(conversationLists);
-
+      
     if (conversationLists) {
+    
       return {
         status: 200,
         data: {
@@ -939,6 +1007,25 @@ class TutorUseCase {
         getCourseGrowth,
       },
     };
+  }
+  // updateProfileDp
+  async updateProfileDp (instructorID:string,file:Express.Multer.File){
+    const newImage = await this._S3Uploader.uploadImage(file)
+    const findInstructor = await this._tutorRepository.findByIdInstructorDetailsAndUpdate(instructorID,newImage)
+    console.log(findInstructor,"findInstructor");
+ if (findInstructor) {
+  const newImageUrl = await this._S3Uploader.getSignedUrl(findInstructor.profileImg as string)
+   return {
+     status:200,
+     data:newImageUrl
+   }
+ } else {
+  return {
+    status:400,
+    data:"something went wrong updating profile img"
+  }
+ }
+    
   }
 }
 export default TutorUseCase;

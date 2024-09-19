@@ -58,6 +58,9 @@ route.get('/getRating',userAuth,(req: Req, res: Res, next: Next)=>userController
 route.get('/getStudentInfo',userAuth,(req: Req, res: Res, next: Next)=>userController.getStudentInfo(req,res,next));
 route.patch('/updatedUserData',userAuth,uploader.single('profileImage'),(req: Req, res: Res, next: Next)=>userController.updatedUserData(req,res,next));
 route.patch('/changePassword',userAuth,(req: Req, res: Res, next: Next)=>userController.changePassword(req,res,next));
+route.get('/getAllCategories',userAuth,(req: Req, res: Res, next: Next)=>userController.getCategories(req,res,next));
+route.get('/getHomePageData',(req: Req, res: Res, next: Next)=>userController.getHomePageData(req,res,next));
+route.get('/getEntrolledCourse',userAuth,(req: Req, res: Res, next: Next)=>userController.entrolledCourseGet(req,res,next));
 
 
 

@@ -58,6 +58,7 @@ route.get('/fetchAssignments',tutorAuth,(req: Req, res: Res, next: Next)=>tutorC
 route.get('/getInstructor',tutorAuth,(req: Req, res: Res, next: Next)=>tutorController.getInstructor(req,res,next));
 route.get('/fetchDashboardData',tutorAuth,(req: Req, res: Res, next: Next)=>tutorController.fetchDashboardData(req,res,next));
 route.get('/getCourseGrowth',tutorAuth,(req: Req, res: Res, next: Next)=>tutorController.getCourseGrowth(req,res,next));
+route.patch('/updateProfileImg',tutorAuth,uploader.single('profileImage'),(req: Req, res: Res, next: Next)=>tutorController.updateProfileImg(req,res,next));
 
 
 
