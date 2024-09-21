@@ -305,17 +305,17 @@ class UserUseCase {
     console.log("get user use case");
 
     const userData = await this._userRepository.findById(userId);
-
+let profileUril = "nopic"
     if (userData) {
-      if (userData.img && userData.img !== "nopic") {
-        userData.img = await this._S3Uploader.getSignedUrl(userData.img);
+      if (userData.img && userData.img != "nopic") {
+        profileUril = await this._S3Uploader.getSignedUrl(userData.img);
       }
 
       return {
         status: 200,
         data: {
           message: "Getting the user data",
-          data: userData,
+          data: {userData,profileUril},
         },
       };
     } else {
@@ -364,31 +364,7 @@ class UserUseCase {
     );
     return itemsCount;
   }
-  // async allCourseGet(limit: number, skip: number) {
-  //   const courses = await this._userRepository.getCourses(limit, skip);
-  //   const getCourses = await this.s3GetFunction(courses);
-  //   if (getCourses) {
-  //     return {
-  //       status: 200,
-  //       data: {
-  //         getCourses,
-  //       },
-  //     };
-  //   } else {
-  //     return {
-  //       status: 400,
-  //       data: {
-  //         message: "Something went wrong fetching courses",
-  //       },
-  //     };
-  //   }
-  // }
-
-  // async countCourses() {
-  //   const itemsCount = await this._userRepository.coursesCount();
-  //   return itemsCount;
-  // }
-
+ 
   // url thorugh data fetching from s3
   async s3GetFunction(getCourses: {}[]) {
     console.log("kkkk");
@@ -747,7 +723,6 @@ class UserUseCase {
     const getInstructor = await this._userRepository.fetchInstructor(
       instructorId
     );
-    console.log(getInstructor,"getInstructor");
     let instructorImgUrl : string | undefined = undefined; 
     if (getInstructor.profileImg != "nopic") {
       instructorImgUrl = await this._S3Uploader.getSignedUrl(getInstructor.profileImg as string)
@@ -816,30 +791,33 @@ class UserUseCase {
     phone: string,
     profileImage?: Express.Multer.File | undefined
   ) {
-    console.log(userid, name, email, phone, profileImage, "phone");
-    let uploadImg = "nopic";
-    if (profileImage !== undefined) {
+    let uploadImg;
+    if (profileImage) {
       uploadImg = await this._S3Uploader.uploadImage(profileImage);
     }
+  
     const data: IUpdateEditData = {
       name: name,
       email: email,
       phone: phone,
-      img: uploadImg,
     };
-    const saveStudentData = await this._userRepository.saveEditData(
-      userid,
-      data
-    );
-    if (saveStudentData) {
+  
+    if (uploadImg) {
+      data.img = uploadImg;
+    }
+  
+    const updatedUser = await this._userRepository.saveEditData(userid, data);
+  
+    if (updatedUser) {
       return {
         status: 200,
         message: "Updated Successfully",
+        updatedUser: updatedUser
       };
     } else {
       return {
         status: 400,
-        message: "Something went wrong updating,Try later",
+        message: "Something went wrong updating, Try later"
       };
     }
   }
@@ -1039,6 +1017,15 @@ class UserUseCase {
       status: 200,
       data: enrolledData,
     };
+  }
+  // getPreviousMsgs
+  async getPreviousMsgs(senderId:string,receiverId:string){
+    const getInitialMsgs = await this._userRepository.getMsgs(senderId,receiverId)
+    console.log(getInitialMsgs,"getPreviousMsgs");
+    return {
+      status:200,
+      data:getInitialMsgs
+    }
   }
   
 }

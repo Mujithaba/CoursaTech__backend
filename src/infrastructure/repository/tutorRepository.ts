@@ -31,6 +31,9 @@ import assignmentModel from "../database/tutorModel/assignmentModel";
 import Review from "../database/commonModel/reviewModel";
 import mongoose from "mongoose";
 import Payment from "../database/commonModel/paymentModel";
+import { IMessage } from "../../domain/message";
+import Message from "../database/commonModel/messageModel";
+import { Conversation } from "../../domain/conversationMsg";
 
 class TutorRepository implements TutorRepo {
   //save tutor to DB
@@ -246,7 +249,7 @@ class TutorRepository implements TutorRepo {
   ): Promise<IConversation[]> {
     const receiverConversations = await conversationModel.find({
       receiverId: instructor_id,
-    });
+    }).sort({updatedAt:-1});
     return receiverConversations;
   }
   // instructorCourseData
@@ -380,7 +383,7 @@ class TutorRepository implements TutorRepo {
     const pipeline: PipelineStage[] = [
       {
         $match: {
-          instructorID: instructorId, 
+          instructorID: instructorId,
         },
       },
       {
@@ -401,10 +404,8 @@ class TutorRepository implements TutorRepo {
         $lookup: {
           from: "courses",
           // Convert string to ObjectId
-          let: { courseId: { $toObjectId: "$_id" } }, 
-          pipeline: [
-            { $match: { $expr: { $eq: ["$_id", "$$courseId"] } } }
-          ],
+          let: { courseId: { $toObjectId: "$_id" } },
+          pipeline: [{ $match: { $expr: { $eq: ["$_id", "$$courseId"] } } }],
           as: "course",
         },
       },
@@ -418,17 +419,16 @@ class TutorRepository implements TutorRepo {
         },
       },
     ];
-  
+
     console.log(JSON.stringify(pipeline, null, 2), "pipeline");
-  
+
     const recentEnrollments = await Payment.aggregate(pipeline);
     console.log("Final result:", recentEnrollments);
-  
+
     return recentEnrollments;
   }
 
   async getCoursePerformance(instructorId: string): Promise<any[]> {
-    
     const courses = await courseModel.find({ instructor_id: instructorId });
     console.log(courses, "courses");
 
@@ -461,36 +461,34 @@ class TutorRepository implements TutorRepo {
     sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 5); // -5 to include current month
     sixMonthsAgo.setDate(1); // Start from the 1st of the month
     sixMonthsAgo.setHours(0, 0, 0, 0);
-  
+
     const pipeline: PipelineStage[] = [
       {
         $match: {
           instructorID: instructorId,
-          createdAt: { $gte: sixMonthsAgo }
-        }
+          createdAt: { $gte: sixMonthsAgo },
+        },
       },
       {
         $group: {
           _id: {
             courseId: "$courseId",
             year: { $year: "$createdAt" },
-            month: { $month: "$createdAt" }
+            month: { $month: "$createdAt" },
           },
-          count: { $sum: 1 }
-        }
+          count: { $sum: 1 },
+        },
       },
       {
         $lookup: {
           from: "courses",
           let: { courseId: { $toObjectId: "$_id.courseId" } },
-          pipeline: [
-            { $match: { $expr: { $eq: ["$_id", "$$courseId"] } } }
-          ],
-          as: "course"
-        }
+          pipeline: [{ $match: { $expr: { $eq: ["$_id", "$$courseId"] } } }],
+          as: "course",
+        },
       },
       {
-        $unwind: "$course"
+        $unwind: "$course",
       },
       {
         $project: {
@@ -499,15 +497,15 @@ class TutorRepository implements TutorRepo {
           courseTitle: "$course.title",
           year: "$_id.year",
           month: "$_id.month",
-          count: 1
-        }
-      }
+          count: 1,
+        },
+      },
     ];
-  
+
     const result = await Payment.aggregate(pipeline);
-  
-    const courseTitles = [...new Set(result.map(item => item.courseTitle))];
-  
+
+    const courseTitles = [...new Set(result.map((item) => item.courseTitle))];
+
     // Generate all months in the last 6 months
     const allMonths = [];
     for (let i = 0; i < 6; i++) {
@@ -515,35 +513,88 @@ class TutorRepository implements TutorRepo {
       date.setMonth(date.getMonth() + i);
       allMonths.push({
         year: date.getFullYear(),
-        month: date.getMonth() + 1
+        month: date.getMonth() + 1,
       });
     }
-  
-  
-    const dataMap = new Map(result.map(item => [`${item.year}-${item.month}-${item.courseTitle}`, item.count]));
-  
- 
+
+    const dataMap = new Map(
+      result.map((item) => [
+        `${item.year}-${item.month}-${item.courseTitle}`,
+        item.count,
+      ])
+    );
+
     const processedData = allMonths.map(({ year, month }) => {
       const monthData: any = {
-        date: `${year}-${month.toString().padStart(2, '0')}`
+        date: `${year}-${month.toString().padStart(2, "0")}`,
       };
-      courseTitles.forEach(title => {
+      courseTitles.forEach((title) => {
         monthData[title] = dataMap.get(`${year}-${month}-${title}`) || 0;
       });
       return monthData;
     });
-  
+
     return processedData;
   }
   // findByIdInstructorDetailsAndUpdate
-  async findByIdInstructorDetailsAndUpdate(instructor_id: string,newImageUrl:string ): Promise<TutorDetails | null> {
-    const result = await InstructorDetails.findOneAndUpdate(
+  async findByIdInstructorDetailsAndUpdate(
+    instructor_id: string,
+    newImageUrl: string
+  ): Promise<TutorDetails | null> {
+    const result = (await InstructorDetails.findOneAndUpdate(
       { instructorId: instructor_id },
       { $set: { profileImg: newImageUrl } },
-      { new: true } 
-    ).exec() as TutorDetails | null;
+      { new: true }
+    ).exec()) as TutorDetails | null;
 
     return result;
+  }
+  // store user Msg
+  async storeMesssage(messages: IMessage): Promise<IMessage> {
+    const newMessage = new Message(messages);
+    const storeMsgs = await newMessage.save();
+    return storeMsgs;
+  }
+  // createConversation
+  async createConversation(
+    lastMessage: Conversation
+  ): Promise<Conversation | null> {
+    const conversationMsg = await conversationModel.findOne({
+      senderId: lastMessage.senderId,
+      receiverId: lastMessage.receiverId,
+    });
+
+    const hasConverstion = !!conversationMsg;
+    let lastConverstion;
+    if (hasConverstion) {
+      const converstion = await conversationModel.updateOne(
+        { senderId: lastMessage.senderId, receiverId: lastMessage.receiverId },
+        { $set: { lastMessage: lastMessage.lastMessage } }
+      );
+      lastConverstion = await conversationModel.findOne({
+        senderId: lastMessage.senderId,
+        receiverId: lastMessage.receiverId,
+      });
+    } else {
+      let newConversation = new conversationModel(lastMessage);
+      let saveConversation = await newConversation.save();
+      lastConverstion = saveConversation;
+    }
+
+    return lastConverstion;
+  }
+  // getMsgs
+  async getMsgs(senderId: string, receiverId: string): Promise<IMessage[] | null> {
+    const senderIdMsgs = await Message.find({senderId:senderId,receiverId:receiverId})
+    const receiverIdMsgs = await Message.find({senderId:receiverId,receiverId:senderId})
+    const allMessages = [...senderIdMsgs, ...receiverIdMsgs];
+
+    allMessages.sort((a: IMessage, b: IMessage) => {
+      const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+      const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+      return dateA - dateB;
+    });
+    return allMessages.length ? allMessages : null;
   }
 }
 

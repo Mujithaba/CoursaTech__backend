@@ -3,9 +3,11 @@ import Tutor from "../../domain/tutor";
 import ICategory from "../../domain/Icategory";
 import Lecture from "../../domain/course/lecture";
 import Modules from "../../domain/course/chapter";
-import { CourseData, IAssignment, IConversation, IFile, IGetReviews, IInstructorDetails, InstructorDashboardData, InterCourse, OtpDoc, TutorDetails } from "../../infrastructure/type/expressTypes";
+import { CourseData, IAssignment, IConversation, IFile, IGetReviews, IInstructorDetails, InstructorDashboardData, InterCourse, Message, OtpDoc, TutorDetails } from "../../infrastructure/type/expressTypes";
 import { ITutorDetails } from "../../domain/tutorDetails";
 import { Assignment } from "../../domain/course/assignment";
+import { IMessage } from "../../domain/message";
+import { Conversation } from "../../domain/conversationMsg";
 
 
 interface TutorRepo {
@@ -38,7 +40,10 @@ interface TutorRepo {
     fetchAssignments(courseId:string):Promise<Assignment[]>;
     fetchInstructor(instructorId:string):Promise<IInstructorDetails>;
     findByIdInstructorDetailsAndUpdate(instructor_id:string,newImageUrl:string):Promise<TutorDetails |null>
-    // fetchDashboardData(instructorId:string):Promise<InstructorDashboardData>
+    storeMesssage(messages:IMessage):Promise<IMessage>;
+    createConversation(lastMessage:Conversation):Promise<Conversation | null>;
+    getMsgs(senderId:string,receiverId:string):Promise<IMessage[]|null>;
+
 }
 
 export default TutorRepo

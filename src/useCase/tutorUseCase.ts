@@ -8,6 +8,7 @@ import JwtToken from "../infrastructure/services/generateToken";
 import S3Uploader from "../infrastructure/services/s3BucketAWS";
 import {
   IFile,
+  Message,
   Next,
   Req,
   Res,
@@ -19,6 +20,7 @@ import Modules from "../domain/course/chapter";
 import Lecture from "../domain/course/lecture";
 import { log, time } from "console";
 import { ITutorDetails } from "../domain/tutorDetails";
+import { Conversation } from "../domain/conversationMsg";
 
 class TutorUseCase {
   private _tutorRepository: TutorRepository;
@@ -700,7 +702,7 @@ class TutorUseCase {
   //   }
   //   if (getInstructorDetails && existDetailsDocument) {
   //     if (existDetailsDocument.profileImg != "nopic") {
-        
+
   //       const imgUrl = await this._S3Uploader.getSignedUrl(existDetailsDocument.profileImg as string)
   //       existDetailsDocument.ProfileImgUrl = imgUrl
   //     }
@@ -723,15 +725,15 @@ class TutorUseCase {
   async getInstructorData(tutor_id: string) {
     try {
       console.log(tutor_id, "tutorId");
-      
-     
-      const getInstructorDetails = await this._tutorRepository.findById(tutor_id);
+
+      const getInstructorDetails = await this._tutorRepository.findById(
+        tutor_id
+      );
       console.log(getInstructorDetails, "instructorDetails");
-      
-      
-      let existDetailsDocument = await this._tutorRepository.instructorDetailsExistId(tutor_id);
-      
-     
+
+      let existDetailsDocument =
+        await this._tutorRepository.instructorDetailsExistId(tutor_id);
+
       if (!existDetailsDocument) {
         let data: ITutorDetails = {
           instructorId: tutor_id,
@@ -741,26 +743,25 @@ class TutorUseCase {
           companyName: "Please give Company",
           aboutBio: "Write something about yourself",
         };
-        existDetailsDocument = await this._tutorRepository.uploadInstructorDetails(data);
+        existDetailsDocument =
+          await this._tutorRepository.uploadInstructorDetails(data);
       }
-      
-     
+
       let profileImgUrl: string | undefined = undefined;
-            if (getInstructorDetails && existDetailsDocument) {
-        
-      
+      if (getInstructorDetails && existDetailsDocument) {
         if (existDetailsDocument.profileImg !== "nopic") {
-          const imgUrl = await this._S3Uploader.getSignedUrl(existDetailsDocument.profileImg as string);
-         profileImgUrl = imgUrl; 
+          const imgUrl = await this._S3Uploader.getSignedUrl(
+            existDetailsDocument.profileImg as string
+          );
+          profileImgUrl = imgUrl;
         }
-        
-       
+
         return {
           status: 200,
           data: {
             getInstructorDetails,
             existDetailsDocument,
-            profileImgUrl
+            profileImgUrl,
           },
         };
       } else {
@@ -781,7 +782,7 @@ class TutorUseCase {
       };
     }
   }
-  
+
   // save profile data
   async saveProfileDetailes(
     registerData: Tutor,
@@ -811,10 +812,9 @@ class TutorUseCase {
   async receiverConversations(instructor_id: string) {
     const conversationLists =
       await this._tutorRepository.findConversationsByReceiverId(instructor_id);
-    console.log(conversationLists);
-      
+
+
     if (conversationLists) {
-    
       return {
         status: 200,
         data: {
@@ -984,7 +984,9 @@ class TutorUseCase {
     const coursePerformance = await this._tutorRepository.getCoursePerformance(
       instructorId
     );
-    const getCourseGrowth = await this._tutorRepository.getCourseGrowth(instructorId)
+    const getCourseGrowth = await this._tutorRepository.getCourseGrowth(
+      instructorId
+    );
 
     return {
       status: 200,
@@ -999,8 +1001,10 @@ class TutorUseCase {
     };
   }
   // courseGrowth
-  async courseGrowth(instructorId:string){
-    const getCourseGrowth = await this._tutorRepository.getCourseGrowth(instructorId)
+  async courseGrowth(instructorId: string) {
+    const getCourseGrowth = await this._tutorRepository.getCourseGrowth(
+      instructorId
+    );
     return {
       status: 200,
       data: {
@@ -1009,23 +1013,73 @@ class TutorUseCase {
     };
   }
   // updateProfileDp
-  async updateProfileDp (instructorID:string,file:Express.Multer.File){
-    const newImage = await this._S3Uploader.uploadImage(file)
-    const findInstructor = await this._tutorRepository.findByIdInstructorDetailsAndUpdate(instructorID,newImage)
-    console.log(findInstructor,"findInstructor");
- if (findInstructor) {
-  const newImageUrl = await this._S3Uploader.getSignedUrl(findInstructor.profileImg as string)
-   return {
-     status:200,
-     data:newImageUrl
-   }
- } else {
-  return {
-    status:400,
-    data:"something went wrong updating profile img"
+  async updateProfileDp(instructorID: string, file: Express.Multer.File) {
+    const newImage = await this._S3Uploader.uploadImage(file);
+    const findInstructor =
+      await this._tutorRepository.findByIdInstructorDetailsAndUpdate(
+        instructorID,
+        newImage
+      );
+    console.log(findInstructor, "findInstructor");
+    if (findInstructor) {
+      const newImageUrl = await this._S3Uploader.getSignedUrl(
+        findInstructor.profileImg as string
+      );
+      return {
+        status: 200,
+        data: newImageUrl,
+      };
+    } else {
+      return {
+        status: 400,
+        data: "something went wrong updating profile img",
+      };
+    }
   }
- }
-    
+  // storeUserMsg
+  async storeUserMsg(
+    message: string,
+    instructorId: string,
+    userId: string,
+    instructorName: string
+  ) {
+    const msg: Message = {
+      senderId: instructorId,
+      receiverId: userId,
+      message: message,
+    };
+    const storeMsg = await this._tutorRepository.storeMesssage(msg);
+    let lastMsg: Conversation = {
+      senderName: instructorName,
+      senderId: instructorId,
+      receiverId: userId,
+      lastMessage: message,
+    };
+    const conversationMsg = await this._tutorRepository.createConversation(
+      lastMsg
+    );
+    console.log(storeMsg, conversationMsg, "stored msg");
+
+    if (storeMsg) {
+      return {
+        status: 200,
+        message: "msg is stored",
+      };
+    } else {
+      return {
+        status: 400,
+        message: "something went wrong the msg storing",
+      };
+    }
+  }
+   // getPreviousMsgs
+   async getPreviousMsgs(senderId:string,receiverId:string){
+    const getInitialMsgs = await this._tutorRepository.getMsgs(senderId,receiverId)
+    console.log(getInitialMsgs,"getPreviousMsgs");
+    return {
+      status:200,
+      data:getInitialMsgs
+    }
   }
 }
 export default TutorUseCase;

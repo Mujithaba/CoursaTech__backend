@@ -474,5 +474,36 @@ class TutorController {
       next(error)
     }
   }
+  // sendInstructorMsg
+  async sendInstructorMsg(req:Req,res:Res,next:Next){
+    try {
+      const { msg, userId, instructorId, instructorName } = req.body;
+      const saveMsg = await this.tutorUseCase.storeUserMsg(
+        msg,
+        instructorId,
+        userId,
+        instructorName
+      );
+      
+
+      if (saveMsg) {
+        return res.status(saveMsg.status).json(saveMsg);
+      }
+    } catch (error) {
+      next(error)
+    }
+  }
+  // getInitialMsg
+  async getInitialMsg(req:Req,res:Res,next:Next){
+    try {
+      const senderId = req.query.senderId as string 
+      const receiverId = req.query.receiverId as string 
+      console.log(senderId,receiverId,"getInitialMsg");
+      const initialMsgs = await this.tutorUseCase.getPreviousMsgs(senderId,receiverId)
+      return res.status(initialMsgs.status).json(initialMsgs.data)
+    } catch (error) {
+      next(error)
+    }
+  }
 }
 export default TutorController;

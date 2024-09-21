@@ -143,32 +143,7 @@ class UserRepository implements UserRepo {
     const counts = await courseModel.countDocuments(query);
     return counts;
   }
-  // async getCourses(limit: number, skip: number): Promise<{}[]> {
-  //   const coursesData = await courseModel
-  //     .find({ is_verified: true })
-  //     .populate({ path: "category_id", select: "categoryName" })
-  //     .populate({
-  //       path: "chapters",
-  //       model: "Module",
-  //       select: "name lectures createdAt",
-  //       populate: {
-  //         path: "lectures",
-  //         model: "Lecture",
-  //         select: "title description video pdf createdAt",
-  //       },
-  //     })
-  //     .limit(limit)
-  //     .skip(skip)
-  //     .lean()
-  //     .exec();
-  //   return coursesData;
-  // }
-
-  // async coursesCount(): Promise<number> {
-  //   const counts = await courseModel.countDocuments({ is_verified: true });
-  //   return counts;
-  // }
-
+ 
   // getCourseView
   async getCourseView(course_id: string, userid: string): Promise<any> {
     const paymentDocument = await Payment.findOne({
@@ -287,7 +262,7 @@ class UserRepository implements UserRepo {
       instructorId: instructorId,
     });
 
-    console.log(tutor, instructor, "Fetched tutor and instructor details");
+    // console.log(tutor, instructor, "Fetched tutor and instructor details");
     const instructor_id = tutor?._id as string;
     const instructorname = tutor?.name as string;
     const instructormail = tutor?.email as string;
@@ -370,15 +345,15 @@ class UserRepository implements UserRepo {
     return ratings
   }
   // saveEditData
-  async saveEditData(userId: string, data: IUpdateEditData): Promise<boolean> {
-    const user = await userModel.findById(userId)
-    const result = await userModel.updateOne(
-      { _id: userId }, 
-      { $set: data }    
+ async saveEditData(userId: string, data: IUpdateEditData): Promise<User | null> {
+  const updatedUser = await userModel.findByIdAndUpdate(
+    userId,
+    { $set: data },
+    { new: true } // This option returns the updated document
   );
 
-  return result.modifiedCount > 0;
-  }
+  return updatedUser;
+}
   // findUser
   async findUser(userId: string): Promise<User | null> {
     const user = await userModel.findById(userId)
@@ -440,8 +415,20 @@ class UserRepository implements UserRepo {
     const existUser = await Payment.find({userId:userId})
     return existUser
   }
-  // 
+  // getMsgs
+  async getMsgs(senderId: string, receiverId: string): Promise<IMessage[] | null> {
+    const senderIdMsgs = await Message.find({senderId:senderId,receiverId:receiverId})
+    const receiverIdMsgs = await Message.find({senderId:receiverId,receiverId:senderId})
+    const allMessages = [...senderIdMsgs, ...receiverIdMsgs];
 
+    allMessages.sort((a: IMessage, b: IMessage) => {
+      const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+      const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+      return dateA - dateB;
+    });
+    return allMessages.length ? allMessages : null;
+  }
+  
 }
 
 export default UserRepository;

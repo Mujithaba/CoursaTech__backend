@@ -2,6 +2,7 @@ import { Req, Res, Next } from "../infrastructure/type/expressTypes";
 import UserUseCase from "../useCase/userUseCase";
 import { VerifyData } from "../useCase/Interface/verifyData";
 import { Request, Response, NextFunction } from "express";
+import { log } from "console";
 interface CustomRequest extends Request {
   file?: Express.Multer.File;
 }
@@ -404,8 +405,7 @@ class userConroller {
     try {
       const { userId, name, email, phoneNumber } = req.body;
       const profileImage = req.file;
-      // console.log(userId, name, email, phoneNumber, profileImage, "updatedUserData");
-
+      
       const saveData = await this._userUseCase.updateEditData(
         userId,
         name,
@@ -413,10 +413,15 @@ class userConroller {
         phoneNumber,
         profileImage
       );
-      if (saveData.status == 200) {
-        return res.status(saveData.status).json(saveData);
+  
+      if (saveData.status === 200) {
+        
+        return res.status(saveData.status).json({
+          message: saveData.message,
+          updatedUser: saveData.updatedUser
+        });
       } else {
-        return res.status(saveData.status).json(saveData.message);
+        return res.status(saveData.status).json({ message: saveData.message });
       }
     } catch (error) {
       next(error);
@@ -470,6 +475,18 @@ class userConroller {
       console.log(entrolledCourses,"entrolledCourses");
       
       return res.status(entrolledCourses.status).json(entrolledCourses.data)
+    } catch (error) {
+      next(error)
+    }
+  }
+  // getInitialMsg
+  async getInitialMsg(req:Req,res:Res,next:Next){
+    try {
+      const senderId = req.query.senderId as string 
+      const receiverId = req.query.receiverId as string 
+      console.log(senderId,receiverId,"getInitialMsg");
+      const initialMsgs = await this._userUseCase.getPreviousMsgs(senderId,receiverId)
+      return res.status(initialMsgs.status).json(initialMsgs.data)
     } catch (error) {
       next(error)
     }

@@ -6,7 +6,7 @@ import { IMessage } from "../../domain/message";
 import { IPayment } from "../../domain/payment";
 import { reviews } from "../../domain/review";
 import User from "../../domain/user";
-import {  AvgRating, IAssignment, IGetReviews, IInstructorDetails, IInstructorHomePage, IReportRequest, IUpdateEditData, OtpDoc } from "../../infrastructure/type/expressTypes";
+import {  AvgRating, IAssignment, IGetReviews, IInstructorDetails, IInstructorHomePage, IReportRequest, IUpdateEditData, Message, OtpDoc } from "../../infrastructure/type/expressTypes";
 
 
 
@@ -31,13 +31,15 @@ interface UserRepo {
     reportCourese(courseId:string,userId:string,issueType:string,description:string):Promise<boolean>;
     userReportExist(courseId:string,userId:string):Promise<boolean>;
     ratesGet():Promise<AvgRating[]>;
-    saveEditData(userId:string,data:IUpdateEditData):Promise<boolean>;
+    saveEditData(userId:string,data:IUpdateEditData):Promise<User|null>;
     findUser(userId:string):Promise<User|null>;
     changedPassword(userid:string,updatePassword:string):Promise<boolean>;
     getCategory():Promise<ICategory[]>;
     ratedCourseHome():Promise<AvgRating[]>;
     findInstructorById(instructorId:string):Promise<IInstructorHomePage>;
     enrolledUserExist(userId:string):Promise<IPayment[] | null>;
+    getMsgs(senderId:string,receiverId:string):Promise<IMessage[]|null>;
+
 }
 
 export default UserRepo

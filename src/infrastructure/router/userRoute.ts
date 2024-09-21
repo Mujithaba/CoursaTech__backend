@@ -61,6 +61,7 @@ route.patch('/changePassword',userAuth,(req: Req, res: Res, next: Next)=>userCon
 route.get('/getAllCategories',userAuth,(req: Req, res: Res, next: Next)=>userController.getCategories(req,res,next));
 route.get('/getHomePageData',(req: Req, res: Res, next: Next)=>userController.getHomePageData(req,res,next));
 route.get('/getEntrolledCourse',userAuth,(req: Req, res: Res, next: Next)=>userController.entrolledCourseGet(req,res,next));
+route.get('/getInitialMsg',userAuth,(req: Req, res: Res, next: Next)=>userController.getInitialMsg(req,res,next));
 
 
 

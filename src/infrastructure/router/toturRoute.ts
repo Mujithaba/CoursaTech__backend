@@ -59,6 +59,8 @@ route.get('/getInstructor',tutorAuth,(req: Req, res: Res, next: Next)=>tutorCont
 route.get('/fetchDashboardData',tutorAuth,(req: Req, res: Res, next: Next)=>tutorController.fetchDashboardData(req,res,next));
 route.get('/getCourseGrowth',tutorAuth,(req: Req, res: Res, next: Next)=>tutorController.getCourseGrowth(req,res,next));
 route.patch('/updateProfileImg',tutorAuth,uploader.single('profileImage'),(req: Req, res: Res, next: Next)=>tutorController.updateProfileImg(req,res,next));
+route.post('/sendInstructorMsg',tutorAuth,(req: Req, res: Res, next: Next)=>tutorController.sendInstructorMsg(req,res,next));
+route.get('/getInitialMsg',tutorAuth,(req: Req, res: Res, next: Next)=>tutorController.getInitialMsg(req,res,next));
 
 
 
