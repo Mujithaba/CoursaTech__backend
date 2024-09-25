@@ -6,8 +6,8 @@ export const adminAuth = async (
   res: Response,
   next: NextFunction
 ) => {
-    console.log("admin auth");
-    
+  console.log("admin auth");
+
   const authHeader = req.headers.authorization;
 
   if (!authHeader || !authHeader.startsWith("Bearer ")) {
@@ -23,7 +23,7 @@ export const adminAuth = async (
       token,
       process.env.SECRET_KEY as string
     ) as JwtPayload;
-console.log(decodedToken,"kk tocken");
+    console.log(decodedToken, "kk tocken");
 
     if (decodedToken.role !== "admin") {
       return res.status(403).json({ message: "Unauthorized access" });

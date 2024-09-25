@@ -11,7 +11,6 @@ import {
 } from "../../infrastructure/type/expressTypes";
 import { Assignment } from "../../domain/course/assignment";
 import { IReport } from "../../domain/report";
-import { IWallet } from "../../domain/wallet";
 
 interface AdminRep {
   // users taking

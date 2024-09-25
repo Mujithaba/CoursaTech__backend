@@ -1,8 +1,6 @@
-import { Req, Res, Next, IFile } from "../infrastructure/type/expressTypes";
+import { Req, Res, Next } from "../infrastructure/type/expressTypes";
 import { VerifyData } from "../useCase/Interface/verifyData";
 import TutorUseCase from "../useCase/tutorUseCase";
-
-
 
 class TutorController {
   private tutorUseCase: TutorUseCase;
@@ -13,11 +11,10 @@ class TutorController {
   async signup(req: Req, res: Res, next: Next) {
     try {
       const tutorVerify = await this.tutorUseCase.checkExist(req.body.email);
-      console.log("tutor controller ", req.body.email);
 
       if (tutorVerify.data.status == true) {
         const sendOtp = await this.tutorUseCase.signup(
-          req.body.name,     
+          req.body.name,
           req.body.email
         );
 
@@ -111,7 +108,6 @@ class TutorController {
   async forgotPass(req: Req, res: Res, next: Next) {
     try {
       const email = req.body.email;
-      console.log(email, "email fgt");
 
       const tutor = await this.tutorUseCase.forgotPassword(email);
 
@@ -131,10 +127,8 @@ class TutorController {
   async forgotOTPverify(req: Req, res: Res, next: Next) {
     try {
       const data: VerifyData = req.body;
-      console.log(data, "ppp");
 
       const verify = await this.tutorUseCase.verify(data);
-      console.log(verify.data?.email, "verify");
 
       if (verify.status == 400) {
         return res.status(verify.status).json({ message: verify.message });
@@ -167,11 +161,9 @@ class TutorController {
   // homePage
   async dashboardPage(req: Req, res: Res, next: Next) {
     try {
-      // console.log(req.query.id, "tutor id in controller");
       const tutorId = req.query.id as string;
 
       const tutor = await this.tutorUseCase.getUser(tutorId);
-      // console.log(tutor);
 
       if (tutor.status == 200) {
         return res.status(tutor.status).json(tutor.data?.data);
@@ -186,7 +178,6 @@ class TutorController {
   // course basic info save
   async courseBasicInfoSave(req: Req, res: Res, next: Next) {
     try {
-      // console.log(req.body.instructor_id,"data");
       const files = req.files as { [fieldname: string]: Express.Multer.File[] };
       const thumbnailFiles = files["thumbnail"];
       const videoFiles = files["video"];
@@ -227,8 +218,6 @@ class TutorController {
   // get instructors courses
   async getInstructorCourses(req: Req, res: Res, next: Next) {
     try {
-      console.log("coming to instructor course");
-
       const id = req.query.id as string;
       const { page = 1, limit = 10 } = req.query;
       const skip = (Number(page) - 1) * Number(limit);
@@ -240,7 +229,6 @@ class TutorController {
       );
       if (instructorCourses) {
         const totalItems = await this.tutorUseCase.countCourses(id);
-        console.log(totalItems, "total");
 
         return res
           .status(instructorCourses.status)
@@ -256,11 +244,8 @@ class TutorController {
   // uploading Curicculum
   async uploadingCuricculum(req: Req, res: Res, next: Next) {
     try {
-      console.log("curicculum");
-
       const course_id = req.body.course_id;
       const modules = JSON.parse(req.body.modules);
-      // console.log(course_id, modules, "llllllooooiiiiqqq");
 
       const files = req.files as Express.Multer.File[];
 
@@ -283,9 +268,7 @@ class TutorController {
 
   async getViewCourse(req: Req, res: Res, next: Next) {
     try {
-      console.log("getViewCourse controller");
       const id = req.query.id as string;
-      // console.log(id, "getViewCourse controller");
       const courseViewData = await this.tutorUseCase.getViewCourse(id);
 
       if (courseViewData) {
@@ -317,11 +300,7 @@ class TutorController {
   async profileDataSave(req: Req, res: Res, next: Next) {
     try {
       const { registerData, instructorProfile } = req.body;
-      console.log(
-        registerData,
-        instructorProfile,
-        "{registerData,instructorProfile}"
-      );
+
       const saveProfileDatas = await this.tutorUseCase.saveProfileDetailes(
         registerData,
         instructorProfile
@@ -338,7 +317,6 @@ class TutorController {
   async storedMsgFetching(req: Req, res: Res, next: Next) {
     try {
       const instructorid = req.query.instructorId as string;
-      // console.log(instructorid, "oooooo");
 
       const conversationReceiver =
         await this.tutorUseCase.receiverConversations(instructorid);
@@ -355,7 +333,6 @@ class TutorController {
   async coursesForAssignment(req: Req, res: Res, next: Next) {
     try {
       const instructorId = req.query.instructorId as string;
-      // console.log(instructorId, "coursesForAssignment");
       const courseDatas = await this.tutorUseCase.fetchInstructorCourses(
         instructorId
       );
@@ -371,7 +348,6 @@ class TutorController {
     try {
       const assignment: Express.Multer.File | undefined = req.file;
       const { courseTitle, courseId } = req.body;
-      console.log(assignment, courseId, courseTitle, "uploadingAssignment");
 
       const upload = await this.tutorUseCase.uploadAssignment(
         courseId,
@@ -388,96 +364,95 @@ class TutorController {
   // assignmentsFetch
   async assignmentsFetch(req: Req, res: Res, next: Next) {
     try {
-      const instructorId= req.query.instructorId as string
-      // console.log(instructorId,"kkklllluuuu");
-      const assignmentData = await this.tutorUseCase.fetchingAssignments(instructorId)
+      const instructorId = req.query.instructorId as string;
+      const assignmentData = await this.tutorUseCase.fetchingAssignments(
+        instructorId
+      );
       console.log(assignmentData);
-     return res.status(assignmentData.status).json(assignmentData.data)
-      
+      return res.status(assignmentData.status).json(assignmentData.data);
     } catch (error) {
       next(error);
     }
   }
   // reviewsFetch
-  async getReviews(req:Req,res:Res,next:Next){
+  async getReviews(req: Req, res: Res, next: Next) {
     try {
       const courseId = req.query.courseId as string;
-      // console.log(courseId,"hhh");
-      const getReview = await this.tutorUseCase.reviewsFetch(courseId)
+      const getReview = await this.tutorUseCase.reviewsFetch(courseId);
       if (getReview) {
-        return res.status(getReview.status).json(getReview)
+        return res.status(getReview.status).json(getReview);
       }
-      
     } catch (error) {
-      next(error)
+      next(error);
     }
   }
   // fetchAssignments
-  async fetchAssignments (req:Req,res:Res,next:Next){
+  async fetchAssignments(req: Req, res: Res, next: Next) {
     try {
-
-      const courseId=  req.query.courseId  as string
-      console.log(courseId,"assignments---");
-      const assignmentsData= await this.tutorUseCase.getAssignments(courseId)
-      return res.status(assignmentsData.status).json(assignmentsData.data)
-      
+      const courseId = req.query.courseId as string;
+      const assignmentsData = await this.tutorUseCase.getAssignments(courseId);
+      return res.status(assignmentsData.status).json(assignmentsData.data);
     } catch (error) {
-      next(error)
+      next(error);
     }
   }
   // getInstructor
-  async getInstructor (req:Req,res:Res,next:Next){
+  async getInstructor(req: Req, res: Res, next: Next) {
     try {
-      const instructorId=  req.query.instructorId  as string
-      const instructorData = await this.tutorUseCase.getInstructorDetails(instructorId)
-      return res.status(instructorData.status).json(instructorData.data)
+      const instructorId = req.query.instructorId as string;
+      const instructorData = await this.tutorUseCase.getInstructorDetails(
+        instructorId
+      );
+      return res.status(instructorData.status).json(instructorData.data);
     } catch (error) {
-      next(error)
+      next(error);
     }
   }
   // fetchDashboardData
-  async fetchDashboardData (req:Req,res:Res,next:Next){
+  async fetchDashboardData(req: Req, res: Res, next: Next) {
     try {
-      const instructorId = req.query.instructorId  as string;
-      
-      const dashboardData = await this.tutorUseCase.dashboardFetch(instructorId)
-      console.log(dashboardData,"fetchDashboardData");
+      const instructorId = req.query.instructorId as string;
+
+      const dashboardData = await this.tutorUseCase.dashboardFetch(
+        instructorId
+      );
       return res.status(dashboardData.status).json(dashboardData);
-      
     } catch (error) {
-      next(error)
+      next(error);
     }
   }
   // getCourseGrowth
-  async getCourseGrowth (req:Req,res:Res,next:Next){
+  async getCourseGrowth(req: Req, res: Res, next: Next) {
     try {
-      const instructorId = req.query.instructorId  as string;
-      
-      const courseGrowthData = await this.tutorUseCase.courseGrowth(instructorId)
-      console.log(courseGrowthData,"courseGrowth");
+      const instructorId = req.query.instructorId as string;
+
+      const courseGrowthData = await this.tutorUseCase.courseGrowth(
+        instructorId
+      );
       return res.status(courseGrowthData.status).json(courseGrowthData);
-      
     } catch (error) {
-      next(error)
+      next(error);
     }
   }
   // updateProfileImg
-  async updateProfileImg(req:Req,res:Res,next:Next){
+  async updateProfileImg(req: Req, res: Res, next: Next) {
     try {
-      const {tutorId} = req.body 
+      const { tutorId } = req.body;
       const profileImage = req.file as Express.Multer.File;
-      console.log(tutorId,profileImage,"090909");
-      
-      const result = await this.tutorUseCase.updateProfileDp(tutorId,profileImage)
-      return res.status(result.status).json(result.data)
+
+      const result = await this.tutorUseCase.updateProfileDp(
+        tutorId,
+        profileImage
+      );
+      return res.status(result.status).json(result.data);
     } catch (error) {
-      next(error)
+      next(error);
     }
   }
   // sendInstructorMsg
-  async sendInstructorMsg(req:Req,res:Res,next:Next){
+  async sendInstructorMsg(req: Req, res: Res, next: Next) {
     try {
-      const { msg, userId, instructorId, userName,instructorName } = req.body;
+      const { msg, userId, instructorId, userName, instructorName } = req.body;
       const saveMsg = await this.tutorUseCase.storeUserMsg(
         msg,
         instructorId,
@@ -485,32 +460,32 @@ class TutorController {
         userName,
         instructorName
       );
-      
 
       if (saveMsg) {
         return res.status(saveMsg.status).json(saveMsg);
       }
     } catch (error) {
-      next(error)
+      next(error);
     }
   }
   // getInitialMsg
-  async getInitialMsg(req:Req,res:Res,next:Next){
+  async getInitialMsg(req: Req, res: Res, next: Next) {
     try {
-      const senderId = req.query.senderId as string 
-      const receiverId = req.query.receiverId as string 
-      console.log(senderId,receiverId,"getInitialMsg");
-      const initialMsgs = await this.tutorUseCase.getPreviousMsgs(senderId,receiverId)
-      return res.status(initialMsgs.status).json(initialMsgs.data)
+      const senderId = req.query.senderId as string;
+      const receiverId = req.query.receiverId as string;
+      const initialMsgs = await this.tutorUseCase.getPreviousMsgs(
+        senderId,
+        receiverId
+      );
+      return res.status(initialMsgs.status).json(initialMsgs.data);
     } catch (error) {
-      next(error)
+      next(error);
     }
   }
   // updatePassword
-  async updatePassword(req:Req,res:Res,next:Next){
+  async updatePassword(req: Req, res: Res, next: Next) {
     try {
-      const { instructorId,currentPassword,newPassword} = req.body;
-      console.log(instructorId, currentPassword, newPassword, "pooooi");
+      const { instructorId, currentPassword, newPassword } = req.body;
 
       const result = await this.tutorUseCase.updatePassword(
         instructorId,
@@ -520,7 +495,7 @@ class TutorController {
 
       return res.status(result?.status).json(result);
     } catch (error) {
-      next(error)
+      next(error);
     }
   }
 }

@@ -3,7 +3,7 @@ import Tutor from "../../domain/tutor";
 import ICategory from "../../domain/Icategory";
 import Lecture from "../../domain/course/lecture";
 import Modules from "../../domain/course/chapter";
-import { CourseData, IAssignment, IConversation, IFile, IGetReviews, IInstructorDetails, InstructorDashboardData, InterCourse, IUpdateTutor, Message, OtpDoc, TutorDetails } from "../../infrastructure/type/expressTypes";
+import { CourseData, IAssignment, IConversation, IGetReviews, IInstructorDetails, InterCourse, IUpdateTutor, OtpDoc, TutorDetails } from "../../infrastructure/type/expressTypes";
 import { ITutorDetails } from "../../domain/tutorDetails";
 import { Assignment } from "../../domain/course/assignment";
 import { IMessage } from "../../domain/message";

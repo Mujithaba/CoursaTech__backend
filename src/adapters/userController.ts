@@ -2,8 +2,7 @@ import { Req, Res, Next } from "../infrastructure/type/expressTypes";
 import UserUseCase from "../useCase/userUseCase";
 import { VerifyData } from "../useCase/Interface/verifyData";
 import { Request, Response, NextFunction } from "express";
-import { log } from "console";
-import { json } from "stream/consumers";
+
 interface CustomRequest extends Request {
   file?: Express.Multer.File;
 }
@@ -75,7 +74,6 @@ class userConroller {
   async resendOtp(req: Req, res: Res, next: Next) {
     try {
       const { name, email } = req.body;
-      console.log(name, email, "otp contoller");
 
       const resendOTP = await this._userUseCase.resend_otp(name, email);
       return res.status(resendOTP.status).json(resendOTP.data);
@@ -115,7 +113,6 @@ class userConroller {
   async forgotPass(req: Request, res: Response, next: NextFunction) {
     try {
       const email = req.body.email;
-      console.log(email, "email fgt");
 
       const user = await this._userUseCase.forgotPassword(email);
       if (user.status == 403) {
@@ -134,10 +131,8 @@ class userConroller {
   async forgotOTPverify(req: Req, res: Res, next: Next) {
     try {
       const data: VerifyData = req.body;
-      // console.log(data,"ppp");
 
       const verify = await this._userUseCase.verify(data);
-      console.log(verify.data?.email, "verify");
 
       if (verify.status == 400) {
         return res.status(verify.status).json({ message: verify.message });
@@ -152,10 +147,7 @@ class userConroller {
   // reset password
   async resetPassword(req: Req, res: Res, next: Next) {
     try {
-      console.log("geooo");
-
       const { email, password } = req.body;
-      console.log(email, password, "uuuu");
       const result = await this._userUseCase.resetPassword(email, password);
       if (result.status == 200) {
         return res.status(result.status).json({ message: result.message });
@@ -218,10 +210,8 @@ class userConroller {
   // get view course
   async ViewCourses(req: Req, res: Res, next: Next) {
     try {
-      console.log("getViewCourse controller");
       const id = req.query.id as string;
       const userid = req.query.userId as string;
-      console.log(id, userid, "getViewCourse controller");
       const courseViewData = await this._userUseCase.getViewCourse(id, userid);
 
       if (courseViewData) {
@@ -236,11 +226,8 @@ class userConroller {
   // create payment
   async coursePayment(req: Req, res: Res, next: Next) {
     try {
-      console.log("courseId");
       const { courseId } = req.body;
-      console.log(courseId, "payment controller");
       const paymentDetails = await this._userUseCase.createPyment(courseId);
-      console.log(paymentDetails, "paymentDetails");
 
       if (paymentDetails) {
         return res.status(200).json(paymentDetails.response);
@@ -259,11 +246,7 @@ class userConroller {
       console.log("paymentCompleted");
 
       const { data } = req.body;
-      console.log(data, "data");
-      console.log(data.res, "res data");
-      console.log(data.courseID, "res data");
-      console.log(data.userID, "res data");
-      console.log(data.instructorId, "res data instructorId");
+
       const successPayment = await this._userUseCase.successPayment(data);
       if (successPayment) {
         return res.status(200).json(successPayment);
@@ -278,8 +261,8 @@ class userConroller {
   // sendUserMsg
   async storeUserMsg(req: Req, res: Res, next: Next) {
     try {
-      const { message, userId, instructorId, username ,instructorName} = req.body;
-console.log(username,"name user msg");
+      const { message, userId, instructorId, username, instructorName } =
+        req.body;
 
       const saveMsg = await this._userUseCase.storeUserMsg(
         message,
@@ -288,7 +271,6 @@ console.log(username,"name user msg");
         username,
         instructorName
       );
-      // console.log(saveMsg, "sss");
 
       if (saveMsg) {
         return res.status(saveMsg.status).json(saveMsg);
@@ -301,14 +283,6 @@ console.log(username,"name user msg");
   async uploadReviews(req: Req, res: Res, next: Next) {
     try {
       const { rating, feedback, courseId, userId, userName } = req.body;
-      console.log(
-        rating,
-        feedback,
-        courseId,
-        userId,
-        userName,
-        "rating,feedback,courseId,userId,userName"
-      );
 
       const reviewUpload = await this._userUseCase.reviewsUpload(
         courseId,
@@ -328,7 +302,6 @@ console.log(username,"name user msg");
   async getReviews(req: Req, res: Res, next: Next) {
     try {
       const courseId = req.query.courseId as string;
-      console.log(courseId, "hhh");
       const getReview = await this._userUseCase.reviewsFetch(courseId);
       if (getReview) {
         return res.status(getReview.status).json(getReview);
@@ -341,7 +314,6 @@ console.log(username,"name user msg");
   async fetchAssignments(req: Req, res: Res, next: Next) {
     try {
       const courseId = req.query.courseId as string;
-      console.log(courseId, "assignments---");
       const assignmentsData = await this._userUseCase.getAssignments(courseId);
       return res.status(assignmentsData.status).json(assignmentsData.data);
     } catch (error) {
@@ -364,7 +336,6 @@ console.log(username,"name user msg");
   async submitTheReport(req: Req, res: Res, next: Next) {
     try {
       const { courseId, userId, formState } = req.body;
-      console.log(courseId, userId, formState, "Received data");
       const reportResponse = await this._userUseCase.reportingCourse(
         courseId,
         userId,
@@ -381,7 +352,6 @@ console.log(username,"name user msg");
   async getRating(req: Req, res: Res, next: Next) {
     try {
       const getRate = await this._userUseCase.getRates();
-      console.log(getRate, "oouuuyy");
       return res.status(getRate.status).json(getRate);
     } catch (error) {
       next(error);
@@ -392,7 +362,6 @@ console.log(username,"name user msg");
     try {
       const userId = req.query.userId as string;
       const userData = await this._userUseCase.getUser(userId);
-      console.log(userData, "getUserData");
       if (userData.status == 200) {
         return res.status(userData.status).json(userData.data?.data);
       } else {
@@ -408,7 +377,7 @@ console.log(username,"name user msg");
     try {
       const { userId, name, email, phoneNumber } = req.body;
       const profileImage = req.file;
-      
+
       const saveData = await this._userUseCase.updateEditData(
         userId,
         name,
@@ -416,12 +385,11 @@ console.log(username,"name user msg");
         phoneNumber,
         profileImage
       );
-  
+
       if (saveData.status === 200) {
-        
         return res.status(saveData.status).json({
           message: saveData.message,
-          updatedUser: saveData.updatedUser
+          updatedUser: saveData.updatedUser,
         });
       } else {
         return res.status(saveData.status).json({ message: saveData.message });
@@ -434,7 +402,6 @@ console.log(username,"name user msg");
   async changePassword(req: Req, res: Res, next: Next) {
     try {
       const { userId, currentPassword, newPassword } = req.body;
-      console.log(userId, currentPassword, newPassword, "pooooi");
 
       const result = await this._userUseCase.updatePassword(
         userId,
@@ -470,59 +437,65 @@ console.log(username,"name user msg");
     }
   }
   // getEntrolledCourse
-  async entrolledCourseGet (req:Req,res:Res,next:Next){
+  async entrolledCourseGet(req: Req, res: Res, next: Next) {
     try {
-      const userId  = req.query.userId as string
-      console.log(userId,"console.log page route");
-      const entrolledCourses =await this._userUseCase.enrolledCourseData(userId)
-      console.log(entrolledCourses,"entrolledCourses");
-      
-      return res.status(entrolledCourses.status).json(entrolledCourses.data)
+      const userId = req.query.userId as string;
+      const entrolledCourses = await this._userUseCase.enrolledCourseData(
+        userId
+      );
+
+      return res.status(entrolledCourses.status).json(entrolledCourses.data);
     } catch (error) {
-      next(error)
+      next(error);
     }
   }
   // getInitialMsg
-  async getInitialMsg(req:Req,res:Res,next:Next){
+  async getInitialMsg(req: Req, res: Res, next: Next) {
     try {
-      const senderId = req.query.senderId as string 
-      const receiverId = req.query.receiverId as string 
-      console.log(senderId,receiverId,"getInitialMsg");
-      const initialMsgs = await this._userUseCase.getPreviousMsgs(senderId,receiverId)
-      return res.status(initialMsgs.status).json(initialMsgs.data)
+      const senderId = req.query.senderId as string;
+      const receiverId = req.query.receiverId as string;
+      const initialMsgs = await this._userUseCase.getPreviousMsgs(
+        senderId,
+        receiverId
+      );
+      return res.status(initialMsgs.status).json(initialMsgs.data);
     } catch (error) {
-      next(error)
+      next(error);
     }
   }
   // getWallet
-  async getWallet(req:Req,res:Res,next:Next){
+  async getWallet(req: Req, res: Res, next: Next) {
     try {
-      const {userid}= req.query 
+      const { userid } = req.query;
       const userId = req.query.userId as string;
-      console.log("userid :",userid,userId,"wallet gett controller");
-      
-      const wallet = await this._userUseCase.getWalletData(userId)
-      console.log(wallet,"controller wallet data-----------+++++++++++");
-      
+
+      const wallet = await this._userUseCase.getWalletData(userId);
+
       return res.status(wallet.status).json(wallet);
     } catch (error) {
-      next(error)
+      next(error);
     }
   }
   // paymentWallet
-  async paymentWallet(req:Req,res:Res,next:Next){
+  async paymentWallet(req: Req, res: Res, next: Next) {
     try {
-      const {userId,instructorId,courseId,coursePrice,courseName} = req.body
-      console.log(userId,instructorId,courseId,coursePrice,"userId,instructorId,courseId,coursePrice");
+      const { userId, instructorId, courseId, coursePrice, courseName } =
+        req.body;
 
-      const walletPaymentResult = await this._userUseCase.successWalletPayment(userId,instructorId,courseId,coursePrice,courseName)
+      const walletPaymentResult = await this._userUseCase.successWalletPayment(
+        userId,
+        instructorId,
+        courseId,
+        coursePrice,
+        courseName
+      );
       if (walletPaymentResult.status == 200) {
-        return res.status(walletPaymentResult.status).json(walletPaymentResult)
+        return res.status(walletPaymentResult.status).json(walletPaymentResult);
       } else {
-        return res.status(walletPaymentResult.status).json(walletPaymentResult)
+        return res.status(walletPaymentResult.status).json(walletPaymentResult);
       }
     } catch (error) {
-      next(error)
+      next(error);
     }
   }
 }

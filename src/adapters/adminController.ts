@@ -1,5 +1,4 @@
-import { json } from "stream/consumers";
-import { Req, Res, Next, Obj } from "../infrastructure/type/expressTypes";
+import { Req, Res, Next } from "../infrastructure/type/expressTypes";
 import AdminUseCase from "../useCase/adminUseCase";
 import ICategory from "../domain/Icategory";
 
@@ -71,7 +70,6 @@ class AdminController {
   async blockTutor(req: Req, res: Res, next: Next) {
     try {
       const { tutorID } = req.body;
-      console.log("blk conntroller", tutorID);
       const result = await this.adminUseCase.tutorBlock(tutorID);
 
       if (result.status == 200) {
@@ -87,7 +85,6 @@ class AdminController {
   async unblockTutor(req: Req, res: Res, next: Next) {
     try {
       const { tutorID } = req.body;
-      console.log("unblk", tutorID);
       const result = await this.adminUseCase.tutorUnblock(tutorID);
       if (result.status == 200) {
         return res.status(result.status).json(result.data.message);
@@ -102,10 +99,7 @@ class AdminController {
   // save category
   async saveCategory(req: Req, res: Res, next: Next) {
     try {
-      console.log("cate contrller");
-
       const { category } = req.body;
-      console.log("category", category);
 
       const Category: ICategory = { categoryName: category };
 
@@ -139,7 +133,6 @@ class AdminController {
   async categoryUnlist(req: Req, res: Res, next: Next) {
     try {
       const { categoryID } = req.body;
-      console.log("blk conntroller", categoryID);
       const result = await this.adminUseCase.categoryUnlist(categoryID);
 
       if (result.status == 200) {
@@ -155,7 +148,6 @@ class AdminController {
   async categoryList(req: Req, res: Res, next: Next) {
     try {
       const { categoryID } = req.body;
-      console.log("blk conntroller", categoryID);
       const result = await this.adminUseCase.categoryList(categoryID);
 
       if (result.status == 200) {
@@ -170,10 +162,7 @@ class AdminController {
   // category update
   async categoryEdit(req: Req, res: Res, next: Next) {
     try {
-      console.log("edit controller");
-
       const { newCategory, categoryID } = req.body;
-      console.log(newCategory, categoryID, "kkkkk");
 
       const result = await this.adminUseCase.categoryUpdate(
         newCategory,
@@ -191,7 +180,6 @@ class AdminController {
 
   async getCourse(req: Req, res: Res, next: Next) {
     try {
-      console.log("course admin conroller getting");
       const { page = 1, limit = 10 } = req.query;
       const skip = (Number(page) - 1) * Number(limit);
 
@@ -201,7 +189,6 @@ class AdminController {
       );
       if (getAllCourses) {
         const totalItems = await this.adminUseCase.countCourses();
-        console.log(totalItems, "total");
 
         return res
           .status(getAllCourses.status)
@@ -232,9 +219,7 @@ class AdminController {
   // getUnapprovedCourse
   async unapprovedCourse(req: Req, res: Res, next: Next) {
     try {
-      console.log("getViewCourse controller");
       const getUnapprCourse = await this.adminUseCase.unapprovedCourses();
-      console.log(getUnapprCourse, "get course unapprove");
 
       if (getUnapprCourse) {
         return res.status(getUnapprCourse.status).json(getUnapprCourse.data);
@@ -248,7 +233,6 @@ class AdminController {
   async courseApproved(req: Req, res: Res, next: Next) {
     try {
       const { course_id } = req.body;
-      console.log("verify conntroller", course_id);
       const result = await this.adminUseCase.courseVerify(course_id);
 
       if (result.status == 200) {
@@ -263,7 +247,6 @@ class AdminController {
   async courseUnapproved(req: Req, res: Res, next: Next) {
     try {
       const { course_id } = req.body;
-      console.log("verify conntroller", course_id);
       const result = await this.adminUseCase.courseUnverify(course_id);
 
       if (result.status == 200) {
@@ -279,7 +262,6 @@ class AdminController {
   async getReviews(req: Req, res: Res, next: Next) {
     try {
       const courseId = req.query.courseId as string;
-      console.log(courseId, "hhh");
       const getReview = await this.adminUseCase.reviewsFetch(courseId);
       if (getReview) {
         return res.status(getReview.status).json(getReview);
@@ -292,7 +274,6 @@ class AdminController {
   async fetchAssignments(req: Req, res: Res, next: Next) {
     try {
       const courseId = req.query.courseId as string;
-      console.log(courseId, "assignments---");
       const assignmentsData = await this.adminUseCase.getAssignments(courseId);
       return res.status(assignmentsData.status).json(assignmentsData.data);
     } catch (error) {
@@ -303,7 +284,6 @@ class AdminController {
   async getInstructor(req: Req, res: Res, next: Next) {
     try {
       const instructorId = req.query.instructorId as string;
-      console.log("coming cotrl");
 
       const instructorData = await this.adminUseCase.getInstructorDetails(
         instructorId
@@ -326,38 +306,40 @@ class AdminController {
     }
   }
   // deleteReportCourse
-  async deleteReportCourse(req:Req,res:Res,next:Next){
+  async deleteReportCourse(req: Req, res: Res, next: Next) {
     try {
       const { courseId, courseName, email, instructorName } = req.body;
-            console.log(courseId,courseName,email,instructorName,"oooo");
-      const result = await this.adminUseCase.deleteCourse(courseId,courseName,email,instructorName );
-      return res.status(result.status).json(result)
+      const result = await this.adminUseCase.deleteCourse(
+        courseId,
+        courseName,
+        email,
+        instructorName
+      );
+      return res.status(result.status).json(result);
     } catch (error) {
-      next(error)
+      next(error);
     }
   }
 
   // getRating
-  async getRating(req:Req,res:Res,next:Next){
+  async getRating(req: Req, res: Res, next: Next) {
     try {
-      const getRate = await this.adminUseCase.getRates()
-      console.log(getRate,"oouuuyy");
-      return res.status(getRate.status).json(getRate)
+      const getRate = await this.adminUseCase.getRates();
+      return res.status(getRate.status).json(getRate);
     } catch (error) {
-      next(error)
+      next(error);
     }
   }
 
   //getDashboardData
-  async getDashboardData (req:Req,res:Res,next:Next){
+  async getDashboardData(req: Req, res: Res, next: Next) {
     try {
-      const getData = await this.adminUseCase.getDashboard()
-      console.log(getData,"getDashboardData");
-      
-      return res.status(getData.status).json(getData)
+      const getData = await this.adminUseCase.getDashboard();
+
+      return res.status(getData.status).json(getData);
     } catch (error) {
-      next(error)
+      next(error);
     }
-  } 
+  }
 }
 export default AdminController;

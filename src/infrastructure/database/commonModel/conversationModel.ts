@@ -1,6 +1,5 @@
 import mongoose, { Schema, Document } from "mongoose";
 import { Conversation } from "../../../domain/conversationMsg";
-import exp from "constants";
 
 interface IConversationDocument extends Conversation, Document {}
 

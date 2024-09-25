@@ -10,7 +10,6 @@ class EncryptPassword implements Encrypt {
   }
 
   async compare(password: string, hashPassword: string): Promise<boolean> {
-    
     return await bcrypt.compare(password, hashPassword);
   }
 }

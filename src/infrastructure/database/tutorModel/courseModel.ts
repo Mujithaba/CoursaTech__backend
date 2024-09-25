@@ -1,5 +1,4 @@
-import mongoose, { Schema, Model, Document } from "mongoose";
-// import ICourse from '../../../domain/course/course';
+import mongoose, { Schema, Document } from "mongoose";
 
 interface ICourse extends Document {
   title: string;
@@ -49,7 +48,7 @@ const CourseSchema: Schema<ICourse> = new Schema<ICourse>({
     required: true,
   },
   chapters: [{ type: mongoose.Schema.Types.ObjectId, ref: "Module" }],
-  assignments:  [{ type: Schema.Types.ObjectId, ref: 'Assignment' }],
+  assignments: [{ type: Schema.Types.ObjectId, ref: "Assignment" }],
   is_verified: {
     type: Boolean,
     default: false,
@@ -71,4 +70,3 @@ const courseModel: mongoose.Model<ICourse> = mongoose.model<ICourse>(
 );
 
 export default courseModel;
-

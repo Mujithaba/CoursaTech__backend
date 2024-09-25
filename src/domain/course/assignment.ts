@@ -1,5 +1,5 @@
 export interface Assignment {
-    title:string;
-    pdf_file:string;
-    courseId:string;
-  }
+  title: string;
+  pdf_file: string;
+  courseId: string;
+}

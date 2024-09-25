@@ -9,13 +9,10 @@ import User from "../../domain/user";
 import { IWallet } from "../../domain/wallet";
 import {
   AvgRating,
-  IAssignment,
   IGetReviews,
   IInstructorDetails,
   IInstructorHomePage,
-  IReportRequest,
   IUpdateEditData,
-  Message,
   OtpDoc,
 } from "../../infrastructure/type/expressTypes";
 

@@ -28,7 +28,7 @@ export interface IFile {
 }
 
 import mongoose, { Types } from "mongoose";
-import{ Assignment }from "../../domain/course/assignment";
+import { Assignment } from "../../domain/course/assignment";
 import Modules from "../../domain/course/chapter";
 
 export interface IExtractCourse {
@@ -74,7 +74,7 @@ export interface IPaymentComplete {
   res: {};
   courseID: string;
   userID: string;
-  instructorId:string;
+  instructorId: string;
 }
 
 export interface InterCourse {
@@ -93,46 +93,44 @@ export interface InterCourse {
   createdAt?: Date;
 }
 
-
 export interface TutorDetails {
-  _id?:string;
-  instructorId:string;
-  profileImg?:string;
-  experience?:string;
-  position?:string;
-  companyName?:string;
-  aboutBio?:string;
+  _id?: string;
+  instructorId: string;
+  profileImg?: string;
+  experience?: string;
+  position?: string;
+  companyName?: string;
+  aboutBio?: string;
 }
 
-export type itemsCount = number
+export type itemsCount = number;
 
 export interface Message {
-  _id?:string;
-  senderId:string;
-  receiverId:string;
-  message:string;
-  timeStamp?:Date;
+  _id?: string;
+  senderId: string;
+  receiverId: string;
+  message: string;
+  timeStamp?: Date;
 }
 
 export interface IConversation {
- senderName:string;
-  senderId:string;
-  receiverId:string;
-  lastMessage:string;
-  timeStamp?:Date;
+  senderName: string;
+  senderId: string;
+  receiverId: string;
+  lastMessage: string;
+  timeStamp?: Date;
 }
-
 
 export interface IAssignment {
-  _id?:string;
-  title:string;
-  pdf_file:string;
-  courseId:string;
+  _id?: string;
+  title: string;
+  pdf_file: string;
+  courseId: string;
 }
 
-export interface CourseData{
-  _id:string;
-  courseName:string;
+export interface CourseData {
+  _id: string;
+  courseName: string;
 }
 
 export interface ICourseWithAssignments {
@@ -147,22 +145,21 @@ export interface ICourseWithAssignments {
 }
 
 export interface IGetReviews {
-  userName?:string;
-  feedback:string;
-  rating:number
+  userName?: string;
+  feedback: string;
+  rating: number;
 }
 
 export interface IInstructorDetails {
-  instructorId:string ;
-  instructorName:string;
-  instructorEmail:string;
-  profileImg?:string;
-  experience?:string;
-  position?:string;
-  companyName?:string;
-  aboutBio?:string;
+  instructorId: string;
+  instructorName: string;
+  instructorEmail: string;
+  profileImg?: string;
+  experience?: string;
+  position?: string;
+  companyName?: string;
+  aboutBio?: string;
 }
-
 
 export interface IReportIssues {
   issueType: string;
@@ -172,19 +169,19 @@ export interface IReportIssues {
 export interface IReportRequest {
   courseId: string;
   userId: string[];
-  issuesType:string[];
-  descriptiion:string[];
+  issuesType: string[];
+  descriptiion: string[];
 }
 
 export interface IReportedCourseData {
-  courseId:string;
-  courseName:string;
-  instructorId:string;
-  thamnail:string;
+  courseId: string;
+  courseName: string;
+  instructorId: string;
+  thamnail: string;
 }
-export interface IReportInstructor{
-  instructorName:string;
-  email:string;
+export interface IReportInstructor {
+  instructorName: string;
+  email: string;
 }
 
 export interface AvgRating {
@@ -219,7 +216,6 @@ export interface InstructorDashboardData {
   }>;
 }
 
-
 export interface DashboardData {
   totalEarnings: number;
   listedCourses: number;
@@ -230,24 +226,24 @@ export interface IUpdateEditData {
   name?: string;
   email?: string;
   phone?: string;
-  img?: string | undefined; 
+  img?: string | undefined;
 }
 
-export interface IInstructorHomePage{
-  _id:string; 
-  instructorImg:string;
-  profileUrl?:string;
-  name:string;
-  position:string;
+export interface IInstructorHomePage {
+  _id: string;
+  instructorImg: string;
+  profileUrl?: string;
+  name: string;
+  position: string;
 }
 
-export interface IUpdateTutor{
-  _id?:string,
-  name:string,
-  email:string,
-  phone:string,
-  password:string,
-  isBlocked?:boolean,
-  isAdmin?:boolean,
-  isGoogle?:boolean
+export interface IUpdateTutor {
+  _id?: string;
+  name: string;
+  email: string;
+  phone: string;
+  password: string;
+  isBlocked?: boolean;
+  isAdmin?: boolean;
+  isGoogle?: boolean;
 }
