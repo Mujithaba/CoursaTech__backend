@@ -32,6 +32,8 @@ import tutorModel from "../database/tutorModel/tutorModel";
 import Report from "../database/commonModel/reportModal";
 import categoryModel from "../database/adminModel/categoryModel";
 import ICategory from "../../domain/Icategory";
+import { IWallet } from "../../domain/wallet";
+import walletModal from "../database/userModels/walletModal";
 
 class UserRepository implements UserRepo {
   // saving user details to  database
@@ -92,20 +94,27 @@ class UserRepository implements UserRepo {
   }
 
   // get all course
-  async getCourses(limit: number, skip: number, searchTerm: string, category: string): Promise<{}[]> {
+  async getCourses(
+    limit: number,
+    skip: number,
+    searchTerm: string,
+    category: string
+  ): Promise<{}[]> {
     let query: any = { is_verified: true };
-    
+
     if (searchTerm) {
-      query.title = { $regex: searchTerm, $options: 'i' };
+      query.title = { $regex: searchTerm, $options: "i" };
     }
-    
+
     if (category) {
-      const categoryObj = await categoryModel.findOne({ categoryName: category });
+      const categoryObj = await categoryModel.findOne({
+        categoryName: category,
+      });
       if (categoryObj) {
         query.category_id = categoryObj._id;
       }
     }
-  
+
     const coursesData = await courseModel
       .find(query)
       .populate({ path: "category_id", select: "categoryName" })
@@ -125,31 +134,35 @@ class UserRepository implements UserRepo {
       .exec();
     return coursesData;
   }
-  
+
   async coursesCount(searchTerm: string, category: string): Promise<number> {
     let query: any = { is_verified: true };
-    
+
     if (searchTerm) {
-      query.title = { $regex: searchTerm, $options: 'i' };
+      query.title = { $regex: searchTerm, $options: "i" };
     }
-    
+
     if (category) {
-      const categoryObj = await categoryModel.findOne({ categoryName: category });
+      const categoryObj = await categoryModel.findOne({
+        categoryName: category,
+      });
       if (categoryObj) {
         query.category_id = categoryObj._id;
       }
     }
-  
+
     const counts = await courseModel.countDocuments(query);
     return counts;
   }
- 
+
   // getCourseView
   async getCourseView(course_id: string, userid: string): Promise<any> {
     const paymentDocument = await Payment.findOne({
       userId: userid,
       courseId: course_id,
     }).lean();
+
+    const wallet = await walletModal.findOne({ userId: userid });
 
     const hasPurchased = !!paymentDocument;
     console.log(hasPurchased, "is__________________");
@@ -174,14 +187,18 @@ class UserRepository implements UserRepo {
       .exec();
     // console.dir(getViewCourses, { depth: null, colors: true });
 
-    return { getCourses: getViewCourses, isPurchased: hasPurchased };
+    return {
+      getCourses: getViewCourses,
+      isPurchased: hasPurchased,
+      getWallet: wallet,
+    };
   }
 
   // find course
   async findCourseById(course_id: string): Promise<ICourse | null> {
     const course = await courseModel.findById(course_id);
-    console.log(course,"doud to");
-    
+    console.log(course, "doud to");
+
     return course?.toObject() as unknown as ICourse;
   }
 
@@ -201,33 +218,71 @@ class UserRepository implements UserRepo {
     return storeMsgs;
   }
   // createConversation
-  async createConversation(
-    lastMessage: Conversation
-  ): Promise<Conversation | null> {
+  async createConversation(lastMessage: Conversation): Promise<Conversation | null> {
+    // Check if the conversation already exists
     const conversationMsg = await conversationModel.findOne({
-      senderId: lastMessage.senderId,
-      receiverId: lastMessage.receiverId,
-    });
-
-    const hasConverstion = !!conversationMsg;
-    let lastConverstion;
-    if (hasConverstion) {
-      const converstion = await conversationModel.updateOne(
+      $or: [
         { senderId: lastMessage.senderId, receiverId: lastMessage.receiverId },
-        { $set: { lastMessage: lastMessage.lastMessage } }
+        { senderId: lastMessage.receiverId, receiverId: lastMessage.senderId }
+      ]
+    });
+  
+    let lastConversation;
+  
+    if (conversationMsg) {
+      // Update the existing conversation with the latest message and sender name
+      lastConversation = await conversationModel.findOneAndUpdate(
+        {
+          $or: [
+            { senderId: lastMessage.senderId, receiverId: lastMessage.receiverId },
+            { senderId: lastMessage.receiverId, receiverId: lastMessage.senderId }
+          ]
+        },
+        { 
+          $set: {
+            senderName: lastMessage.senderName, 
+            instructorName:lastMessage.instructorName,
+            lastMessage: lastMessage.lastMessage 
+          }
+        },
+        { new: true } // Return the updated document
       );
-      lastConverstion = await conversationModel.findOne({
-        senderId: lastMessage.senderId,
-        receiverId: lastMessage.receiverId,
-      });
     } else {
-      let newConversation = new conversationModel(lastMessage);
-      let saveConversation = await newConversation.save();
-      lastConverstion = saveConversation;
+      // Create a new conversation
+      const newConversation = new conversationModel(lastMessage);
+      lastConversation = await newConversation.save();
     }
-
-    return lastConverstion;
+  
+    return lastConversation;
   }
+  
+  // async createConversation(
+  //   lastMessage: Conversation
+  // ): Promise<Conversation | null> {
+  //   const conversationMsg = await conversationModel.findOne({
+  //     senderId: lastMessage.senderId,
+  //     receiverId: lastMessage.receiverId,
+  //   });
+
+  //   const hasConverstion = !!conversationMsg;
+  //   let lastConverstion;
+  //   if (hasConverstion) {
+  //     const converstion = await conversationModel.updateOne(
+  //       { senderId: lastMessage.senderId, receiverId: lastMessage.receiverId },
+  //       { $set: {senderName:lastMessage.senderName, lastMessage: lastMessage.lastMessage } }
+  //     );
+  //     lastConverstion = await conversationModel.findOne({
+  //       senderId: lastMessage.senderId,
+  //       receiverId: lastMessage.receiverId,
+  //     });
+  //   } else {
+  //     let newConversation = new conversationModel(lastMessage);
+  //     let saveConversation = await newConversation.save();
+  //     lastConverstion = saveConversation;
+  //   }
+
+  //   return lastConverstion;
+  // }
   // upload reviews
   async uploadReview(data: reviews): Promise<boolean> {
     const newReview = new Review(data);
@@ -326,47 +381,52 @@ class UserRepository implements UserRepo {
   async userReportExist(courseId: string, userId: string): Promise<boolean> {
     const userExistReport = await Report.findOne({ courseId });
     if (userExistReport) {
-      return userExistReport.userId.includes(userId); 
+      return userExistReport.userId.includes(userId);
     }
     return false;
   }
   // ratesGet
-  async ratesGet():Promise<AvgRating[]>{
+  async ratesGet(): Promise<AvgRating[]> {
     const ratings = await Review.aggregate([
       {
-        $group:{
-          _id:'$courseId',
-          averageRating:{$avg:'$rating'},
-          totalReviews:{$sum:1},
-        }
+        $group: {
+          _id: "$courseId",
+          averageRating: { $avg: "$rating" },
+          totalReviews: { $sum: 1 },
+        },
       },
-
-    ])
-    return ratings
+    ]);
+    return ratings;
   }
   // saveEditData
- async saveEditData(userId: string, data: IUpdateEditData): Promise<User | null> {
-  const updatedUser = await userModel.findByIdAndUpdate(
-    userId,
-    { $set: data },
-    { new: true } // This option returns the updated document
-  );
+  async saveEditData(
+    userId: string,
+    data: IUpdateEditData
+  ): Promise<User | null> {
+    const updatedUser = await userModel.findByIdAndUpdate(
+      userId,
+      { $set: data },
+      { new: true } 
+    ).select('-password');
 
-  return updatedUser;
-}
+    return updatedUser;
+  }
   // findUser
   async findUser(userId: string): Promise<User | null> {
-    const user = await userModel.findById(userId)
+    const user = await userModel.findById(userId);
     return user;
   }
   // changedPassword
-  async changedPassword(userId: string, hashedNewPassword: string): Promise<boolean> {
+  async changedPassword(
+    userId: string,
+    hashedNewPassword: string
+  ): Promise<boolean> {
     const result = await userModel.updateOne(
-      { _id: userId },          
-      { $set: { password: hashedNewPassword } }  
+      { _id: userId },
+      { $set: { password: hashedNewPassword } }
     );
-  
-    return result.modifiedCount > 0;  
+
+    return result.modifiedCount > 0;
   }
 
   // get category*******************
@@ -379,46 +439,57 @@ class UserRepository implements UserRepo {
     const ratings = await Review.aggregate([
       {
         $group: {
-          _id: '$courseId',
-          averageRating: { $avg: '$rating' },
+          _id: "$courseId",
+          averageRating: { $avg: "$rating" },
           totalReviews: { $sum: 1 },
         },
       },
       {
-        $sort: { averageRating: -1 }, 
+        $sort: { averageRating: -1 },
       },
       {
-        $limit: 3, 
+        $limit: 3,
       },
     ]);
-  
+
     return ratings;
   }
 
   async findInstructorById(instructorId: string): Promise<IInstructorHomePage> {
     console.log("home instructor");
-  
+
     const name = await tutorModel.findById(instructorId);
-    const details = await InstructorDetails.findOne({ instructorId: instructorId });
-    
+    const details = await InstructorDetails.findOne({
+      instructorId: instructorId,
+    });
+
     const instructorData: IInstructorHomePage = {
-      _id:name?._id as string,
+      _id: name?._id as string,
       name: name?.name as string,
       instructorImg: details?.profileImg as string,
       position: details?.position as string,
     };
-    
+
     return instructorData;
   }
-// entrolledUserExist
+  // entrolledUserExist
   async enrolledUserExist(userId: string): Promise<IPayment[] | null> {
-    const existUser = await Payment.find({userId:userId})
-    return existUser
+    const existUser = await Payment.find({ userId: userId });
+    return existUser;
   }
   // getMsgs
-  async getMsgs(senderId: string, receiverId: string): Promise<IMessage[] | null> {
-    const senderIdMsgs = await Message.find({senderId:senderId,receiverId:receiverId})
-    const receiverIdMsgs = await Message.find({senderId:receiverId,receiverId:senderId})
+  async getMsgs(
+    senderId: string,
+    receiverId: string
+  ): Promise<IMessage[] | null> {
+    const senderIdMsgs = await Message.find({
+      senderId: senderId,
+      receiverId: receiverId,
+    });
+    const receiverIdMsgs = await Message.find({
+      senderId: receiverId,
+      receiverId: senderId,
+    });
     const allMessages = [...senderIdMsgs, ...receiverIdMsgs];
 
     allMessages.sort((a: IMessage, b: IMessage) => {
@@ -428,7 +499,41 @@ class UserRepository implements UserRepo {
     });
     return allMessages.length ? allMessages : null;
   }
-  
+  // walletDatas
+  async walletDatas(userId: string): Promise<IWallet | null> {
+    const getWallet = await walletModal.findOne({ userId: userId });
+    return getWallet;
+  }
+  // saveWalletPayment
+  async saveWalletPayment(payment: IPayment): Promise<IPayment> {
+    const newPayment = new Payment(payment);
+    const savedPayment = await newPayment.save();
+    console.log(savedPayment, "saved payment");
+    return savedPayment;
+  }
+  // updateWallet
+  async updateWallet(
+    userId: string,
+    price: number,
+    courseName: string
+  ): Promise<boolean> {
+    const updateResult = await walletModal.updateOne(
+      { userId: userId },
+      {
+        $inc: { balance: -price },
+        $push: {
+          history: {
+            type: "Debit",
+            amount: price,
+            reason: `Purchased the ${courseName} using wallet cash`,
+            date: new Date(),
+          },
+        },
+      }
+    );
+
+    return updateResult.modifiedCount > 0;
+  }
 }
 
 export default UserRepository;

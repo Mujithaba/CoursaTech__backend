@@ -3,6 +3,7 @@ import UserUseCase from "../useCase/userUseCase";
 import { VerifyData } from "../useCase/Interface/verifyData";
 import { Request, Response, NextFunction } from "express";
 import { log } from "console";
+import { json } from "stream/consumers";
 interface CustomRequest extends Request {
   file?: Express.Multer.File;
 }
@@ -277,13 +278,15 @@ class userConroller {
   // sendUserMsg
   async storeUserMsg(req: Req, res: Res, next: Next) {
     try {
-      const { message, userId, instructorId, username } = req.body;
+      const { message, userId, instructorId, username ,instructorName} = req.body;
+console.log(username,"name user msg");
 
       const saveMsg = await this._userUseCase.storeUserMsg(
         message,
         userId,
         instructorId,
-        username
+        username,
+        instructorName
       );
       // console.log(saveMsg, "sss");
 
@@ -487,6 +490,37 @@ class userConroller {
       console.log(senderId,receiverId,"getInitialMsg");
       const initialMsgs = await this._userUseCase.getPreviousMsgs(senderId,receiverId)
       return res.status(initialMsgs.status).json(initialMsgs.data)
+    } catch (error) {
+      next(error)
+    }
+  }
+  // getWallet
+  async getWallet(req:Req,res:Res,next:Next){
+    try {
+      const {userid}= req.query 
+      const userId = req.query.userId as string;
+      console.log("userid :",userid,userId,"wallet gett controller");
+      
+      const wallet = await this._userUseCase.getWalletData(userId)
+      console.log(wallet,"controller wallet data-----------+++++++++++");
+      
+      return res.status(wallet.status).json(wallet);
+    } catch (error) {
+      next(error)
+    }
+  }
+  // paymentWallet
+  async paymentWallet(req:Req,res:Res,next:Next){
+    try {
+      const {userId,instructorId,courseId,coursePrice,courseName} = req.body
+      console.log(userId,instructorId,courseId,coursePrice,"userId,instructorId,courseId,coursePrice");
+
+      const walletPaymentResult = await this._userUseCase.successWalletPayment(userId,instructorId,courseId,coursePrice,courseName)
+      if (walletPaymentResult.status == 200) {
+        return res.status(walletPaymentResult.status).json(walletPaymentResult)
+      } else {
+        return res.status(walletPaymentResult.status).json(walletPaymentResult)
+      }
     } catch (error) {
       next(error)
     }

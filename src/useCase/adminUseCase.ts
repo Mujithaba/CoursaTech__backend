@@ -681,22 +681,50 @@ class AdminUseCase {
     email: string,
     instructorName: string
   ) {
-    const sendMail = await this._generateMail.sendCourseDeleteMail(
-      email,
-      instructorName,
-      courseName
-    );
-    const result = await this._adminRepository.courseDelete(courseId);
-    const deleteReport = await this._adminRepository.deleteReport(courseId);
-    if (result && deleteReport) {
+    try {
+      const refundAmoutSet = await this._adminRepository.refundUserAmt(
+        courseId,
+        courseName
+      );
+
+      if (!refundAmoutSet) {
+        return {
+          status: 400,
+          message:
+            "Something went wrong during the refund process. Course not deleted.",
+        };
+      }
+
+      await this._generateMail.sendCourseDeleteMail(
+        email,
+        instructorName,
+        courseName
+      );
+
+      const courseDeleted = await this._adminRepository.courseDelete(courseId);
+      const reportDeleted = await this._adminRepository.deleteReport(courseId);
+      const paymentDataDeleted = await this._adminRepository.deletePayments(
+        courseId
+      );
+
+      if (courseDeleted && reportDeleted && paymentDataDeleted) {
+        return {
+          status: 200,
+          message:
+            "The course was successfully deleted along with reports and payment data.",
+        };
+      } else {
+        return {
+          status: 400,
+          message:
+            "Something went wrong during the course, report, or payment data deletion.",
+        };
+      }
+    } catch (error) {
+      console.error("Error during course deletion:", error);
       return {
-        status: 200,
-        message: "This course deleted Successfully",
-      };
-    } else {
-      return {
-        status: 400,
-        message: "Something went wrong the course and report deletion",
+        status: 500,
+        message: "An internal server error occurred while deleting the course.",
       };
     }
   }
@@ -710,25 +738,13 @@ class AdminUseCase {
     };
   }
   // getDashboard
-  async getDashboard (){
-
-    const totalEarnings = await this._adminRepository.getTotalEarnings(
-      
-    );
-    const totalStudents = await this._adminRepository.getTotalStudents(
-      
-    );
-    const activeCourses = await this._adminRepository.getActiveCourses(
-      
-    );
-    const getTopCourses = await this._adminRepository.getTopCourses(
-      
-    );
-    const coursePerformance = await this._adminRepository.getCoursePerformance(
-
-    );
-   
-
+  async getDashboard() {
+    const totalEarnings = await this._adminRepository.getTotalEarnings();
+    const totalStudents = await this._adminRepository.getTotalStudents();
+    const activeCourses = await this._adminRepository.getActiveCourses();
+    const getTopCourses = await this._adminRepository.getTopCourses();
+    const coursePerformance =
+      await this._adminRepository.getCoursePerformance();
 
     return {
       status: 200,

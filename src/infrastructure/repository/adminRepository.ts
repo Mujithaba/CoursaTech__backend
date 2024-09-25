@@ -22,6 +22,8 @@ import { IReport } from "../../domain/report";
 import Report from "../database/commonModel/reportModal";
 import Payment from "../database/commonModel/paymentModel";
 import { log } from "console";
+import walletModal from "../database/userModels/walletModal";
+import { IWallet } from "../../domain/wallet";
 
 class AdminRepository implements AdminRep {
   // async findUsers(page: number, limit: number): Promise<{ users: User[], totalUsers: number }> {
@@ -342,10 +344,54 @@ class AdminRepository implements AdminRep {
     };
     return instructor;
   }
+  // refundUserAmt
+  async refundUserAmt(course_id: string, courseName: string): Promise<boolean> {
+    try {
+      const coursePaymentData = await Payment.find({ courseId: course_id });
+      const refundPromises = coursePaymentData.map(async (refund) => {
+        const existWallet = await walletModal.findOne({
+          userId: refund.userId,
+        });
+
+        if (!existWallet) {
+          const data: IWallet = {
+            userId: refund.userId,
+            balance: refund.price,
+            history: [
+              {
+                type: "Credit",
+                amount: refund.price,
+                reason: `Deleted the ${courseName} course due to many reports.`,
+                date: new Date(),
+              },
+            ],
+          };
+          const newWallet = new walletModal(data);
+          await newWallet.save();
+        } else {
+          existWallet.balance += refund.price;
+          existWallet.history.push({
+            type: "Credit",
+            amount: refund.price,
+            reason: `Deleted the ${courseName} course due to many reports.`,
+            date: new Date(),
+          });
+
+          await existWallet.save();
+        }
+      });
+
+      await Promise.all(refundPromises);
+      return true;
+    } catch (error) {
+      console.error("Error processing refunds:", error);
+      return false;
+    }
+  }
   // courseDelete
   async courseDelete(courseId: string): Promise<boolean> {
     try {
-      const resultDelete = await courseModel.findOne({_id:courseId});
+      const resultDelete = await courseModel.findOne({ _id: courseId });
       if (!resultDelete) {
         console.error("No course found for the given course ID.");
         return false;
@@ -360,9 +406,9 @@ class AdminRepository implements AdminRep {
   // deleteReport
   async deleteReport(courseId: string): Promise<boolean> {
     try {
-      console.log(courseId,"iiiiiiii");
-      
-      const report = await Report.findOne({courseId: courseId });
+      console.log(courseId, "iiiiiiii");
+
+      const report = await Report.findOne({ courseId: courseId });
       if (!report) {
         console.error("No report found for the given course ID.");
         return false;
@@ -374,22 +420,26 @@ class AdminRepository implements AdminRep {
       return false;
     }
   }
-   // ratesGet
-   async ratesGet():Promise<AvgRating[]>{
+  // deletePayments
+  async deletePayments(course_id: string): Promise<boolean> {
+    const paymentsDlt = await Payment.deleteMany({ courseId: course_id });
+    return !!paymentsDlt;
+  }
+  // ratesGet
+  async ratesGet(): Promise<AvgRating[]> {
     const ratings = await Review.aggregate([
       {
-        $group:{
-          _id:'$courseId',
-          averageRating:{$avg:'$rating'},
-          totalReviews:{$sum:1},
-        }
+        $group: {
+          _id: "$courseId",
+          averageRating: { $avg: "$rating" },
+          totalReviews: { $sum: 1 },
+        },
       },
-
-    ])
-    return ratings
+    ]);
+    return ratings;
   }
 
-  // dashboard funtions 
+  // dashboard funtions
   async getTotalEarnings(): Promise<number> {
     const totalEarnings = await Payment.aggregate([
       { $group: { _id: null, total: { $sum: "$price" } } },
@@ -404,7 +454,7 @@ class AdminRepository implements AdminRep {
 
   async getActiveCourses(): Promise<number> {
     return courseModel.countDocuments({
-      is_listed: false, 
+      is_listed: false,
     });
   }
 
@@ -433,16 +483,15 @@ class AdminRepository implements AdminRep {
         $limit: 4,
       },
     ]);
-console.log(ratings,"ratinfs sdaffkdkj");
+    console.log(ratings, "ratinfs sdaffkdkj");
 
-
-  // Map course details with average ratings
-  return courses
-    .filter((course) => ratings.some((r) => r._id == course._id ))
-    .map((course) => ({
-      title: course.title,
-      rating: ratings.find((r) => r._id  == course._id )?.averageRating || 1,
-    }));
+    // Map course details with average ratings
+    return courses
+      .filter((course) => ratings.some((r) => r._id == course._id))
+      .map((course) => ({
+        title: course.title,
+        rating: ratings.find((r) => r._id == course._id)?.averageRating || 1,
+      }));
   }
 
   async getCoursePerformance(): Promise<any[]> {
@@ -465,12 +514,10 @@ console.log(ratings,"ratinfs sdaffkdkj");
       },
     ]);
 
-
     return courses.map((course) => ({
       title: course.title,
       rating: ratings.find((r) => r._id == course._id)?.averageRating || 1,
     }));
-
   }
 }
 

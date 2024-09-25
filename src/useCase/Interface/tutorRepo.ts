@@ -3,7 +3,7 @@ import Tutor from "../../domain/tutor";
 import ICategory from "../../domain/Icategory";
 import Lecture from "../../domain/course/lecture";
 import Modules from "../../domain/course/chapter";
-import { CourseData, IAssignment, IConversation, IFile, IGetReviews, IInstructorDetails, InstructorDashboardData, InterCourse, Message, OtpDoc, TutorDetails } from "../../infrastructure/type/expressTypes";
+import { CourseData, IAssignment, IConversation, IFile, IGetReviews, IInstructorDetails, InstructorDashboardData, InterCourse, IUpdateTutor, Message, OtpDoc, TutorDetails } from "../../infrastructure/type/expressTypes";
 import { ITutorDetails } from "../../domain/tutorDetails";
 import { Assignment } from "../../domain/course/assignment";
 import { IMessage } from "../../domain/message";
@@ -16,7 +16,7 @@ interface TutorRepo {
     findById(tutorId :string):Promise<Tutor | null>;
     uploadInstructorDetails(details:ITutorDetails):Promise<ITutorDetails>;
     instructorDetailsExistId(instructorId:string):Promise<ITutorDetails | null>;
-    updateTheRegister(registerData:Tutor):Promise<boolean>
+    updateTheRegister(registerData:Tutor):Promise<IUpdateTutor | null>
     updateTheInstructorDetails(instructorDetail:ITutorDetails):Promise<boolean>
 
     saveOtp(name:string,email:string,otp:number,tutor:string):Promise<{}>;
@@ -43,6 +43,7 @@ interface TutorRepo {
     storeMesssage(messages:IMessage):Promise<IMessage>;
     createConversation(lastMessage:Conversation):Promise<Conversation | null>;
     getMsgs(senderId:string,receiverId:string):Promise<IMessage[]|null>;
+    changedPassword(instructorId: string, updatePassword: string): Promise<boolean>;
 
 }
 

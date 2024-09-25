@@ -11,6 +11,7 @@ import {
 } from "../../infrastructure/type/expressTypes";
 import { Assignment } from "../../domain/course/assignment";
 import { IReport } from "../../domain/report";
+import { IWallet } from "../../domain/wallet";
 
 interface AdminRep {
   // users taking
@@ -53,6 +54,9 @@ interface AdminRep {
   courseDelete(courseId:string):Promise<boolean>;
   deleteReport(courseId:string):Promise<boolean>;
   ratesGet():Promise<AvgRating[]>;
+  refundUserAmt(course_id:string, courseName:string):Promise<boolean>;
+  deletePayments(course_id:string):Promise<boolean>;
+ 
 }
 
 export default AdminRep;

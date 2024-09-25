@@ -20,6 +20,7 @@ import {
   IGetReviews,
   IInstructorDetails,
   InstructorDashboardData,
+  IUpdateTutor,
   OtpDoc,
   TutorDetails,
 } from "../type/expressTypes";
@@ -76,14 +77,21 @@ class TutorRepository implements TutorRepo {
     return instructorData;
   }
   // register data update
-  async updateTheRegister(registerData: Tutor): Promise<boolean> {
+  async updateTheRegister(
+    registerData: IUpdateTutor
+  ): Promise<IUpdateTutor | null> {
     const { _id, ...updateFields } = registerData;
+
     if (!_id) {
       throw new Error("ID is required for updating the user data");
     }
-    const result = await tutorModel.updateOne({ _id }, { $set: updateFields });
 
-    return result.modifiedCount > 0;
+    // Update the document and return the updated document
+    const updatedTutor = await tutorModel
+      .findOneAndUpdate({ _id }, { $set: updateFields }, { new: true })
+      .lean();
+
+    return updatedTutor;
   }
   // updateTheInstructorDetails
   async updateTheInstructorDetails(
@@ -247,9 +255,11 @@ class TutorRepository implements TutorRepo {
   async findConversationsByReceiverId(
     instructor_id: string
   ): Promise<IConversation[]> {
-    const receiverConversations = await conversationModel.find({
-      receiverId: instructor_id,
-    }).sort({updatedAt:-1});
+    const receiverConversations = await conversationModel
+      .find({
+        receiverId: instructor_id,
+      })
+      .sort({ updatedAt: -1 });
     return receiverConversations;
   }
   // instructorCourseData
@@ -556,37 +566,96 @@ class TutorRepository implements TutorRepo {
     return storeMsgs;
   }
   // createConversation
-  async createConversation(
-    lastMessage: Conversation
-  ): Promise<Conversation | null> {
+  async createConversation(lastMessage: Conversation): Promise<Conversation | null> {
+    // Check if the conversation already exists in either direction (sender/receiver or receiver/sender)
     const conversationMsg = await conversationModel.findOne({
-      senderId: lastMessage.senderId,
-      receiverId: lastMessage.receiverId,
-    });
-
-    const hasConverstion = !!conversationMsg;
-    let lastConverstion;
-    if (hasConverstion) {
-      const converstion = await conversationModel.updateOne(
+      $or: [
         { senderId: lastMessage.senderId, receiverId: lastMessage.receiverId },
-        { $set: { lastMessage: lastMessage.lastMessage } }
+        { senderId: lastMessage.receiverId, receiverId: lastMessage.senderId }
+      ]
+    });
+  
+    let lastConversation;
+  
+    if (conversationMsg) {
+      // Update the existing conversation with the new last message, sender name, and instructor name
+      await conversationModel.updateOne(
+        {
+          $or: [
+            { senderId: lastMessage.senderId, receiverId: lastMessage.receiverId },
+            { senderId: lastMessage.receiverId, receiverId: lastMessage.senderId }
+          ]
+        },
+        { 
+          $set: { 
+            senderName: lastMessage.senderName, 
+            instructorName: lastMessage.instructorName, 
+            lastMessage: lastMessage.lastMessage 
+          } 
+        }
       );
-      lastConverstion = await conversationModel.findOne({
-        senderId: lastMessage.senderId,
-        receiverId: lastMessage.receiverId,
+  
+      // Fetch the updated conversation
+      lastConversation = await conversationModel.findOne({
+        $or: [
+          { senderId: lastMessage.senderId, receiverId: lastMessage.receiverId },
+          { senderId: lastMessage.receiverId, receiverId: lastMessage.senderId }
+        ]
       });
     } else {
-      let newConversation = new conversationModel(lastMessage);
-      let saveConversation = await newConversation.save();
-      lastConverstion = saveConversation;
+      // Create a new conversation if it doesn't exist
+      const newConversation = new conversationModel(lastMessage);
+      lastConversation = await newConversation.save();
     }
-
-    return lastConverstion;
+  
+    return lastConversation;
   }
+  
+  
+  // async createConversation(
+  //   lastMessage: Conversation
+  // ): Promise<Conversation | null> {
+  //   const conversationMsg = await conversationModel.findOne({
+  //     senderId: lastMessage.senderId,
+  //     receiverId: lastMessage.receiverId,
+  //   });
+
+  //   const hasConverstion = !!conversationMsg;
+  //   let lastConverstion;
+  //   if (hasConverstion) {
+  //     const converstion = await conversationModel.updateOne(
+  //       { senderId: lastMessage.senderId, receiverId: lastMessage.receiverId },
+  //       { $set: { lastMessage: lastMessage.lastMessage } }
+  //     );
+  //      await conversationModel.updateOne(
+  //       {senderId:lastMessage.receiverId,receiverId:lastMessage.senderId},
+  //       {$set:{ lastMessage: lastMessage.lastMessage }}
+  //     )
+  //     lastConverstion = await conversationModel.findOne({
+  //       senderId: lastMessage.senderId,
+  //       receiverId: lastMessage.receiverId,
+  //     });
+  //   } else {
+  //     let newConversation = new conversationModel(lastMessage);
+  //     let saveConversation = await newConversation.save();
+  //     lastConverstion = saveConversation;
+  //   }
+
+  //   return lastConverstion;
+  // }
   // getMsgs
-  async getMsgs(senderId: string, receiverId: string): Promise<IMessage[] | null> {
-    const senderIdMsgs = await Message.find({senderId:senderId,receiverId:receiverId})
-    const receiverIdMsgs = await Message.find({senderId:receiverId,receiverId:senderId})
+  async getMsgs(
+    senderId: string,
+    receiverId: string
+  ): Promise<IMessage[] | null> {
+    const senderIdMsgs = await Message.find({
+      senderId: senderId,
+      receiverId: receiverId,
+    });
+    const receiverIdMsgs = await Message.find({
+      senderId: receiverId,
+      receiverId: senderId,
+    });
     const allMessages = [...senderIdMsgs, ...receiverIdMsgs];
 
     allMessages.sort((a: IMessage, b: IMessage) => {
@@ -595,6 +664,18 @@ class TutorRepository implements TutorRepo {
       return dateA - dateB;
     });
     return allMessages.length ? allMessages : null;
+  }
+  // changedPassword
+  async changedPassword(
+    instructorId: string,
+    hashedNewPassword: string
+  ): Promise<boolean> {
+    const result = await tutorModel.updateOne(
+      { _id: instructorId },
+      { $set: { password: hashedNewPassword } }
+    );
+
+    return result.modifiedCount > 0;
   }
 }
 

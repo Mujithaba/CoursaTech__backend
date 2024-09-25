@@ -477,11 +477,12 @@ class TutorController {
   // sendInstructorMsg
   async sendInstructorMsg(req:Req,res:Res,next:Next){
     try {
-      const { msg, userId, instructorId, instructorName } = req.body;
+      const { msg, userId, instructorId, userName,instructorName } = req.body;
       const saveMsg = await this.tutorUseCase.storeUserMsg(
         msg,
         instructorId,
         userId,
+        userName,
         instructorName
       );
       
@@ -501,6 +502,23 @@ class TutorController {
       console.log(senderId,receiverId,"getInitialMsg");
       const initialMsgs = await this.tutorUseCase.getPreviousMsgs(senderId,receiverId)
       return res.status(initialMsgs.status).json(initialMsgs.data)
+    } catch (error) {
+      next(error)
+    }
+  }
+  // updatePassword
+  async updatePassword(req:Req,res:Res,next:Next){
+    try {
+      const { instructorId,currentPassword,newPassword} = req.body;
+      console.log(instructorId, currentPassword, newPassword, "pooooi");
+
+      const result = await this.tutorUseCase.updatePassword(
+        instructorId,
+        currentPassword,
+        newPassword
+      );
+
+      return res.status(result?.status).json(result);
     } catch (error) {
       next(error)
     }

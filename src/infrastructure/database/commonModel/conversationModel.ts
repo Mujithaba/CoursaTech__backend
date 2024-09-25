@@ -10,6 +10,10 @@ const conversationSchema: Schema = new Schema(
       type: String,
       required: true,
     },
+    instructorName: {
+      type: String,
+      required: true,
+    },
     senderId: {
       type: String,
       required: true,

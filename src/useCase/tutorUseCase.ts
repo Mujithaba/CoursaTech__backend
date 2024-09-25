@@ -799,6 +799,7 @@ class TutorUseCase {
       return {
         status: 200,
         message: "SuccessFully updated",
+        updateRegister,
       };
     } else {
       return {
@@ -812,7 +813,6 @@ class TutorUseCase {
   async receiverConversations(instructor_id: string) {
     const conversationLists =
       await this._tutorRepository.findConversationsByReceiverId(instructor_id);
-
 
     if (conversationLists) {
       return {
@@ -1041,6 +1041,7 @@ class TutorUseCase {
     message: string,
     instructorId: string,
     userId: string,
+    userName:string,
     instructorName: string
   ) {
     const msg: Message = {
@@ -1050,7 +1051,8 @@ class TutorUseCase {
     };
     const storeMsg = await this._tutorRepository.storeMesssage(msg);
     let lastMsg: Conversation = {
-      senderName: instructorName,
+      senderName: userName,
+      instructorName:instructorName,
       senderId: instructorId,
       receiverId: userId,
       lastMessage: message,
@@ -1072,13 +1074,64 @@ class TutorUseCase {
       };
     }
   }
-   // getPreviousMsgs
-   async getPreviousMsgs(senderId:string,receiverId:string){
-    const getInitialMsgs = await this._tutorRepository.getMsgs(senderId,receiverId)
-    console.log(getInitialMsgs,"getPreviousMsgs");
+  // getPreviousMsgs
+  async getPreviousMsgs(senderId: string, receiverId: string) {
+    const getInitialMsgs = await this._tutorRepository.getMsgs(
+      senderId,
+      receiverId
+    );
+    console.log(getInitialMsgs, "getPreviousMsgs");
     return {
-      status:200,
-      data:getInitialMsgs
+      status: 200,
+      data: getInitialMsgs,
+    };
+  }
+  // updatePassword
+  async updatePassword(
+    instructorId: string,
+    currentPassword: string,
+    newPassword: string
+  ) {
+    const tutorData = await this._tutorRepository.findById(instructorId);
+    let result;
+    if (!tutorData) {
+      return {
+        status: 404,
+        message: "Tutor not found",
+      };
+    }
+
+    const matchingCurrent = await this._encryptPassword.compare(
+      currentPassword,
+      tutorData.password
+    );
+
+    if (matchingCurrent) {
+      const hashedNewPassword = await this._encryptPassword.encryptPassword(
+        newPassword
+      );
+
+      result = await this._tutorRepository.changedPassword(
+        instructorId,
+        hashedNewPassword
+      );
+
+      if (result) {
+        return {
+          status: 200,
+          message: "Password changed successfully",
+        };
+      } else {
+        return {
+          status: 400,
+          message: "Failed to change password",
+        };
+      }
+    } else {
+      return {
+        status: 400,
+        message: "The entered current password is incorrect",
+      };
     }
   }
 }

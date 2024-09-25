@@ -458,7 +458,7 @@ let profileUril = "nopic"
 
   //individual getViewCourse
   async getViewCourse(course_id: string, userid: string) {
-    const { getCourses, isPurchased } =
+    const { getCourses, isPurchased,getWallet } =
       await this._userRepository.getCourseView(course_id, userid);
     const getViewCourses = await this.s3GenerateForViewCourse(getCourses);
     // console.log(getViewCourses, "aray s3 bucke");
@@ -469,6 +469,7 @@ let profileUril = "nopic"
         data: {
           getViewCourses,
           isPurchased,
+          getWallet
         },
       };
     } else {
@@ -612,7 +613,8 @@ let profileUril = "nopic"
     message: string,
     userId: string,
     instructorId: string,
-    username: string
+    username: string,
+    instructorName:string
   ) {
     const msg: Message = {
       senderId: userId,
@@ -622,6 +624,7 @@ let profileUril = "nopic"
     const storeMsg = await this._userRepository.storeMesssage(msg);
     let lastMsg: Conversation = {
       senderName: username,
+      instructorName:instructorName,
       senderId: userId,
       receiverId: instructorId,
       lastMessage: message,
@@ -1027,7 +1030,38 @@ let profileUril = "nopic"
       data:getInitialMsgs
     }
   }
-  
+  // getWalletData
+  async getWalletData(userId:string){
+    const getWallet = await this._userRepository.walletDatas(userId);
+    console.log(getWallet,"getWalletData")
+    return {
+      status:200,
+      getWallet
+    }
+  }
+  // successWalletPayment
+  async successWalletPayment(userId:string,instructorId:string,courseId:string,price:number,courseName:string){
+    const paymentData: IPayment = {
+      userId: userId,
+      courseId: courseId,
+      instructorID: instructorId,
+      price: price ,
+    };
+
+    const walletPaymentSave = await this._userRepository.saveWalletPayment(paymentData)
+    const walletUpdate = await this._userRepository.updateWallet(userId,price,courseName)
+    if (walletPaymentSave && walletUpdate) {
+      return {
+        status: 200,
+        message: "Payment successfully completed",
+      };
+    } else {
+      return {
+        status: 400,
+        message: "Something went wrong in the payment,Please Check that",
+      };
+    }
+  }
 }
 
 export default UserUseCase;

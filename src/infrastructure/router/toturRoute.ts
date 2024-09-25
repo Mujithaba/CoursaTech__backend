@@ -61,6 +61,7 @@ route.get('/getCourseGrowth',tutorAuth,(req: Req, res: Res, next: Next)=>tutorCo
 route.patch('/updateProfileImg',tutorAuth,uploader.single('profileImage'),(req: Req, res: Res, next: Next)=>tutorController.updateProfileImg(req,res,next));
 route.post('/sendInstructorMsg',tutorAuth,(req: Req, res: Res, next: Next)=>tutorController.sendInstructorMsg(req,res,next));
 route.get('/getInitialMsg',tutorAuth,(req: Req, res: Res, next: Next)=>tutorController.getInitialMsg(req,res,next));
+route.patch('/updatePassword',tutorAuth,(req:Req,res:Res,next:Next)=>tutorController.updatePassword(req,res,next));
 
 
 
