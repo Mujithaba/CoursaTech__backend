@@ -158,7 +158,6 @@ class AdminUseCase {
   // category usecase start here
   async saveCategory(category: ICategory) {
     const saveData = await this._adminRepository.createCategory(category);
-    console.log(saveData, "cate data save");
 
     if (saveData.success === true) {
       return {
@@ -278,6 +277,7 @@ class AdminUseCase {
       };
     }
   }
+  // course count
   async countCourses() {
     const itemsCount = await this._adminRepository.coursesCount();
     return itemsCount;
@@ -285,7 +285,6 @@ class AdminUseCase {
 
   // url thorugh data fetching from s3
   async s3GetFunction(getCourses: {}[]) {
-    console.log("kkkk");
     const coursesWithSignedUrls = await Promise.all(
       getCourses.map(async (course: any) => {
         let thumbnailUrl = "";
@@ -377,9 +376,7 @@ class AdminUseCase {
   //individual getViewCourse
   async getViewCourse(course_id: string) {
     const getCourses = await this._adminRepository.getCourseView(course_id);
-    console.log(getCourses, "getViewCourses");
     const getViewCourses = await this.s3GenerateForViewCourse(getCourses);
-    console.log(getViewCourses, "aray s3 bucke");
 
     if (getViewCourses) {
       return {
@@ -488,7 +485,6 @@ class AdminUseCase {
     const { getCourses, totalUnverify } = await this.s3GenerateForViewCourse(
       fetchUnapprovedCourse
     );
-    console.log(getCourses, "aray s3 bucke");
 
     if (getCourses) {
       return {
@@ -575,7 +571,6 @@ class AdminUseCase {
     const assignmentsFetch = await this._adminRepository.fetchAssignments(
       courseId
     );
-    console.log(assignmentsFetch);
 
     const assignmentsWithUrlPromises = assignmentsFetch.map(
       async (assignment) => {
@@ -590,7 +585,6 @@ class AdminUseCase {
     );
 
     const assignmentsWithUrls = await Promise.all(assignmentsWithUrlPromises);
-    console.log(assignmentsWithUrls, assignmentsWithUrls);
 
     return {
       status: 200,
@@ -599,8 +593,6 @@ class AdminUseCase {
   }
   // getInstructorDetails
   async getInstructorDetails(instructorId: string) {
-    console.log("coming admint usecase");
-
     const getInstructor = await this._adminRepository.fetchInstructor(
       instructorId
     );

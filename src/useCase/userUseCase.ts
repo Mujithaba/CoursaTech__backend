@@ -9,23 +9,16 @@ import S3Uploader from "../infrastructure/services/s3BucketAWS";
 import Modules from "../domain/course/chapter";
 import Lecture from "../domain/course/lecture";
 import Razorpay from "razorpay";
-import { log } from "util";
 import {
-  IConversation,
   IInstructorHomePage,
   IPaymentComplete,
   IReportIssues,
-  IReportRequest,
   IUpdateEditData,
   Message,
 } from "../infrastructure/type/expressTypes";
 import { IPayment } from "../domain/payment";
-import items from "razorpay/dist/types/items";
 import { Conversation } from "../domain/conversationMsg";
 import { reviews } from "../domain/review";
-import { stat } from "fs";
-import { get } from "http";
-import ICourse from "../domain/course/course";
 
 class UserUseCase {
   private _userRepository: UserRepository;
@@ -105,8 +98,6 @@ class UserUseCase {
       return { status: 400, message: "Invalid or expired OTP" };
     }
 
-    console.log(otpDetailes.otp, "l2222");
-
     if (otpDetailes.otp !== data.otp) {
       return { status: 400, message: "Invalid OTP" };
     }
@@ -139,7 +130,6 @@ class UserUseCase {
         _id: user._id,
         name: user.name,
         email: user.email,
-        // password: user.password,
         isBlock: user.isBlocked,
         isAdmin: user.isAdmin,
         isGoogle: user.isGoogle,
@@ -177,7 +167,6 @@ class UserUseCase {
 
       if (passwordMatch) {
         token = this._jwtToken.generateToken(user._id, "user");
-        console.log(token, "token");
 
         return {
           status: 200,
@@ -211,7 +200,7 @@ class UserUseCase {
 
   async resend_otp(name: string, email: string) {
     const otp = this._generateOtp.createOtp();
-    console.log(otp, "OTP");
+    console.log(otp, "resend OTP");
 
     const role = "user";
     await this._userRepository.saveOtp(name, email, otp, role);
@@ -228,7 +217,6 @@ class UserUseCase {
 
   async forgotPassword(email: string) {
     const userExist = await this._userRepository.findByEmail(email);
-    console.log(userExist, "data");
     if (userExist?.isGoogle) {
       return {
         status: 403,
@@ -278,8 +266,6 @@ class UserUseCase {
   }
 
   async resetPassword(email: string, password: string) {
-    console.log(email, "kkkkoi");
-
     const hashPassword = await this._encryptPassword.encryptPassword(
       password as string
     );
@@ -302,10 +288,8 @@ class UserUseCase {
 
   // taking userData by id
   async getUser(userId: string) {
-    console.log("get user use case");
-
     const userData = await this._userRepository.findById(userId);
-let profileUril = "nopic"
+    let profileUril = "nopic";
     if (userData) {
       if (userData.img && userData.img != "nopic") {
         profileUril = await this._S3Uploader.getSignedUrl(userData.img);
@@ -315,7 +299,7 @@ let profileUril = "nopic"
         status: 200,
         data: {
           message: "Getting the user data",
-          data: {userData,profileUril},
+          data: { userData, profileUril },
         },
       };
     } else {
@@ -364,10 +348,9 @@ let profileUril = "nopic"
     );
     return itemsCount;
   }
- 
+
   // url thorugh data fetching from s3
   async s3GetFunction(getCourses: {}[]) {
-    console.log("kkkk");
     const coursesWithSignedUrls = await Promise.all(
       getCourses.map(async (course: any) => {
         let thumbnailUrl = "";
@@ -458,10 +441,9 @@ let profileUril = "nopic"
 
   //individual getViewCourse
   async getViewCourse(course_id: string, userid: string) {
-    const { getCourses, isPurchased,getWallet } =
+    const { getCourses, isPurchased, getWallet } =
       await this._userRepository.getCourseView(course_id, userid);
     const getViewCourses = await this.s3GenerateForViewCourse(getCourses);
-    // console.log(getViewCourses, "aray s3 bucke");
 
     if (getViewCourses) {
       return {
@@ -469,7 +451,7 @@ let profileUril = "nopic"
         data: {
           getViewCourses,
           isPurchased,
-          getWallet
+          getWallet,
         },
       };
     } else {
@@ -567,7 +549,6 @@ let profileUril = "nopic"
 
   // create course
   async createPyment(courseId: string) {
-    console.log("course paymnet use case", courseId);
     const courseData = await this._userRepository.findCourseById(courseId);
 
     const price: string = courseData?.price?.toString() || "0";
@@ -595,7 +576,6 @@ let profileUril = "nopic"
       price: courseData?.price as number,
     };
     const savePayment = await this._userRepository.savePayments(paymentData);
-    console.log(savePayment, "savePayment");
     if (savePayment) {
       return {
         status: 200,
@@ -614,7 +594,7 @@ let profileUril = "nopic"
     userId: string,
     instructorId: string,
     username: string,
-    instructorName:string
+    instructorName: string
   ) {
     const msg: Message = {
       senderId: userId,
@@ -624,7 +604,7 @@ let profileUril = "nopic"
     const storeMsg = await this._userRepository.storeMesssage(msg);
     let lastMsg: Conversation = {
       senderName: username,
-      instructorName:instructorName,
+      instructorName: instructorName,
       senderId: userId,
       receiverId: instructorId,
       lastMessage: message,
@@ -632,7 +612,6 @@ let profileUril = "nopic"
     const conversationMsg = await this._userRepository.createConversation(
       lastMsg
     );
-    // console.log(storeMsg, conversationMsg, "stored msg");
 
     if (storeMsg) {
       return {
@@ -699,7 +678,6 @@ let profileUril = "nopic"
     const assignmentsFetch = await this._userRepository.fetchAssignments(
       courseId
     );
-    console.log(assignmentsFetch);
 
     const assignmentsWithUrlPromises = assignmentsFetch.map(
       async (assignment) => {
@@ -714,7 +692,6 @@ let profileUril = "nopic"
     );
 
     const assignmentsWithUrls = await Promise.all(assignmentsWithUrlPromises);
-    console.log(assignmentsWithUrls, assignmentsWithUrls);
 
     return {
       status: 200,
@@ -726,15 +703,17 @@ let profileUril = "nopic"
     const getInstructor = await this._userRepository.fetchInstructor(
       instructorId
     );
-    let instructorImgUrl : string | undefined = undefined; 
+    let instructorImgUrl: string | undefined = undefined;
     if (getInstructor.profileImg != "nopic") {
-      instructorImgUrl = await this._S3Uploader.getSignedUrl(getInstructor.profileImg as string)
-    }else{
-      instructorImgUrl = "nopic"
+      instructorImgUrl = await this._S3Uploader.getSignedUrl(
+        getInstructor.profileImg as string
+      );
+    } else {
+      instructorImgUrl = "nopic";
     }
     return {
       status: 200,
-      data: {getInstructor,instructorImgUrl},
+      data: { getInstructor, instructorImgUrl },
     };
   }
   // reportingCourse
@@ -743,8 +722,6 @@ let profileUril = "nopic"
     userId: string,
     formState: IReportIssues
   ) {
-    console.log(courseId, userId, formState, "userusecase report");
-
     // Check if the user has already reported the course
     const hasUserReported = await this._userRepository.userReportExist(
       courseId,
@@ -798,29 +775,29 @@ let profileUril = "nopic"
     if (profileImage) {
       uploadImg = await this._S3Uploader.uploadImage(profileImage);
     }
-  
+
     const data: IUpdateEditData = {
       name: name,
       email: email,
       phone: phone,
     };
-  
+
     if (uploadImg) {
       data.img = uploadImg;
     }
-  
+
     const updatedUser = await this._userRepository.saveEditData(userid, data);
-  
+
     if (updatedUser) {
       return {
         status: 200,
         message: "Updated Successfully",
-        updatedUser: updatedUser
+        updatedUser: updatedUser,
       };
     } else {
       return {
         status: 400,
-        message: "Something went wrong updating, Try later"
+        message: "Something went wrong updating, Try later",
       };
     }
   }
@@ -897,30 +874,29 @@ let profileUril = "nopic"
   async getDataToHome() {
     try {
       const ratedCourses = await this._userRepository.ratedCourseHome();
-      console.log(ratedCourses, "rated courses");
-  
+
       let instructorArray: IInstructorHomePage[] = [];
       const instructorCache = new Map<string, Promise<IInstructorHomePage>>();
-  
+
       const topCoursesPromises = ratedCourses.map(async (course) => {
         try {
-          const getCourses = await this._userRepository.findCourseById(course._id);
-          console.log(getCourses,"ppppppppppppppppppppp");
-          
-  
+          const getCourses = await this._userRepository.findCourseById(
+            course._id
+          );
+
           if (!getCourses) {
             console.log(`Course not found for id: ${course._id}`);
             return null;
           }
-  
+
           const thumbnailUrl = await this._S3Uploader.getSignedUrl(
             getCourses.thambnail_Img as string
           );
-  
+
           let instructorDataPromise = instructorCache.get(
             getCourses.instructor_id as string
           );
-  
+
           if (!instructorDataPromise) {
             instructorDataPromise = this._userRepository
               .findInstructorById(getCourses.instructor_id as string)
@@ -931,25 +907,29 @@ let profileUril = "nopic"
                     : await this._S3Uploader.getSignedUrl(
                         instructorData.instructorImg
                       );
-  
+
                 return { ...instructorData, profileUrl };
               });
-  
+
             instructorCache.set(
               getCourses.instructor_id as string,
               instructorDataPromise
             );
           }
-  
+
           const instructorData = await instructorDataPromise;
-  
-        
-          if (!instructorArray.some((instructor) => instructor._id.toString() === instructorData._id.toString())) {
+
+          if (
+            !instructorArray.some(
+              (instructor) =>
+                instructor._id.toString() === instructorData._id.toString()
+            )
+          ) {
             instructorArray.push(instructorData);
           }
-  
+
           return {
-            _id:getCourses._id,
+            _id: getCourses._id,
             courseName: getCourses.title,
             thumbnail: thumbnailUrl,
             averageRating: course.averageRating,
@@ -965,14 +945,11 @@ let profileUril = "nopic"
           return null;
         }
       });
-  
+
       const topCourses = await Promise.all(topCoursesPromises);
-  
-      console.log(topCourses, "topCourses before filtering");
-  
+
       const homeData = topCourses.filter((course) => course !== null);
-      console.log(homeData, "filtered topCourses");
-  
+
       if (homeData.length > 0) {
         return {
           status: 200,
@@ -995,61 +972,80 @@ let profileUril = "nopic"
   }
   // entrolledCourseData
   async enrolledCourseData(userId: string) {
-    const existEnrolledUser = await this._userRepository.enrolledUserExist(userId);
-  
+    const existEnrolledUser = await this._userRepository.enrolledUserExist(
+      userId
+    );
+
     if (existEnrolledUser == null) {
       return {
         status: 200,
         data: "No courses you are enrolled in",
       };
     }
-  
+
     const enrolledData = await Promise.all(
       existEnrolledUser.map(async (courseEnrolled) => {
-        const getCourse = await this._userRepository.findCourseById(courseEnrolled.courseId as string);
-        const thumbnailImgUrl = await this._S3Uploader.getSignedUrl(getCourse?.thambnail_Img as string);
-  
+        const getCourse = await this._userRepository.findCourseById(
+          courseEnrolled.courseId as string
+        );
+        const thumbnailImgUrl = await this._S3Uploader.getSignedUrl(
+          getCourse?.thambnail_Img as string
+        );
+
         return {
           ...getCourse,
           thumbnailImgUrl,
         };
       })
     );
-  
+
     return {
       status: 200,
       data: enrolledData,
     };
   }
   // getPreviousMsgs
-  async getPreviousMsgs(senderId:string,receiverId:string){
-    const getInitialMsgs = await this._userRepository.getMsgs(senderId,receiverId)
-    console.log(getInitialMsgs,"getPreviousMsgs");
+  async getPreviousMsgs(senderId: string, receiverId: string) {
+    const getInitialMsgs = await this._userRepository.getMsgs(
+      senderId,
+      receiverId
+    );
     return {
-      status:200,
-      data:getInitialMsgs
-    }
+      status: 200,
+      data: getInitialMsgs,
+    };
   }
   // getWalletData
-  async getWalletData(userId:string){
+  async getWalletData(userId: string) {
     const getWallet = await this._userRepository.walletDatas(userId);
-    console.log(getWallet,"getWalletData")
     return {
-      status:200,
-      getWallet
-    }
+      status: 200,
+      getWallet,
+    };
   }
   // successWalletPayment
-  async successWalletPayment(userId:string,instructorId:string,courseId:string,price:number,courseName:string){
+  async successWalletPayment(
+    userId: string,
+    instructorId: string,
+    courseId: string,
+    price: number,
+    courseName: string
+  ) {
     const paymentData: IPayment = {
       userId: userId,
       courseId: courseId,
       instructorID: instructorId,
-      price: price ,
+      price: price,
     };
 
-    const walletPaymentSave = await this._userRepository.saveWalletPayment(paymentData)
-    const walletUpdate = await this._userRepository.updateWallet(userId,price,courseName)
+    const walletPaymentSave = await this._userRepository.saveWalletPayment(
+      paymentData
+    );
+    const walletUpdate = await this._userRepository.updateWallet(
+      userId,
+      price,
+      courseName
+    );
     if (walletPaymentSave && walletUpdate) {
       return {
         status: 200,

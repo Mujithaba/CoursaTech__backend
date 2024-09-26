@@ -26,14 +26,6 @@ import walletModal from "../database/userModels/walletModal";
 import { IWallet } from "../../domain/wallet";
 
 class AdminRepository implements AdminRep {
-  // async findUsers(page: number, limit: number): Promise<{ users: User[], totalUsers: number }> {
-  //   const totalUsers = await userModel.countDocuments({ isAdmin: false });
-  //   const users = await userModel
-  //     .find({ isAdmin: false })
-  //     .skip((page - 1) * limit)
-  //     .limit(limit);
-  //   return { users, totalUsers };
-  // }
   async findUsers(
     page: number,
     limit: number
@@ -192,6 +184,7 @@ class AdminRepository implements AdminRep {
 
     return coursesData;
   }
+  // course count
   async coursesCount(): Promise<number> {
     const counts = await courseModel.countDocuments();
     return counts;
@@ -225,10 +218,6 @@ class AdminRepository implements AdminRep {
     const totalUnverify = await courseModel.countDocuments({
       is_verified: false,
     });
-    console.log(
-      totalUnverify,
-      "totalUnverify............................................"
-    );
 
     const getCourses = await courseModel
       .find({ is_verified: false })
@@ -248,7 +237,6 @@ class AdminRepository implements AdminRep {
       })
       .lean()
       .exec();
-    console.dir(getCourses, { depth: null, colors: true });
 
     return { getCourses, totalUnverify };
   }
@@ -274,14 +262,11 @@ class AdminRepository implements AdminRep {
     const reviews = await Review.find({ courseId: courseId }).sort({
       createdAt: -1,
     });
-    console.log(reviews, "getReview");
     const reviewData: IGetReviews[] = reviews.map((review) => ({
       userName: review.userName,
       feedback: review.feedback,
       rating: review.rating,
     }));
-
-    console.log(reviewData, "data reiew");
 
     return reviewData;
   }
@@ -292,8 +277,6 @@ class AdminRepository implements AdminRep {
   }
   // fetchInstructor
   async fetchInstructor(instructorId: string): Promise<IInstructorDetails> {
-    console.log("erepo insru data", instructorId);
-
     const tutor = await tutorModel.findById(instructorId);
     const instructor = await InstructorDetails.findOne({
       instructorId: instructorId,
@@ -313,7 +296,6 @@ class AdminRepository implements AdminRep {
       position: instructor?.position || "",
       profileImg: instructor?.profileImg || "",
     };
-    console.log(instructorData, "instructorData");
 
     return instructorData;
   }
@@ -406,8 +388,6 @@ class AdminRepository implements AdminRep {
   // deleteReport
   async deleteReport(courseId: string): Promise<boolean> {
     try {
-      console.log(courseId, "iiiiiiii");
-
       const report = await Report.findOne({ courseId: courseId });
       if (!report) {
         console.error("No report found for the given course ID.");
@@ -460,7 +440,6 @@ class AdminRepository implements AdminRep {
 
   async getTopCourses(): Promise<any[]> {
     const courses = await courseModel.find();
-    console.log(courses, "courses");
 
     const courseIds = courses.map((course) => String(course._id));
     console.log(courseIds, "courseIds");
@@ -483,7 +462,6 @@ class AdminRepository implements AdminRep {
         $limit: 4,
       },
     ]);
-    console.log(ratings, "ratinfs sdaffkdkj");
 
     // Map course details with average ratings
     return courses
@@ -493,13 +471,11 @@ class AdminRepository implements AdminRep {
         rating: ratings.find((r) => r._id == course._id)?.averageRating || 1,
       }));
   }
-
+  // course performace
   async getCoursePerformance(): Promise<any[]> {
     const courses = await courseModel.find();
-    console.log(courses, "courses");
 
     const courseIds = courses.map((course) => String(course._id));
-    console.log(courseIds, "courseIds");
 
     const ratings = await Review.aggregate([
       {

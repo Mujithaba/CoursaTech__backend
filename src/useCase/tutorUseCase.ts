@@ -7,18 +7,13 @@ import { VerifyData } from "./Interface/verifyData";
 import JwtToken from "../infrastructure/services/generateToken";
 import S3Uploader from "../infrastructure/services/s3BucketAWS";
 import {
-  IFile,
   Message,
-  Next,
-  Req,
-  Res,
   TutorDetails,
   courseInfo,
 } from "../infrastructure/type/expressTypes";
 import ICourse from "../domain/course/course";
 import Modules from "../domain/course/chapter";
 import Lecture from "../domain/course/lecture";
-import { log, time } from "console";
 import { ITutorDetails } from "../domain/tutorDetails";
 import { Conversation } from "../domain/conversationMsg";
 
@@ -88,8 +83,6 @@ class TutorUseCase {
 
   // otp verification case
   async verify(data: VerifyData) {
-    console.log(data.roleData, "tutor sucase otp");
-
     const otpDetailes = await this._tutorRepository.findOtpByEmail(
       data.roleData.email,
       data.role
@@ -112,14 +105,11 @@ class TutorUseCase {
   }
 
   async saveTutor(tutor: Tutor) {
-    console.log(tutor.password, "pass save ");
-
     const hashPassword = await this._encryptPassword.encryptPassword(
       tutor.password as string
     );
     tutor.password = hashPassword;
     const userSave = await this._tutorRepository.saves(tutor);
-    console.log(hashPassword, "pass hash");
     return {
       status: 201,
       data: userSave,
@@ -194,7 +184,7 @@ class TutorUseCase {
 
   async resend_otp(name: string, email: string) {
     const otp = this._generateOtp.createOtp();
-    console.log(otp, "OTP");
+    console.log(otp, "OTP send");
 
     const role = "Tutor";
     await this._tutorRepository.saveOtp(name, email, otp, role);
@@ -262,8 +252,6 @@ class TutorUseCase {
   }
 
   async resetPassword(email: string, password: string) {
-    console.log(email, "kkkkoi");
-
     const hashPassword = await this._encryptPassword.encryptPassword(
       password as string
     );
@@ -286,8 +274,6 @@ class TutorUseCase {
 
   // taking userData by id
   async getUser(userId: string) {
-    console.log("get user use case");
-
     const tutorData = await this._tutorRepository.findById(userId);
     if (tutorData) {
       return {
@@ -305,17 +291,13 @@ class TutorUseCase {
     }
   }
   // basic course upload
-
   async uploadBasicInfo(
     thumbnail: Express.Multer.File,
     video: Express.Multer.File,
     courseInfo: courseInfo
   ) {
-    console.log("Thumbnail file:", thumbnail);
-    console.log("Video file:", video);
     const s3thumbnail = await this._S3Uploader.uploadImage(thumbnail);
     const s3TrailerVD = await this._S3Uploader.uploadVideo(video);
-    console.log(s3TrailerVD, s3thumbnail, "kkk s3 bucket");
     const data: ICourse = {
       title: courseInfo.title,
       description: courseInfo.description,
@@ -326,7 +308,6 @@ class TutorUseCase {
       price: courseInfo.price,
     };
     const cousrseData = await this._tutorRepository.createCourse(data);
-    console.log(cousrseData, "cousrseCreate use case$$$$$$$$$$$$$$$$$$");
     if (cousrseData) {
       return {
         status: 201,
@@ -362,7 +343,6 @@ class TutorUseCase {
         limit,
         skip
       );
-    // console.log(getInstructorCourses, "getInstructorCourses");
     const getTutorCourses = await this.s3GetFunction(getInstructorCourses);
 
     if (getTutorCourses) {
@@ -388,7 +368,6 @@ class TutorUseCase {
 
   // url thorugh data fetching from s3
   async s3GetFunction(getTutorCourses: {}[]) {
-    console.log("kkkk");
     const coursesWithSignedUrls = await Promise.all(
       getTutorCourses.map(async (course: any) => {
         let thumbnailUrl = "";
@@ -483,19 +462,15 @@ class TutorUseCase {
     modules: Modules[],
     files: Express.Multer.File[]
   ) {
-    // console.log(course_id, modules, "usecase data ");
     const modules_IDs: string[] = [];
     const processedModulesIDs: Modules[] = [];
     for (const [moduleIndex, module] of modules.entries()) {
       const processedLecturesIDs: any[] = [];
 
       console.log("Module Data:", module);
-      // console.log("Module Name:", module.name);
 
       if (module.lectures) {
         for (const [lectureIndex, lecture] of module.lectures.entries()) {
-          // console.log("Lecture Data:", lecture);
-
           const videoFileName = `lectures[${moduleIndex}][${lectureIndex}].video`;
           const pdfFileName = `lectures[${moduleIndex}][${lectureIndex}].pdf`;
 
@@ -508,11 +483,9 @@ class TutorUseCase {
           let pdfUrl = "";
 
           if (pdfFile) {
-            // console.log("PDF File:", pdfFile);
             pdfUrl = await this._S3Uploader.uploadPDF(pdfFile);
           }
           if (videoFile) {
-            // console.log("Video File:", videoFile);
             videoUrl = await this._S3Uploader.uploadVideo(videoFile);
           }
 
@@ -565,7 +538,7 @@ class TutorUseCase {
         },
       };
     } else {
-      console.log("something chapter updtion");
+      console.log("something wrong chapter updtion");
       return {
         status: 400,
         data: {
@@ -578,9 +551,7 @@ class TutorUseCase {
   //individual getViewCourse
   async getViewCourse(course_id: string) {
     const getCourses = await this._tutorRepository.getCourseView(course_id);
-    console.log(getCourses, "getInstructorCourses");
     const getTutorCourses = await this.s3GenerateForViewCourse(getCourses);
-    console.log(getTutorCourses, "aray s3 bucke");
 
     if (getTutorCourses) {
       return {
@@ -681,55 +652,12 @@ class TutorUseCase {
       modules: moduleWithSignedUrls,
     };
   }
-  // fetching profile data
-  // async getInstructorData(tutor_id: string) {
-  //   console.log(tutor_id, "tutorId");
-  //   const getInstructorDetails = await this._tutorRepository.findById(tutor_id);
-  //   console.log(getInstructorDetails, "isnturcto");
-  //   let existDetailsDocument =
-  //     await this._tutorRepository.instructorDetailsExistId(tutor_id);
-  //   if (!existDetailsDocument) {
-  //     let data: ITutorDetails = {
-  //       instructorId: tutor_id,
-  //       profileImg: "nopic",
-  //       experience: "Please give your experience",
-  //       position: "Please give your role",
-  //       companyName: "Please give Company",
-  //       aboutBio: "write something about yousrelf",
-  //     };
-  //     existDetailsDocument =
-  //       await this._tutorRepository.uploadInstructorDetails(data);
-  //   }
-  //   if (getInstructorDetails && existDetailsDocument) {
-  //     if (existDetailsDocument.profileImg != "nopic") {
-
-  //       const imgUrl = await this._S3Uploader.getSignedUrl(existDetailsDocument.profileImg as string)
-  //       existDetailsDocument.ProfileImgUrl = imgUrl
-  //     }
-  //     return {
-  //       status: 200,
-  //       data: {
-  //         getInstructorDetails,
-  //         existDetailsDocument,
-  //       },
-  //     };
-  //   } else {
-  //     return {
-  //       status: 400,
-  //       data: {
-  //         message: "Something went wrong the fetching instructor data!",
-  //       },
-  //     };
-  //   }
-  // }
+  // get instructor data
   async getInstructorData(tutor_id: string) {
     try {
-      console.log(tutor_id, "tutorId");
-
       const getInstructorDetails = await this._tutorRepository.findById(
         tutor_id
       );
-      console.log(getInstructorDetails, "instructorDetails");
 
       let existDetailsDocument =
         await this._tutorRepository.instructorDetailsExistId(tutor_id);
@@ -788,7 +716,6 @@ class TutorUseCase {
     registerData: Tutor,
     instructorDetails: TutorDetails
   ) {
-    console.log(registerData, instructorDetails, "instructorDetails usecase");
     const updateRegister = await this._tutorRepository.updateTheRegister(
       registerData
     );
@@ -833,7 +760,6 @@ class TutorUseCase {
 
   // fetchInstructorCourses
   async fetchInstructorCourses(instructor_id: string) {
-    console.log(instructor_id, "instructor id for fetch courseName and Id");
     const fetchCourses = await this._tutorRepository.instructorCourseData(
       instructor_id
     );
@@ -910,8 +836,6 @@ class TutorUseCase {
 
   // reviewsFetch
   async reviewsFetch(courseId: string) {
-    console.log(courseId, "revie cour id");
-
     const getReviews = await this._tutorRepository.getReview(courseId);
     if (getReviews) {
       return {
@@ -949,7 +873,6 @@ class TutorUseCase {
     );
 
     const assignmentsWithUrls = await Promise.all(assignmentsWithUrlPromises);
-    console.log(assignmentsWithUrls, assignmentsWithUrls);
 
     return {
       status: 200,
@@ -1041,7 +964,7 @@ class TutorUseCase {
     message: string,
     instructorId: string,
     userId: string,
-    userName:string,
+    userName: string,
     instructorName: string
   ) {
     const msg: Message = {
@@ -1052,7 +975,7 @@ class TutorUseCase {
     const storeMsg = await this._tutorRepository.storeMesssage(msg);
     let lastMsg: Conversation = {
       senderName: userName,
-      instructorName:instructorName,
+      instructorName: instructorName,
       senderId: instructorId,
       receiverId: userId,
       lastMessage: message,

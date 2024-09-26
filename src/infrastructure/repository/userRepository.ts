@@ -1,18 +1,13 @@
 import User from "../../domain/user";
-// import IOtpDoc from "../../domain/IOtpDoc";
 import userModel from "../database/userModels/userModel";
 import otpDocModel from "../database/commonModel/otpDocModel";
 import UserRepo from "../../useCase/Interface/userRepo";
-import { log } from "console";
 import courseModel from "../database/tutorModel/courseModel";
 import {
   AvgRating,
-  IAssignment,
   IGetReviews,
   IInstructorDetails,
   IInstructorHomePage,
-  IReportRequest,
-  itemsCount,
   IUpdateEditData,
   OtpDoc,
 } from "../type/expressTypes";
@@ -52,7 +47,6 @@ class UserRepository implements UserRepo {
   // find by id
   async findById(userId: string): Promise<User | null> {
     const userData = await userModel.findById(userId).exec();
-    // console.log(userData, "find by id");
     return userData;
   }
 
@@ -165,7 +159,6 @@ class UserRepository implements UserRepo {
     const wallet = await walletModal.findOne({ userId: userid });
 
     const hasPurchased = !!paymentDocument;
-    console.log(hasPurchased, "is__________________");
 
     const getViewCourses = await courseModel
       .findById(course_id)
@@ -185,7 +178,6 @@ class UserRepository implements UserRepo {
       })
       .lean()
       .exec();
-    // console.dir(getViewCourses, { depth: null, colors: true });
 
     return {
       getCourses: getViewCourses,
@@ -197,7 +189,6 @@ class UserRepository implements UserRepo {
   // find course
   async findCourseById(course_id: string): Promise<ICourse | null> {
     const course = await courseModel.findById(course_id);
-    console.log(course, "doud to");
 
     return course?.toObject() as unknown as ICourse;
   }
@@ -206,7 +197,6 @@ class UserRepository implements UserRepo {
   async savePayments(payment: IPayment): Promise<IPayment> {
     const newPayment = new Payment(payment);
     const savedPayment = await newPayment.save();
-    console.log(savedPayment, "saved payment");
 
     return savedPayment;
   }
@@ -218,71 +208,52 @@ class UserRepository implements UserRepo {
     return storeMsgs;
   }
   // createConversation
-  async createConversation(lastMessage: Conversation): Promise<Conversation | null> {
+  async createConversation(
+    lastMessage: Conversation
+  ): Promise<Conversation | null> {
     // Check if the conversation already exists
     const conversationMsg = await conversationModel.findOne({
       $or: [
         { senderId: lastMessage.senderId, receiverId: lastMessage.receiverId },
-        { senderId: lastMessage.receiverId, receiverId: lastMessage.senderId }
-      ]
+        { senderId: lastMessage.receiverId, receiverId: lastMessage.senderId },
+      ],
     });
-  
+
     let lastConversation;
-  
+
     if (conversationMsg) {
       // Update the existing conversation with the latest message and sender name
       lastConversation = await conversationModel.findOneAndUpdate(
         {
           $or: [
-            { senderId: lastMessage.senderId, receiverId: lastMessage.receiverId },
-            { senderId: lastMessage.receiverId, receiverId: lastMessage.senderId }
-          ]
+            {
+              senderId: lastMessage.senderId,
+              receiverId: lastMessage.receiverId,
+            },
+            {
+              senderId: lastMessage.receiverId,
+              receiverId: lastMessage.senderId,
+            },
+          ],
         },
-        { 
+        {
           $set: {
-            senderName: lastMessage.senderName, 
-            instructorName:lastMessage.instructorName,
-            lastMessage: lastMessage.lastMessage 
-          }
+            senderName: lastMessage.senderName,
+            instructorName: lastMessage.instructorName,
+            lastMessage: lastMessage.lastMessage,
+          },
         },
-        { new: true } // Return the updated document
+        { new: true }
       );
     } else {
       // Create a new conversation
       const newConversation = new conversationModel(lastMessage);
       lastConversation = await newConversation.save();
     }
-  
+
     return lastConversation;
   }
-  
-  // async createConversation(
-  //   lastMessage: Conversation
-  // ): Promise<Conversation | null> {
-  //   const conversationMsg = await conversationModel.findOne({
-  //     senderId: lastMessage.senderId,
-  //     receiverId: lastMessage.receiverId,
-  //   });
 
-  //   const hasConverstion = !!conversationMsg;
-  //   let lastConverstion;
-  //   if (hasConverstion) {
-  //     const converstion = await conversationModel.updateOne(
-  //       { senderId: lastMessage.senderId, receiverId: lastMessage.receiverId },
-  //       { $set: {senderName:lastMessage.senderName, lastMessage: lastMessage.lastMessage } }
-  //     );
-  //     lastConverstion = await conversationModel.findOne({
-  //       senderId: lastMessage.senderId,
-  //       receiverId: lastMessage.receiverId,
-  //     });
-  //   } else {
-  //     let newConversation = new conversationModel(lastMessage);
-  //     let saveConversation = await newConversation.save();
-  //     lastConverstion = saveConversation;
-  //   }
-
-  //   return lastConverstion;
-  // }
   // upload reviews
   async uploadReview(data: reviews): Promise<boolean> {
     const newReview = new Review(data);
@@ -300,8 +271,6 @@ class UserRepository implements UserRepo {
       feedback: review.feedback,
       rating: review.rating,
     }));
-
-    console.log(reviewData, "data reiew");
 
     return reviewData;
   }
@@ -403,11 +372,9 @@ class UserRepository implements UserRepo {
     userId: string,
     data: IUpdateEditData
   ): Promise<User | null> {
-    const updatedUser = await userModel.findByIdAndUpdate(
-      userId,
-      { $set: data },
-      { new: true } 
-    ).select('-password');
+    const updatedUser = await userModel
+      .findByIdAndUpdate(userId, { $set: data }, { new: true })
+      .select("-password");
 
     return updatedUser;
   }
@@ -429,7 +396,7 @@ class UserRepository implements UserRepo {
     return result.modifiedCount > 0;
   }
 
-  // get category*******************
+  // get category
   async getCategory(): Promise<ICategory[]> {
     const getData = await categoryModel.find({ is_listed: true });
     return getData;
@@ -456,8 +423,6 @@ class UserRepository implements UserRepo {
   }
 
   async findInstructorById(instructorId: string): Promise<IInstructorHomePage> {
-    console.log("home instructor");
-
     const name = await tutorModel.findById(instructorId);
     const details = await InstructorDetails.findOne({
       instructorId: instructorId,
@@ -508,7 +473,6 @@ class UserRepository implements UserRepo {
   async saveWalletPayment(payment: IPayment): Promise<IPayment> {
     const newPayment = new Payment(payment);
     const savedPayment = await newPayment.save();
-    console.log(savedPayment, "saved payment");
     return savedPayment;
   }
   // updateWallet

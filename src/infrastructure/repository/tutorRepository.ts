@@ -4,7 +4,6 @@ import tutorModel from "../database/tutorModel/tutorModel";
 import OtpDocModel from "../database/commonModel/otpDocModel";
 import courseModel from "../database/tutorModel/courseModel";
 import ICourse from "../../domain/course/course";
-import { ObjectId } from "mongodb";
 import { PipelineStage } from "mongoose";
 import ICategory from "../../domain/Icategory";
 import categoryModel from "../database/adminModel/categoryModel";
@@ -19,7 +18,6 @@ import {
   ICourseWithAssignments,
   IGetReviews,
   IInstructorDetails,
-  InstructorDashboardData,
   IUpdateTutor,
   OtpDoc,
   TutorDetails,
@@ -30,7 +28,6 @@ import conversationModel from "../database/commonModel/conversationModel";
 import { Assignment } from "../../domain/course/assignment";
 import assignmentModel from "../database/tutorModel/assignmentModel";
 import Review from "../database/commonModel/reviewModel";
-import mongoose from "mongoose";
 import Payment from "../database/commonModel/paymentModel";
 import { IMessage } from "../../domain/message";
 import Message from "../database/commonModel/messageModel";
@@ -41,7 +38,6 @@ class TutorRepository implements TutorRepo {
   async saves(tutor: Tutor): Promise<Tutor> {
     const newTutor = new tutorModel(tutor);
     const saveTutor = await newTutor.save();
-    // console.log(saveTutor, "_id kittiyo");
 
     return saveTutor;
   }
@@ -55,7 +51,6 @@ class TutorRepository implements TutorRepo {
   // find by id
   async findById(tutorId: string): Promise<Tutor | null> {
     const tutorData = await tutorModel.findById({ _id: tutorId });
-    // console.log(tutorData, "find by id");
     return tutorData;
   }
   // Instructor Details uploading
@@ -64,7 +59,6 @@ class TutorRepository implements TutorRepo {
   ): Promise<ITutorDetails> {
     const newDetailInstrucotr = new InstructorDetails(details);
     const saveDetails = await newDetailInstrucotr.save();
-    console.log(saveDetails, "saveDetails");
     return saveDetails;
   }
   // instructor details document checking
@@ -125,7 +119,6 @@ class TutorRepository implements TutorRepo {
       generatedAt: new Date(),
     });
     const saveOtp = await newOtpDoc.save();
-    // console.log(saveOtp, "tutor otp data");
 
     return saveOtp;
   }
@@ -154,10 +147,9 @@ class TutorRepository implements TutorRepo {
   async createCourse(course: ICourse): Promise<ICourse> {
     const newCOurse = new courseModel(course);
     const saveCourse = await newCOurse.save();
-    console.log(saveCourse, "repo save course");
     return saveCourse.toObject() as unknown as ICourse;
   }
-  // get category*******************
+  // get category
   async getCategory(): Promise<ICategory[]> {
     const getData = await categoryModel.find({ is_listed: true });
     return getData;
@@ -188,20 +180,17 @@ class TutorRepository implements TutorRepo {
       .skip(skip)
       .lean()
       .exec();
-    // console.dir(getTutorCourses, { depth: null, colors: true });
 
     return getTutorCourses;
   }
   async coursesCount(id: string): Promise<number> {
     const counts = await courseModel.countDocuments({ instructor_id: id });
-    console.log(`Count of documents for ID ${id}:`, counts);
     return counts;
   }
   // lecture create
   async saveLectures(lecture: Lecture): Promise<Lecture> {
     const newLecture = new lectureModel(lecture);
     const saveLecture = newLecture.save();
-    console.log(saveLecture, "lecture saved");
 
     return (await saveLecture).toObject() as unknown as Lecture;
   }
@@ -210,7 +199,6 @@ class TutorRepository implements TutorRepo {
     const newModule = new moduleModel(module);
     const saveModule = newModule.save();
 
-    console.log(saveModule, "module save");
     return (await saveModule).toObject() as unknown as Modules;
   }
   // update course chapter array
@@ -223,7 +211,6 @@ class TutorRepository implements TutorRepo {
       { $push: { chapters: { $each: modules_Id } } },
       { new: true, runValidators: true }
     );
-    console.log(findCourse, "module ids are added to chapter");
 
     return findCourse;
   }
@@ -247,7 +234,6 @@ class TutorRepository implements TutorRepo {
       })
       .lean()
       .exec();
-    console.dir(getTutorCourses, { depth: null, colors: true });
 
     return getTutorCourses;
   }
@@ -284,7 +270,6 @@ class TutorRepository implements TutorRepo {
     };
     const newAssignment = new assignmentModel(assigments);
     const saveAssignment = await newAssignment.save();
-    console.log(saveAssignment, "saveAssignment");
     const updateCourse = await courseModel.findByIdAndUpdate(
       courseId,
       {
@@ -325,14 +310,11 @@ class TutorRepository implements TutorRepo {
     const reviews = await Review.find({ courseId: courseId }).sort({
       createdAt: -1,
     });
-    console.log(reviews, "getReview");
     const reviewData: IGetReviews[] = reviews.map((review) => ({
       userName: review.userName,
       feedback: review.feedback,
       rating: review.rating,
     }));
-
-    console.log(reviewData, "data reiew");
 
     return reviewData;
   }
@@ -433,17 +415,14 @@ class TutorRepository implements TutorRepo {
     console.log(JSON.stringify(pipeline, null, 2), "pipeline");
 
     const recentEnrollments = await Payment.aggregate(pipeline);
-    console.log("Final result:", recentEnrollments);
 
     return recentEnrollments;
   }
 
   async getCoursePerformance(instructorId: string): Promise<any[]> {
     const courses = await courseModel.find({ instructor_id: instructorId });
-    console.log(courses, "courses");
 
     const courseIds = courses.map((course) => String(course._id));
-    console.log(courseIds, "courseIds");
 
     const ratings = await Review.aggregate([
       {
@@ -457,8 +436,6 @@ class TutorRepository implements TutorRepo {
         },
       },
     ]);
-
-    console.log(ratings, "Ratings Data");
 
     return courses.map((course) => ({
       title: course.title,
@@ -566,83 +543,65 @@ class TutorRepository implements TutorRepo {
     return storeMsgs;
   }
   // createConversation
-  async createConversation(lastMessage: Conversation): Promise<Conversation | null> {
+  async createConversation(
+    lastMessage: Conversation
+  ): Promise<Conversation | null> {
     // Check if the conversation already exists in either direction (sender/receiver or receiver/sender)
     const conversationMsg = await conversationModel.findOne({
       $or: [
         { senderId: lastMessage.senderId, receiverId: lastMessage.receiverId },
-        { senderId: lastMessage.receiverId, receiverId: lastMessage.senderId }
-      ]
+        { senderId: lastMessage.receiverId, receiverId: lastMessage.senderId },
+      ],
     });
-  
+
     let lastConversation;
-  
+
     if (conversationMsg) {
-      // Update the existing conversation with the new last message, sender name, and instructor name
+      // Update the existing conversation with the new last message sender name and instructor name
       await conversationModel.updateOne(
         {
           $or: [
-            { senderId: lastMessage.senderId, receiverId: lastMessage.receiverId },
-            { senderId: lastMessage.receiverId, receiverId: lastMessage.senderId }
-          ]
+            {
+              senderId: lastMessage.senderId,
+              receiverId: lastMessage.receiverId,
+            },
+            {
+              senderId: lastMessage.receiverId,
+              receiverId: lastMessage.senderId,
+            },
+          ],
         },
-        { 
-          $set: { 
-            senderName: lastMessage.senderName, 
-            instructorName: lastMessage.instructorName, 
-            lastMessage: lastMessage.lastMessage 
-          } 
+        {
+          $set: {
+            senderName: lastMessage.senderName,
+            instructorName: lastMessage.instructorName,
+            lastMessage: lastMessage.lastMessage,
+          },
         }
       );
-  
+
       // Fetch the updated conversation
       lastConversation = await conversationModel.findOne({
         $or: [
-          { senderId: lastMessage.senderId, receiverId: lastMessage.receiverId },
-          { senderId: lastMessage.receiverId, receiverId: lastMessage.senderId }
-        ]
+          {
+            senderId: lastMessage.senderId,
+            receiverId: lastMessage.receiverId,
+          },
+          {
+            senderId: lastMessage.receiverId,
+            receiverId: lastMessage.senderId,
+          },
+        ],
       });
     } else {
-      // Create a new conversation if it doesn't exist
+      // Create a new conversation if  not exist
       const newConversation = new conversationModel(lastMessage);
       lastConversation = await newConversation.save();
     }
-  
+
     return lastConversation;
   }
-  
-  
-  // async createConversation(
-  //   lastMessage: Conversation
-  // ): Promise<Conversation | null> {
-  //   const conversationMsg = await conversationModel.findOne({
-  //     senderId: lastMessage.senderId,
-  //     receiverId: lastMessage.receiverId,
-  //   });
 
-  //   const hasConverstion = !!conversationMsg;
-  //   let lastConverstion;
-  //   if (hasConverstion) {
-  //     const converstion = await conversationModel.updateOne(
-  //       { senderId: lastMessage.senderId, receiverId: lastMessage.receiverId },
-  //       { $set: { lastMessage: lastMessage.lastMessage } }
-  //     );
-  //      await conversationModel.updateOne(
-  //       {senderId:lastMessage.receiverId,receiverId:lastMessage.senderId},
-  //       {$set:{ lastMessage: lastMessage.lastMessage }}
-  //     )
-  //     lastConverstion = await conversationModel.findOne({
-  //       senderId: lastMessage.senderId,
-  //       receiverId: lastMessage.receiverId,
-  //     });
-  //   } else {
-  //     let newConversation = new conversationModel(lastMessage);
-  //     let saveConversation = await newConversation.save();
-  //     lastConverstion = saveConversation;
-  //   }
-
-  //   return lastConverstion;
-  // }
   // getMsgs
   async getMsgs(
     senderId: string,
