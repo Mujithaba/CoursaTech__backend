@@ -43,6 +43,8 @@ app.use(
     methods: "GET,POST,PUT,PATCH,DELETE",
     credentials: true,
     allowedHeaders: ["Content-Type", "Authorization"],
+    // Add this for more verbose debugging
+    exposedHeaders: ['*']  // Expose all headers
   })
 );
 app.use(morgan("dev"));
