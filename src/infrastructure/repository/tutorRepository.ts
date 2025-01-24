@@ -284,7 +284,8 @@ class TutorRepository implements TutorRepo {
 
   // findAssignments
   async findAssignments(instructor_id: string): Promise<IAssignment[]> {
-    const instructorCourses: ICourseWithAssignments[] = await courseModel
+    // const instructorCourses: ICourseWithAssignments[] = await courseModel
+    const instructorCourses: any[] = await courseModel
       .find({ instructor_id: instructor_id })
       .populate({
         path: "assignments",
@@ -295,7 +296,8 @@ class TutorRepository implements TutorRepo {
 
     const assignments: IAssignment[] = instructorCourses.flatMap(
       (course) =>
-        course.assignments?.map((assignment) => ({
+        // course.assignments?.map((assignment) => ({
+        course.assignments?.map((assignment:any) => ({
           _id: assignment._id.toString(),
           title: assignment.title,
           pdf_file: assignment.pdf_file,
