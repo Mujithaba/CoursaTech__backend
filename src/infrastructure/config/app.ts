@@ -53,6 +53,11 @@ app.use("/api/users", userRoute);
 app.use("/api/tutors", tutorRoute);
 app.use("/api/admin", adminRoute);
 
+
+app.get('/', (req, res) => {
+  res.status(200).send('Server is running');
+});
+
 // Socket.IO event handlers
 io.on("connection", (socket) => {
   console.log("connected:", socket.id);
