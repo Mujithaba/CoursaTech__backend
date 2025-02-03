@@ -19,10 +19,17 @@ class sendotp {
     const mailoptions: nodemailer.SendMailOptions = {
       from: "muj@gmail.com",
       to: email,
-      subject: `Coursa Tech Email verification for ${role}`,
-      html: `<p>Dear ${name},</p>
-                   <p><b>Your verification OTP is: ${otp}</b></p>
-                   <p>Thank you,<br/>CoursaTech Team</p>`,
+      subject: `CoursaTech Account Verification for ${role}`,
+      html: `
+                    <div style="font-family: Arial, sans-serif; padding: 20px;">
+                <h2>Account Verification</h2>
+                <p>Dear ${name},</p>
+                <p>To verify your CoursaTech account, use the following OTP:</p>
+                <h3 style="background: #f4f4f4; padding: 10px; text-align: center;">${otp}</h3>
+                <p>Thank you,<br>CoursaTech Team</p>
+            </div>
+                   
+                   `,
     };
     this.transporter.sendMail(mailoptions, (err) => {
       if (err) {
