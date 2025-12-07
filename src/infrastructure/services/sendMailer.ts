@@ -8,7 +8,7 @@ class sendotp {
     this.transporter = nodemailer.createTransport({
       service: "gmail",
       auth: {
-        user: "mujithabaep772@gmail.com",
+        user: "mhdep772@gmail.com",
         pass: process.env.maile_Pass,
       },
     });
