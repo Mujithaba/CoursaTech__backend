@@ -115,9 +115,13 @@ class UserUseCase {
     );
     user.password = hashPassword;
     const userSave = await this._userRepository.saves(user);
+    console.log(userSave,"usersave-----")
     return {
       status: 201,
-      data: userSave,
+      data:{
+        message: "sign up completed successfully",
+        data: userSave,
+      }
     };
   }
 
