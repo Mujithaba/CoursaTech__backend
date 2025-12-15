@@ -32,11 +32,16 @@ import walletModal from "../database/userModels/walletModal";
 
 class UserRepository implements UserRepo {
   // saving user details to  database
+  // async saves(user: User): Promise<User> {
+  //   const newUser = new userModel(user);
+  //   const saveUser = await newUser.save();
+  //   return saveUser;
+  // }
+
   async saves(user: User): Promise<User> {
-    const newUser = new userModel(user);
-    const saveUser = await newUser.save();
-    return saveUser;
-  }
+  const newUser = new userModel(user);
+  return await newUser.save();
+}
 
   // email finding from DB
   async findByEmail(email: string): Promise<User | null> {

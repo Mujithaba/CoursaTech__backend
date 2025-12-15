@@ -122,16 +122,20 @@ class UserUseCase {
   // }
 
   async saveUser(user: User) {
-    const hashPassword = await this._encryptPassword.encryptPassword(
-      user.password as string
-    );
-    user.password = hashPassword;
-    const userSave = await this._userRepository.saves(user);
-    return {
-      status: 201,
-      data: userSave,
-    };
-  }
+  const hashedPassword = await this._encryptPassword.encryptPassword(
+    user.password as string
+  );
+
+  user.password = hashedPassword;
+
+  const savedUser = await this._userRepository.saves(user);
+
+  return {
+    status: 201,
+    data: savedUser,
+  };
+}
+
 
   async login(email: string, password: string) {
     const user = await this._userRepository.findByEmail(email);

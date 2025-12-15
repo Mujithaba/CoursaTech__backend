@@ -16,34 +16,36 @@ class userConroller {
 
   // user sign up
 
-  async signUp(req: Req, res: Res, next: Next) {
-    try {
-      const userVerify = await this._userUseCase.checkExist(req.body.email);
+ async signUp(req: Req, res: Res, next: Next) {
+  try {
+    const { name, email, phone, password } = req.body;
 
-      if (!userVerify.data.status) {
-        return res.status(userVerify.status).json(userVerify.data);
-      }
+    const userVerify = await this._userUseCase.checkExist(email);
 
-      const newUser = await this._userUseCase.saveUser({
-        name: req.body.name,
-        email: req.body.email,
-        phone: req.body.phone,
-        password: req.body.password,
-        isGoogle: false,
-        isAdmin: false,
-      });
-
-      return res
-        .status(newUser.status)
-        .json({
-          status: true,
-          message: "Signup successful",
-          data: newUser.data,
-        });
-    } catch (error) {
-      next(error);
+    if (!userVerify.data.status) {
+      return res.status(400).json(userVerify.data);
     }
+
+    const newUser = await this._userUseCase.saveUser({
+      name,
+      email,
+      phone,
+      password,
+      isGoogle: false,
+      isAdmin: false,
+      isBlocked: false,
+    });
+
+    return res.status(201).json({
+      status: true,
+      message: "Signup successful. Please login.",
+      data: newUser.data,
+    });
+  } catch (error) {
+    next(error);
   }
+}
+
 
   // async signUp(req: Req, res: Res, next: Next) {
   //   try {

@@ -28,8 +28,9 @@ const io = new SocketIoServer(httpServer, {
 });
 
 // Middleware configuration
-app.use(express.json({ limit: "50mb" }));
-app.use(express.urlencoded({ limit: "50mb", extended: true }));
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
 app.use(cookieParser());
 
 // Session configuration - use only once
@@ -38,7 +39,11 @@ app.use(session(sessionConfig));
 // CORS configuration
 app.use(
   cors({
-    origin: process.env.CORS_URL,
+    // origin: process.env.CORS_URL,
+     origin: [
+      "https://coursa-tech.vercel.app",
+      "http://localhost:5173",
+    ],
     methods: "GET,POST,PUT,PATCH,DELETE",
     credentials: true,
     allowedHeaders: ["Content-Type", "Authorization"],
