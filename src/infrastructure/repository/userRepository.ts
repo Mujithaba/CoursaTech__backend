@@ -38,7 +38,7 @@ class UserRepository implements UserRepo {
   //   return saveUser;
   // }
 
-  async saves(user: User): Promise<User> {
+  async saves(user: any): Promise<User> {
   const newUser = new userModel(user);
   return await newUser.save();
 }
