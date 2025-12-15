@@ -70,22 +70,22 @@ class UserUseCase {
   }
 
   // signup user usecase
-  async signup(name: string, email: string) {
-    const otp = this._generateOtp.createOtp();
-    console.log(otp, "OTP");
+  // async signup(name: string, email: string) {
+  //   const otp = this._generateOtp.createOtp();
+  //   console.log(otp, "OTP");
 
-    const role = "user";
-    await this._userRepository.saveOtp(name, email, otp, role);
-    this._generateSendMail.sendMail(name, email, otp, role);
+  //   const role = "user";
+  //   await this._userRepository.saveOtp(name, email, otp, role);
+  //   this._generateSendMail.sendMail(name, email, otp, role);
 
-    return {
-      status: 200,
-      data: {
-        status: true,
-        message: "Verification otp sent to your email",
-      },
-    };
-  }
+  //   return {
+  //     status: 200,
+  //     data: {
+  //       status: true,
+  //       message: "Verification otp sent to your email",
+  //     },
+  //   };
+  // }
 
   // otp verification case
   async verify(data: VerifyData) {
@@ -109,19 +109,27 @@ class UserUseCase {
     };
   }
 
+  // async saveUser(user: User) {
+  //   const hashPassword = await this._encryptPassword.encryptPassword(
+  //     user.password as string
+  //   );
+  //   user.password = hashPassword;
+  //   const userSave = await this._userRepository.saves(user);
+  //   return {
+  //     status: 201,
+  //     data: userSave,
+  //   };
+  // }
+
   async saveUser(user: User) {
     const hashPassword = await this._encryptPassword.encryptPassword(
       user.password as string
     );
     user.password = hashPassword;
     const userSave = await this._userRepository.saves(user);
-    console.log(userSave,"usersave-----")
     return {
       status: 201,
-      data:{
-        message: "sign up completed successfully",
-        data: userSave,
-      }
+      data: userSave,
     };
   }
 

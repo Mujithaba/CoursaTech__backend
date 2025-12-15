@@ -36,7 +36,7 @@ const userController = new UserController(userUseCase)
 
 
 route.post('/signUp',(req:Req,res:Res,next:Next)=> userController.signUp(req,res,next))
-route.post('/verify',(req:Req,res:Res,next:Next)=>userController.verifyOTP(req,res,next));
+// route.post('/verify',(req:Req,res:Res,next:Next)=>userController.verifyOTP(req,res,next));
 route.post('/login',(req:Req,res:Res,next:Next)=>userController.login(req,res,next));
 route.post('/googleIN',(req:Req,res:Res,next:Next)=>userController.googleUse(req,res,next));
 route.post('/resendOTP',(req:Req,res:Res,next:Next)=>userController.resendOtp(req,res,next));

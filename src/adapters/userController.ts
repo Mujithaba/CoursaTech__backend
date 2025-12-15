@@ -15,51 +15,78 @@ class userConroller {
   }
 
   // user sign up
+
   async signUp(req: Req, res: Res, next: Next) {
     try {
-      let user =req.body
       const userVerify = await this._userUseCase.checkExist(req.body.email);
-      if (userVerify.data.status == true) {
-        // const sendOtp = await this._userUseCase.signup(
-        //   req.body.name,
-        //   req.body.email
-        // );
 
-        const save = await this._userUseCase.saveUser(user)
-        console.log(save,"save----cntr")
-        return res.status(save.status).json(save.data);
-      } else {
+      if (!userVerify.data.status) {
         return res.status(userVerify.status).json(userVerify.data);
       }
+
+      const newUser = await this._userUseCase.saveUser({
+        name: req.body.name,
+        email: req.body.email,
+        phone: req.body.phone,
+        password: req.body.password,
+        isGoogle: false,
+        isAdmin: false,
+      });
+
+      return res
+        .status(newUser.status)
+        .json({
+          status: true,
+          message: "Signup successful",
+          data: newUser.data,
+        });
     } catch (error) {
       next(error);
     }
   }
+
+  // async signUp(req: Req, res: Res, next: Next) {
+  //   try {
+  //     const userVerify = await this._userUseCase.checkExist(req.body.email);
+  //     if (userVerify.data.status == true) {
+  //       const sendOtp = await this._userUseCase.signup(
+  //         req.body.name,
+  //         req.body.email
+  //       );
+
+  //       return res.status(sendOtp.status).json(sendOtp.data);
+  //     } else {
+  //       return res.status(userVerify.status).json(userVerify.data);
+  //     }
+  //   } catch (error) {
+  //     next(error);
+  //   }
+  // }
 
   // otp verification
-  async verifyOTP(req: Req, res: Res, next: Next) {
-    try {
-      const data: VerifyData = req.body;
-      const OTPverification = await this._userUseCase.verify(data);
+  // async verifyOTP(req: Req, res: Res, next: Next) {
+  //   try {
+  //     const data: VerifyData = req.body;
+  //     const OTPverification = await this._userUseCase.verify(data);
 
-      if (OTPverification.status == 400) {
-        return res
-          .status(OTPverification.status)
-          .json({ message: OTPverification.message });
-      }
-      if (OTPverification.data && OTPverification.status == 200) {
-        const savedUser = await this._userUseCase.saveUser(
-          OTPverification.data
-        );
+  //     if (OTPverification.status == 400) {
+  //       return res
+  //         .status(OTPverification.status)
+  //         .json({ message: OTPverification.message });
+  //     }
+  //     if (OTPverification.data && OTPverification.status == 200) {
+  //       const savedUser = await this._userUseCase.saveUser(
+  //         OTPverification.data
+  //       );
 
-        return res
-          .status(200)
-          .json({ message: "User verification successfully", data: savedUser });
-      }
-    } catch (error) {
-      next(error);
-    }
-  }
+  //       return res
+  //         .status(200)
+  //         .json({ message: "User verification successfully", data: savedUser });
+  //     }
+  //   } catch (error) {
+  //     next(error);
+  //   }
+  // }
 
   // login
   async login(req: Req, res: Res, next: Next) {
