@@ -284,7 +284,6 @@ class TutorRepository implements TutorRepo {
 
   // findAssignments
   async findAssignments(instructor_id: string): Promise<IAssignment[]> {
-    // const instructorCourses: ICourseWithAssignments[] = await courseModel
     const instructorCourses: any[] = await courseModel
       .find({ instructor_id: instructor_id })
       .populate({
